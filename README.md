@@ -112,31 +112,43 @@
 
 ```mermaid
 flowchart TD
-    subgraph Frontend ["🖥️ Frontend (TypeScript / Visual Studio Code)"]
+    subgraph Frontend["🖥️ Frontend — TypeScript"]
         UI_Taquilla["Taquilla / Operador"]
         UI_Admin["Dashboard Administrativo"]
-        UI_Telepeaje["Portal de Usuarios & TAGs"]
+        UI_Telepeaje["Portal de Usuarios y TAGs"]
     end
 
-    subgraph Backend ["⚡ Backend API (C# .NET / Visual Studio Community)"]
+    subgraph Backend["⚡ Backend API — C# .NET"]
         API_Gateway["Controllers / REST API"]
-        BLL_Transacciones["Servicio de Transacciones & Cobro"]
-        BLL_Telepeaje["Servicio de Telepeaje & Saldos"]
-        BLL_Turnos["Servicio de Turnos & Arqueo"]
+        BLL_Transacciones["Servicio de Transacciones y Cobro"]
+        BLL_Telepeaje["Servicio de Telepeaje y Saldos"]
+        BLL_Turnos["Servicio de Turnos y Arqueo"]
         DAL["Data Access Layer (EF Core / Dapper)"]
     end
 
-    subgraph Database ["🐘 Base de Datos Relacional (PostgreSQL)"]
-        DB_Core[(Tablas Principales: Estaciones, Casetas, Categorias, Tarifas)]
-        DB_Tx[(Transacciones de Peaje & Cuentas TAG)]
-        DB_Audit[(Triggers & Tablas de Auditoría Inmutable)]
-        DB_Views[(Vistas Materializadas de Reportes)]
+    subgraph Database["🐘 Base de Datos Relacional — PostgreSQL"]
+        DB_Core[("Tablas Principales: Estaciones, Casetas, Categorias")]
+        DB_Tx[("Transacciones de Peaje y Cuentas TAG")]
+        DB_Audit[("Triggers y Auditoría Inmutable")]
+        DB_Views[("Vistas de Reportes y Liquidación")]
     end
 
-    Frontend -->|HTTP / JSON (REST)| API_Gateway
-    API_Gateway --> BLL_Transacciones & BLL_Telepeaje & BLL_Turnos
-    BLL_Transacciones & BLL_Telepeaje & BLL_Turnos --> DAL
-    DAL -->|Conexión Segura Npgsql| Database
+    UI_Taquilla -->|"HTTP / JSON REST"| API_Gateway
+    UI_Admin -->|"HTTP / JSON REST"| API_Gateway
+    UI_Telepeaje -->|"HTTP / JSON REST"| API_Gateway
+
+    API_Gateway --> BLL_Transacciones
+    API_Gateway --> BLL_Telepeaje
+    API_Gateway --> BLL_Turnos
+
+    BLL_Transacciones --> DAL
+    BLL_Telepeaje --> DAL
+    BLL_Turnos --> DAL
+
+    DAL -->|"Conexión Segura Npgsql"| DB_Core
+    DAL -->|"Conexión Segura Npgsql"| DB_Tx
+    DB_Tx -.->|"Triggers Automáticos"| DB_Audit
+    DB_Tx -.->|"Consultas de Resumen"| DB_Views
 ```
 
 ### 🗃️ Modelo de Entidades Principales
