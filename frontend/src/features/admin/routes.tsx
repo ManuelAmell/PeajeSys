@@ -1,25 +1,61 @@
+import { useState } from 'react';
 import { LayoutApp } from '@/components/layout/LayoutApp';
-import { Franja } from '@/components/layout/Franja';
+import { SeccionCategorias } from './SeccionCategorias';
+import { SeccionEstaciones } from './SeccionEstaciones';
+import { SeccionPersonal } from './SeccionPersonal';
+import { SeccionTarifas } from './SeccionTarifas';
 
-export default function AdminPage() {
+type TabAdmin = 'tarifas' | 'personal' | 'estaciones' | 'categorias';
+
+const PESTANAS: Array<{ id: TabAdmin; label: string }> = [
+  { id: 'tarifas', label: 'Tarifas' },
+  { id: 'personal', label: 'Personal' },
+  { id: 'estaciones', label: 'Estaciones y casetas' },
+  { id: 'categorias', label: 'Categorías' },
+];
+
+/**
+ * Panel del administrador (Admin.dc.html): cuatro secciones bajo la navegación
+ * del prototipo. Tarifas es la única sección con edición; Personal permite
+ * activar o desactivar; Estaciones y Categorías son de solo lectura.
+ */
+export function AdminPage() {
+  const [tab, setTab] = useState<TabAdmin>('tarifas');
+
   return (
     <LayoutApp titulo="Administración">
-      <div className="p-4 md:p-8 max-w-5xl mx-auto flex flex-col gap-6">
-        <div className="rounded-[8px] border-2 border-borde bg-superficie p-6 md:p-8 flex flex-col gap-4 shadow-sm">
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[28px] md:text-[32px] font-bold text-texto m-0">
-              Administración
-            </h1>
-            <p className="text-[16px] md:text-[17px] text-texto-2 m-0">
-              En construcción · El bloque B5 implementará la administración de peajes, casetas y esquemas tarifarios.
-            </p>
-          </div>
-          <Franja className="rounded-[4px] my-2" />
-          <div className="p-4 rounded-[6px] bg-superficie-2 border border-borde text-[14px] text-texto-2 leading-relaxed">
-            Módulo reservado para el rol ADMIN. La gestión de estaciones, configuración de casetas y mantenimiento de tarifas se integrarán en esta vista.
-          </div>
-        </div>
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 px-3 pb-10 pt-6 md:px-8">
+        <nav
+          aria-label="Secciones de administración"
+          className="flex flex-wrap gap-2"
+        >
+          {PESTANAS.map((pestana) => {
+            const activa = tab === pestana.id;
+            return (
+              <button
+                key={pestana.id}
+                type="button"
+                aria-pressed={activa}
+                onClick={() => setTab(pestana.id)}
+                className={
+                  activa
+                    ? 'h-[48px] cursor-pointer rounded-[6px] border-[3px] border-texto bg-marca-amarillo px-[18px] text-[17px] font-bold text-sobre-acento focus-visible:outline-[3px] focus-visible:outline-texto focus-visible:outline-offset-2'
+                    : 'h-[48px] cursor-pointer rounded-[6px] border-2 border-borde bg-superficie px-[18px] text-[17px] font-semibold text-texto transition-colors hover:bg-hover focus-visible:outline-[3px] focus-visible:outline-texto focus-visible:outline-offset-2'
+                }
+              >
+                {pestana.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        {tab === 'tarifas' && <SeccionTarifas />}
+        {tab === 'personal' && <SeccionPersonal />}
+        {tab === 'estaciones' && <SeccionEstaciones />}
+        {tab === 'categorias' && <SeccionCategorias />}
       </div>
     </LayoutApp>
   );
 }
+
+export default AdminPage;
