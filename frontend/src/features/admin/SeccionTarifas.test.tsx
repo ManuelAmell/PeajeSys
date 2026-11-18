@@ -26,11 +26,13 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     expect(
       await screen.findByRole('heading', { name: 'Tarifas por estación' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Automóviles, camperos y camionetas')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Automóviles, camperos y camionetas'),
+    ).toBeInTheDocument();
     expect(screen.getByText('$ 10.500')).toBeInTheDocument();
     expect(screen.getByText('$ 48.500')).toBeInTheDocument();
-    expect(screen.getByText('Res. MinTransporte 0045/2026')).toBeInTheDocument();
-    expect(screen.getByText('01/01/2026')).toBeInTheDocument();
+    expect(screen.getAllByText('Res. MinTransporte 0045/2026')).toHaveLength(7);
+    expect(screen.getAllByText('01/01/2026')).toHaveLength(7);
   });
 
   it('ofrece las dos estaciones del DML con su código', async () => {
@@ -38,7 +40,11 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
 
     const selector = await screen.findByLabelText('Estación');
     expect(selector).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Estación Gambote · PEA-GAM-01' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('option', {
+        name: 'Estación Gambote · PEA-GAM-01',
+      }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole('option', { name: 'Estación La Ceballos · PEA-CEB-02' }),
     ).toBeInTheDocument();
@@ -62,7 +68,7 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     expect(
       screen.getByRole('button', { name: 'Definir tarifa de la categoría IV' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Res. MinTransporte 0046/2026')).toBeInTheDocument();
+    expect(screen.getAllByText('Res. MinTransporte 0046/2026')).toHaveLength(3);
   });
 
   it('rechaza un monto 0 con el mensaje del esquema y no guarda', async () => {
@@ -70,7 +76,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Editar tarifa de la categoría I' }),
+      await screen.findByRole('button', {
+        name: 'Editar tarifa de la categoría I',
+      }),
     );
     const dialogo = await screen.findByRole('dialog');
     expect(
@@ -96,7 +104,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Editar tarifa de la categoría I' }),
+      await screen.findByRole('button', {
+        name: 'Editar tarifa de la categoría I',
+      }),
     );
     await usuario.clear(await screen.findByLabelText('Monto en pesos'));
     await usuario.type(screen.getByLabelText('Monto en pesos'), '11200');
@@ -113,9 +123,13 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     expect(
       screen.getByRole('heading', { name: 'Historial de cambios' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Estación Gambote · categoría I')).toBeInTheDocument();
+    expect(
+      screen.getByText('Estación Gambote · categoría I'),
+    ).toBeInTheDocument();
     expect(screen.getByText('$ 10.500 -> $ 11.200')).toBeInTheDocument();
-    expect(screen.getByText(/ADMIN-01 · Res. MinTransporte 0045\/2026/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/ADMIN-01 · Res. MinTransporte 0045\/2026/),
+    ).toBeInTheDocument();
 
     await waitFor(async () => {
       const tarifas = await obtenerTarifas({ estacion: 1, categoria: 1 });
@@ -135,7 +149,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Editar tarifa de la categoría I' }),
+      await screen.findByRole('button', {
+        name: 'Editar tarifa de la categoría I',
+      }),
     );
     await usuario.clear(screen.getByLabelText('Monto en pesos'));
     await usuario.type(screen.getByLabelText('Monto en pesos'), '11200');
@@ -149,7 +165,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
         'La fecha de fin debe ser posterior o igual a la de inicio.',
       ),
     ).toBeInTheDocument();
-    expect(screen.queryByText('Historial de cambios')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Estación Gambote · categoría I'),
+    ).not.toBeInTheDocument();
   });
 
   it('presenta el error 409 de solape en la alerta del diálogo', async () => {
@@ -159,7 +177,8 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
           {
             error: {
               codigo: 'SOLAPE_VIGENCIAS',
-              mensaje: 'Ya existe una tarifa que se solapa con las fechas indicadas.',
+              mensaje:
+                'Ya existe una tarifa que se solapa con las fechas indicadas.',
             },
           },
           { status: 409 },
@@ -171,7 +190,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Editar tarifa de la categoría I' }),
+      await screen.findByRole('button', {
+        name: 'Editar tarifa de la categoría I',
+      }),
     );
     await usuario.clear(screen.getByLabelText('Monto en pesos'));
     await usuario.type(screen.getByLabelText('Monto en pesos'), '11200');
@@ -207,7 +228,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Editar tarifa de la categoría I' }),
+      await screen.findByRole('button', {
+        name: 'Editar tarifa de la categoría I',
+      }),
     );
     await usuario.clear(await screen.findByLabelText('Monto en pesos'));
     await usuario.clear(screen.getByLabelText('Vigente desde'));
@@ -224,7 +247,8 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
           {
             error: {
               codigo: 'ERROR_SIMULADO',
-              mensaje: 'Error de servidor simulado mediante parámetro ?mock=error.',
+              mensaje:
+                'Error de servidor simulado mediante parámetro ?mock=error.',
             },
           },
           { status: 500 },
@@ -241,13 +265,13 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
         'El servidor no respondió. Para no guardar cambios sobre datos viejos, la edición queda bloqueada hasta que carguen.',
       ),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Reintentar' }),
+    ).toBeInTheDocument();
   });
 
   it('muestra estado vacío cuando no hay estaciones registradas', async () => {
-    server.use(
-      http.get('*/api/estaciones', () => HttpResponse.json([])),
-    );
+    server.use(http.get('*/api/estaciones', () => HttpResponse.json([])));
     renderSeccion();
 
     expect(

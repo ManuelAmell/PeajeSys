@@ -23,15 +23,21 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
   it('lista los 10 operadores del DML con código, nombre, documento, rol y estado', async () => {
     renderSeccion();
 
-    expect(await screen.findByRole('heading', { name: 'Personal' })).toBeInTheDocument();
-    expect(screen.getByText('EMP-001')).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Personal' }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText('EMP-001')).toBeInTheDocument();
     expect(screen.getByText('Carlos Alberto Gómez Pérez')).toBeInTheDocument();
     expect(screen.getByText('1047123456')).toBeInTheDocument();
     expect(screen.getByText('EMP-009')).toBeInTheDocument();
     expect(screen.getByText('Jorge Luis Vargas Romero')).toBeInTheDocument();
-    expect(screen.getByText('SUPERVISOR')).toBeInTheDocument();
+    expect(screen.getAllByText('SUPERVISOR')).toHaveLength(2);
     expect(screen.getByText('EMP-003')).toBeInTheDocument();
-    expect(screen.getByText('Un usuario INACTIVO no puede iniciar sesión ni abrir turno.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Un usuario INACTIVO no puede iniciar sesión ni abrir turno.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('marca a EMP-009 como INACTIVO con acción para activarlo', async () => {
@@ -42,7 +48,9 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     if (fila) {
       expect(within(fila).getByText('INACTIVO')).toBeInTheDocument();
       expect(
-        within(fila).getByRole('button', { name: 'Activar a Jorge Luis Vargas Romero' }),
+        within(fila).getByRole('button', {
+          name: 'Activar a Jorge Luis Vargas Romero',
+        }),
       ).toBeInTheDocument();
     }
   });
@@ -52,7 +60,10 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     renderSeccion();
 
     await screen.findByText('EMP-001');
-    await usuario.type(await screen.findByLabelText('Buscar por nombre o código'), 'diaz');
+    await usuario.type(
+      await screen.findByLabelText('Buscar por nombre o código'),
+      'diaz',
+    );
 
     expect(await screen.findByText('EMP-006')).toBeInTheDocument();
     expect(screen.getByText('Laura Patricia Díaz Morales')).toBeInTheDocument();
@@ -64,9 +75,14 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     renderSeccion();
 
     await screen.findByText('EMP-001');
-    await usuario.type(await screen.findByLabelText('Buscar por nombre o código'), 'emp-009');
+    await usuario.type(
+      await screen.findByLabelText('Buscar por nombre o código'),
+      'emp-009',
+    );
 
-    expect(await screen.findByText('Jorge Luis Vargas Romero')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Jorge Luis Vargas Romero'),
+    ).toBeInTheDocument();
     expect(screen.queryByText('EMP-001')).not.toBeInTheDocument();
   });
 
@@ -75,13 +91,18 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     renderSeccion();
 
     await screen.findByText('EMP-001');
-    await usuario.type(await screen.findByLabelText('Buscar por nombre o código'), 'zzz');
+    await usuario.type(
+      await screen.findByLabelText('Buscar por nombre o código'),
+      'zzz',
+    );
 
     expect(
       await screen.findByText('Nadie coincide con la búsqueda'),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Revisa el código (EMP-000) o escribe parte del nombre.'),
+      screen.getByText(
+        'Revisa el código (EMP-000) o escribe parte del nombre.',
+      ),
     ).toBeInTheDocument();
   });
 
@@ -90,11 +111,15 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Desactivar a Carlos Alberto Gómez Pérez' }),
+      await screen.findByRole('button', {
+        name: 'Desactivar a Carlos Alberto Gómez Pérez',
+      }),
     );
 
     expect(
-      await screen.findByText('Carlos Alberto Gómez Pérez ahora está INACTIVO.'),
+      await screen.findByText(
+        'Carlos Alberto Gómez Pérez ahora está INACTIVO.',
+      ),
     ).toBeInTheDocument();
 
     await screen.findByText('Jorge Luis Vargas Romero');
@@ -112,7 +137,9 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Activar a Jorge Luis Vargas Romero' }),
+      await screen.findByRole('button', {
+        name: 'Activar a Jorge Luis Vargas Romero',
+      }),
     );
 
     expect(
@@ -143,7 +170,8 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
           {
             error: {
               codigo: 'ERROR_SIMULADO',
-              mensaje: 'Error de servidor simulado mediante parámetro ?mock=error.',
+              mensaje:
+                'Error de servidor simulado mediante parámetro ?mock=error.',
             },
           },
           { status: 500 },
@@ -155,7 +183,9 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     expect(
       await screen.findByText('No se pudieron cargar los datos'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Reintentar' }),
+    ).toBeInTheDocument();
   });
 
   it('muestra estado vacío cuando no hay personal registrado', async () => {
