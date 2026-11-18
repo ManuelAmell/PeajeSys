@@ -33,6 +33,7 @@ export default defineConfig({
         'src/api/**',
         'src/mocks/**',
         'src/types/**',
+        'src/features/**',
       ],
       exclude: [
         'src/components/ui/sonner.tsx',
@@ -41,6 +42,8 @@ export default defineConfig({
         'src/mocks/semilla.tipos.ts',
         'src/types/ddl.ts',
         '**/*.test.{ts,tsx}',
+        'src/features/**/capturar-*.ts',
+        'src/features/**/*.test.{ts,tsx}',
         'src/test/**',
       ],
       thresholds: {
