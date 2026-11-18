@@ -28,9 +28,9 @@ export function SeccionCuentas({ cuentas }: SeccionCuentasProps) {
     >
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div className="flex flex-col gap-1">
-          <h1 id="t-cuentas" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
+          <h2 id="t-cuentas" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
             Cuentas de telepeaje
-          </h1>
+          </h2>
           <p className="text-[16px] md:text-[17px] text-texto-2 m-0">
             Vista vw_estado_cuentas_telepeaje, de menor a mayor saldo.
           </p>

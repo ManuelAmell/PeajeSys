@@ -21,9 +21,9 @@ export function SeccionRecaudo({ recaudo, diasGrafico }: SeccionRecaudoProps) {
       className="flex flex-col gap-5 outline-none"
     >
       <div className="flex flex-col gap-1">
-        <h1 id="t-recaudo" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
+        <h2 id="t-recaudo" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
           Recaudo diario
-        </h1>
+        </h2>
         <p className="text-[16px] md:text-[17px] text-texto-2 m-0">
           Vista vw_resumen_diario_estacion · Estación Gambote
         </p>

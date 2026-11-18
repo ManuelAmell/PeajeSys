@@ -33,9 +33,9 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
     >
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div className="flex flex-col gap-1">
-          <h1 id="t-arqueo" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
+          <h2 id="t-arqueo" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
             Arqueo y conciliación de turnos
-          </h1>
+          </h2>
           <p className="text-[16px] md:text-[17px] text-texto-2 m-0">
             Compara lo que dice cada turno con la suma de sus pasos en efectivo y con lo que entregó el recaudador.
           </p>
@@ -87,21 +87,21 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
 
       {/* Tabla con scroll horizontal propio */}
       <div className="bg-superficie border border-borde rounded-[10px] p-2 md:p-5 overflow-x-auto shadow-sm">
-        <table className="w-full min-w-[1060px] border-collapse text-[15px] md:text-[16px]">
+        <table className="w-full min-w-[1180px] border-collapse text-[15px] md:text-[16px]">
           <caption className="text-left py-2.5 text-[14px] md:text-[15px] text-texto-2">
             Datos del DML del Avance 2. "Pasos en efectivo" es la suma de TRANSACCION_PEAJE de cada turno.
           </caption>
           <thead>
             <tr className="text-left text-texto-2 text-[14px] md:text-[15px]">
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold">Turno</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold">Fecha</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold">Carril</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold">Recaudador</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right">Según turno</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right">Pasos en efectivo</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right">Declarado</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold">Arqueo</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold">Conciliación</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[60px] min-w-[50px]">Turno</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[110px] min-w-[105px]">Fecha</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[110px] min-w-[105px]">Carril</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[230px] min-w-[210px]">Recaudador</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right w-[120px] min-w-[110px]">Según turno</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right w-[140px] min-w-[130px]">Pasos en efectivo</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right w-[120px] min-w-[110px]">Declarado</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[180px] min-w-[170px]">Arqueo</th>
+              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold min-w-[230px]">Conciliación</th>
             </tr>
           </thead>
           <tbody>
@@ -114,7 +114,7 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
                 <td className="p-3 border-b border-superficie-2 font-bold">{t.id_turno}</td>
                 <td className="p-3 border-b border-superficie-2 whitespace-nowrap">{t.fecha}</td>
                 <td className="p-3 border-b border-superficie-2 whitespace-nowrap">{t.carrilTexto}</td>
-                <td className="p-3 border-b border-superficie-2">{t.operadorNombre}</td>
+                <td className="p-3 border-b border-superficie-2 font-medium leading-snug">{t.operadorNombre}</td>
                 <td className="p-3 border-b border-superficie-2 text-right whitespace-nowrap font-medium">
                   {t.recaudadoTexto}
                 </td>
