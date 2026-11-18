@@ -19,15 +19,16 @@
 El repositorio se encuentra rigurosamente normalizado conforme al **Numeral 4.4 de la Guía Oficial**:
 
 ```
-Avance-2-PeajeSys/ (o BD_Grupo##_PeajeSys/)
+PeajeSys/database
 ├── 00_Master_PeajeSys.sql                     # Script maestro consolidado de ejecución total
 ├── README.md                                  # Este documento de instrucciones y arquitectura
 ├── PeajeSys_Avance_Corte1.pdf                 # Informe de Avance Corte 1 (Análisis y Diseño)
 ├── PeajeSys_Avance_Corte2.pdf                 # Informe de Avance Corte 2 (Implementación SQL)
+├── PeajeSys_Avance_Final.pdf                  # Informe de Avance Final (Integración PL/SQL)
 ├── Guia Ejecucion BD PeajeSys.pdf             # Guía visual de ejecución en PostgreSQL
 ├── 01_Modelado/                               # Fase 1: Análisis, Modelado y Diccionario
-│   ├── Diccionario_Datos_PeajeSys.md          # Diccionario completo de las 11 tablas en 3FN
-│   └── Especificacion_Modelo_Relacional.md    # DER en Mermaid, cardinalidades y normalización
+│   ├── Diccionario_Datos_PeajeSys.pdf         # Diccionario completo de las 11 tablas en 3FN
+│   └── Esquema Relacional y E-R.html          # DER y esquema relacional
 ├── 02_SQL/                                    # Fase 2: Esquema Físico y Consultas
 │   ├── 01_DDL_PeajeSys.sql                    # Creación física de tablas y restricciones
 │   ├── 02_DML_Datos_PeajeSys.sql              # Carga masiva (+10 reg/tabla) y pruebas ACID
@@ -62,7 +63,7 @@ psql -U postgres -d peajesys -f 00_Master_PeajeSys.sql
 Si se desea ejecutar componente por componente en orden de dependencias referenciales:
 
 1. **`02_SQL/01_DDL_PeajeSys.sql`**  
-   Crea las 11 tablas relacionales, claves primarias, foráneas, restricciones CHECK, UNIQUE y disparador base de auditoría inmutable.
+   Crea las 11 tablas relacionales, claves primarias, foráneas, restricciones CHECK, UNIQUE.
 2. **`02_SQL/02_DML_Datos_PeajeSys.sql`**  
    Carga los datos iniciales de prueba (más de 10 registros útiles por tabla principal) y ejecuta casos transaccionales DML con `COMMIT` y `ROLLBACK`.
 3. **`02_SQL/04_Objetos_PeajeSys.sql`**  
@@ -70,7 +71,7 @@ Si se desea ejecutar componente por componente en orden de dependencias referenc
 4. **`03_PLSQL/01_Funciones_PeajeSys.sql`**  
    Compila las funciones almacenadas de liquidación tarifaria, validación RFID y cálculo de descuadres.
 5. **`03_PLSQL/03_Triggers_PeajeSys.sql`**  
-   Activa los disparadores de prevención de saldo negativo, auditoría de evasiones y acumulación en tiempo real.
+   Activa los disparadores de prevención de saldo negativo, auditoría de evasiones, acumulación en tiempo real y disparador base de auditoría inmutable.
 6. **`03_PLSQL/02_Procedimientos_PeajeSys.sql`**  
    Compila los procedimientos almacenados de cobro atómico por telepeaje, arqueo de turno y recarga de saldo.
 7. **`03_PLSQL/04_Proceso_Cursor_PeajeSys.sql`**  

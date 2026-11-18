@@ -229,20 +229,8 @@ CREATE TABLE AUDITORIA_TRANSACCION (
         REFERENCES TRANSACCION_PEAJE (id_transaccion) ON DELETE RESTRICT
 );
 
--- =============================================================================
--- CONTROL DE INMUTABILIDAD PARA AUDITORIA_TRANSACCION (Append-Only)
--- =============================================================================
-CREATE OR REPLACE FUNCTION fn_prevent_audit_modification()
-RETURNS TRIGGER AS $$
-BEGIN
-    RAISE EXCEPTION 'Operación denegada: La tabla AUDITORIA_TRANSACCION es estrictamente de solo lectura/inserción (append-only) para garantizar trazabilidad legal.';
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_auditoria_inmutable
-BEFORE UPDATE OR DELETE ON AUDITORIA_TRANSACCION
-FOR EACH ROW
-EXECUTE FUNCTION fn_prevent_audit_modification();
+-- (Nota: La inmutabilidad de AUDITORIA_TRANSACCION mediante triggers se implementa
+-- en la fase procedimental: Fase 4.2 / 03_PLSQL/03_Triggers_PeajeSys.sql)
 
 
 -- #############################################################################
@@ -1044,7 +1032,7 @@ EXECUTE FUNCTION fn_trg_acumular_recaudo_efectivo();
 
 
 -- =============================================================================
--- TRIGGER 4 (Auditoría Inmutable - Mantenido del Esquema DDL):
+-- TRIGGER 4 (Auditoría Inmutable):
 -- Garantiza que los registros de AUDITORIA_TRANSACCION no puedan ser alterados
 -- ni eliminados por ningún usuario, asegurando valor probatorio forense.
 -- =============================================================================

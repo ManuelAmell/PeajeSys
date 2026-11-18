@@ -141,7 +141,7 @@ EXECUTE FUNCTION fn_trg_acumular_recaudo_efectivo();
 
 
 -- =============================================================================
--- TRIGGER 4 (Auditoría Inmutable - Mantenido del Esquema DDL):
+-- TRIGGER 4 (Auditoría Inmutable):
 -- Garantiza que los registros de AUDITORIA_TRANSACCION no puedan ser alterados
 -- ni eliminados por ningún usuario, asegurando valor probatorio forense.
 -- =============================================================================
