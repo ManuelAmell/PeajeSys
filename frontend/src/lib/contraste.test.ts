@@ -34,13 +34,13 @@ describe('Auditoría matemática de ratios de contraste WCAG 2.1 (src/index.css)
         ? /\[data-tema='claro'\]\s*\{([^}]+)\}/
         : /\[data-tema='oscuro'\]\s*\{([^}]+)\}/;
     const matchBloque = css.match(regexBloque);
-    if (!matchBloque) {
+    if (!matchBloque || !matchBloque[1]) {
       throw new Error(`Bloque de tema ${bloque} no encontrado en index.css`);
     }
     const contenidoBloque = matchBloque[1];
     const regexToken = new RegExp(`${nombre}:\\s*(#[0-9a-fA-F]{6})`);
     const matchToken = contenidoBloque.match(regexToken);
-    if (!matchToken) {
+    if (!matchToken || !matchToken[1]) {
       throw new Error(`Token ${nombre} no encontrado en bloque ${bloque}`);
     }
     return matchToken[1];
