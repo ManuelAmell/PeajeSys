@@ -311,7 +311,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_turno: 8,
+          id_turno: 9,
           id_tarifa: 1,
           id_categoria: 1,
           placa_detectada: 'HKL123',
@@ -332,7 +332,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_turno: 8,
+          id_turno: 9,
           id_tarifa: 1,
           id_categoria: 1,
           placa_detectada: 'HKL123',
@@ -521,7 +521,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_turno: 8,
+          id_turno: 9,
           id_tarifa: 1,
           id_categoria: 1,
           placa_detectada: 'XYZ123',
@@ -538,7 +538,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_turno: 8,
+          id_turno: 9,
           id_tarifa: 1,
           id_categoria: 1,
           placa_detectada: 'NOEXISTE',
@@ -554,7 +554,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id_turno: 8,
+          id_turno: 9,
           id_tarifa: 3,
           id_categoria: 3,
           placa_detectada: 'QWE321',
