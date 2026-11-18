@@ -101,6 +101,23 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       expect(data.usuario.rol).toBe('SUPERVISOR');
       expect(data.usuario.rolTxt).toBe('Supervisor');
     });
+
+    it('con ?mock=error devuelve el 500 del contrato aunque las credenciales sean válidas', async () => {
+      const res = await fetch(
+        `http://localhost:3000/api/auth/login?mock=error`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ codigo: 'EMP-002', clave: 'prueba' }),
+        },
+      );
+      expect(res.status).toBe(500);
+      const data = await res.json();
+      expect(data.error.codigo).toBe('ERROR_SIMULADO');
+      expect(data.error.mensaje).toBe(
+        'Error de servidor simulado mediante parámetro ?mock=error.',
+      );
+    });
   });
 
   describe('2. Estaciones y Casetas (GET /api/estaciones, GET /api/casetas)', () => {
