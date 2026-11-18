@@ -98,11 +98,11 @@ test.describe('Protección y navegación por roles (e2e/rutas.spec.ts)', () => {
     // 1. Acceso permitido a /admin
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.locator('h1')).toHaveText('Administración');
+    await expect(page.locator('h1')).toHaveText('Tarifas por estación');
 
     // 2. Intento de acceso a /operador redirige a su ruta por defecto (/admin)
     await page.goto('/operador');
     await expect(page).toHaveURL(/\/admin$/);
-    await expect(page.locator('h1')).toHaveText('Administración');
+    await expect(page.locator('h1')).toHaveText('Tarifas por estación');
   });
 });
