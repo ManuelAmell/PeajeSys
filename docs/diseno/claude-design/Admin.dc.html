@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PeajeSys · Administración</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+.ps-tema{--fondo:#f6f4ef;--superficie:#ffffff;--superficie-2:#ece8e0;--borde:#d9d4ca;--borde-fuerte:#b5afa3;--texto:#1f1d19;--texto-2:#5c574d;--texto-3:#3d3a33;--sobre-acento:#1f1d19;--asfalto:#1f1d19;--acento-texto:#a84f00;--hover:#f1eee7;--correcto:#1e7a46;--correcto-texto:#145232;--correcto-fondo:#e3f1e8;--error:#b42318;--error-fondo:#fbe7e5;--aviso-texto:#7a4a00;--aviso-fondo:#fdf0d2;--peligro:#b42318;color-scheme:light}
+.ps-tema[data-tema="oscuro"]{--fondo:#121110;--superficie:#1e1c19;--superficie-2:#2a2723;--borde:#3a3631;--borde-fuerte:#5e584f;--texto:#f3f0ea;--texto-2:#b8b1a5;--texto-3:#d4cec3;--asfalto:#0a0908;--acento-texto:#ffb15c;--hover:#2a2723;--correcto:#5cc08a;--correcto-texto:#8fddb0;--correcto-fondo:#15301f;--error:#ff8a7a;--error-fondo:#3a1714;--aviso-texto:#ffc870;--aviso-fondo:#3a2b0a;color-scheme:dark}
+.ps-oscuro:hover:not(:disabled){background:rgba(255,255,255,0.14) !important}
+.ps-tema[data-tema="oscuro"] .ps-silueta{background:#ebe6dc;border-radius:6px;box-sizing:border-box;padding:3px}
+body{margin:0}
+a{color:#ffffff}a:hover{color:#FCBD17}
+label[for]{cursor:pointer}
+button,select{cursor:pointer;font-family:'Barlow',system-ui,sans-serif;transition:background-color 120ms}
+button:disabled{cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #FCBD17;outline-offset:2px}
+main button:focus-visible,main input:focus-visible,main select:focus-visible{outline-color:var(--texto)}
+[role="dialog"] button:focus-visible,[role="dialog"] input:focus-visible{outline-color:var(--texto)}
+.ps-tab:hover{background:var(--hover) !important}
+.ps-primario:hover:not(:disabled){background:#E5A800 !important}
+.ps-secundario:hover:not(:disabled){background:var(--hover) !important}
+.ps-filtro:hover{border-color:var(--texto) !important}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div class="ps-tema" data-tema="{{tema}}" style="position: relative; min-height: 100vh; box-sizing: border-box; background: var(--fondo); color: var(--texto); font-family: 'Barlow', system-ui, sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+
+<header style="background: var(--asfalto); color: #ffffff; padding: 14px clamp(16px, 3vw, 32px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px">
+<div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap">
+<img src="/_blob/57e50eaf28f8047c226a70b55cec93e3" alt="PeajeSys" width="150" height="40" style="width: 150px; height: 40px; object-fit: contain; object-position: left center">
+<span style="font-size: 18px; font-weight: 600">Administración</span>
+</div>
+<div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 16px">
+<span>ADMIN-01 · usuario de prueba</span>
+<button type="button" class="ps-oscuro" onClick="{{alternarTema}}" style="height: 44px; padding: 0 14px; border: 2px solid #ffffff; border-radius: 6px; background: transparent; color: #ffffff; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>{{temaTxt}}</button>
+<a href="Login.dc.html" style="font-weight: 600">Cerrar sesión</a>
+</div>
+</header>
+<div aria-hidden="true" style="height: 8px; background: repeating-linear-gradient(135deg, #FCBD17 0 16px, #1f1d19 16px 32px)"></div>
+
+<main style="flex: 1; padding: 24px clamp(12px, 3vw, 32px) 40px; display: flex; flex-direction: column; gap: 24px; max-width: 1400px; width: 100%; box-sizing: border-box; margin: 0 auto">
+<nav aria-label="Secciones de administración" style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<sc-if value="{{t.activa}}" hint-placeholder-val="{{false}}">
+<button type="button" aria-pressed="true" onClick="{{t.ir}}" style="height: 48px; padding: 0 18px; border: 3px solid var(--texto); border-radius: 6px; background: #FCBD17; color: var(--sobre-acento); font-size: 17px; font-weight: 700">{{t.label}}</button>
+</sc-if>
+<sc-if value="{{t.inactiva}}" hint-placeholder-val="{{true}}">
+<button type="button" aria-pressed="false" class="ps-tab" onClick="{{t.ir}}" style="height: 48px; padding: 0 18px; border: 2px solid var(--borde); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">{{t.label}}</button>
+</sc-if>
+</sc-for>
+</nav>
+
+<sc-if value="{{datosCargando}}" hint-placeholder-val="{{false}}">
+<div role="status" style="max-width: 640px; box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<strong style="font-size: 24px">Cargando tarifas, personal y estaciones…</strong>
+<div aria-hidden="true" style="height: 10px; border-radius: 2px; background: repeating-linear-gradient(135deg, #FCBD17 0 12px, #1f1d19 12px 24px)"></div>
+<span style="font-size: 17px; color: var(--texto-2)">Los cambios se habilitan cuando lleguen los datos del servidor.</span>
+</div>
+</sc-if>
+<sc-if value="{{datosError}}" hint-placeholder-val="{{false}}">
+<div role="alert" style="max-width: 640px; box-sizing: border-box; background: var(--superficie); border: 2px solid var(--error); border-radius: 10px; padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<strong style="font-size: 24px; color: var(--error)">No se pudieron cargar los datos</strong>
+<span style="font-size: 17px; color: var(--texto-3)">El servidor no respondió. Para no guardar cambios sobre datos viejos, la edición queda bloqueada hasta que carguen.</span>
+<button type="button" onClick="{{reintentar}}" class="ps-tab" style="align-self: flex-start; height: 48px; padding: 0 20px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">Reintentar</button>
+</div>
+</sc-if>
+<sc-if value="{{datosNormal}}" hint-placeholder-val="{{true}}">
+
+<sc-if value="{{aviso}}" hint-placeholder-val="{{false}}">
+<p role="status" style="margin: 0; padding: 12px 16px; border-radius: 6px; background: var(--correcto-fondo); border: 2px solid var(--correcto); color: var(--correcto-texto); font-size: 17px; font-weight: 600">{{aviso}}</p>
+</sc-if>
+
+<sc-if value="{{verTarifas}}" hint-placeholder-val="{{true}}">
+<section aria-labelledby="t-tarifas" style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<div style="flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-tarifas" style="margin: 0; font-size: 32px; font-weight: 700">Tarifas por estación</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Una tarifa activa por categoría. El monto debe ser mayor que 0 (CHECK monto &gt; 0).</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="ad-estacion" style="font-size: 15px; font-weight: 600">Estación</label>
+<select id="ad-estacion" value="{{estacion}}" onChange="{{onEstacion}}" class="ps-filtro" style="height: 44px; min-width: 220px; padding: 0 12px; border: 2px solid var(--borde-fuerte); border-radius: 6px; background: var(--superficie); font-size: 17px; color: var(--texto)">
+<option value="1">Gambote · PEA-GAM-01</option>
+<option value="2">La Ceballos · PEA-CEB-02</option>
+</select>
+</div>
+</div>
+<sc-if value="{{faltanTarifas}}" hint-placeholder-val="{{false}}">
+<p role="alert" style="margin: 0; padding: 12px 16px; border-radius: 6px; background: var(--aviso-fondo); color: var(--aviso-texto); font-size: 17px; font-weight: 600">{{faltanTxt}}</p>
+</sc-if>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 20px 12px; overflow-x: auto">
+<table style="width: 100%; min-width: 720px; border-collapse: collapse; font-size: 16px">
+<thead>
+<tr style="text-align: left; color: var(--texto-2); font-size: 15px">
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Categoría</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600; text-align: right">Monto</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Resolución</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Vigente desde</th>
+<th scope="col" style="position: relative; padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600"><span style="position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Acción</span></th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{tarifas}}" as="f" hint-placeholder-count="7">
+<tr>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)"><span style="display: flex; align-items: center; gap: 12px"><img class="ps-silueta" src="{{f.img}}" alt="" width="72" height="28" style="width: 72px; height: 28px; object-fit: contain"><span style="display: flex; flex-direction: column"><strong>{{f.roman}}</strong><span style="font-size: 14px; color: var(--texto-2)">{{f.desc}}</span></span></span></td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right; font-size: 18px; font-weight: 700; white-space: nowrap; color: {{f.montoColor}}">{{f.montoTxt}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)">{{f.resolucion}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)">{{f.desde}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right"><button type="button" class="ps-secundario" onClick="{{f.editar}}" aria-label="{{f.accionAria}}" style="height: 44px; padding: 0 14px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 16px; font-weight: 600; white-space: nowrap">{{f.accion}}</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</div>
+<aside aria-labelledby="t-historial" style="flex: 1 1 320px; min-width: 0; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="t-historial" style="margin: 0; font-size: 22px; font-weight: 700">Historial de cambios</h2>
+<p style="margin: 0; font-size: 15px; color: var(--texto-2)">En la base de datos lo guardará el trigger trg_auditoria_tarifas, pendiente del Avance 3.</p>
+<sc-if value="{{sinHistorial}}" hint-placeholder-val="{{true}}">
+<p style="margin: 0; padding: 14px 0; font-size: 17px; color: var(--texto-2)">Aún no hay cambios en esta sesión. Edita una tarifa para ver aquí el valor anterior y el nuevo.</p>
+</sc-if>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+<sc-for list="{{historial}}" as="h" hint-placeholder-count="0">
+<li style="padding: 12px 0; border-bottom: 1px solid var(--superficie-2); display: flex; flex-direction: column; gap: 2px">
+<strong style="font-size: 17px">{{h.titulo}}</strong>
+<span style="font-size: 16px">{{h.cambio}}</span>
+<span style="font-size: 14px; color: var(--texto-2)">{{h.meta}}</span>
+</li>
+</sc-for>
+</ol>
+</aside>
+</section>
+</sc-if>
+
+<sc-if value="{{verPersonal}}" hint-placeholder-val="{{false}}">
+<section aria-labelledby="t-personal" style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-personal" style="margin: 0; font-size: 32px; font-weight: 700">Personal</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Un usuario INACTIVO no puede iniciar sesión ni abrir turno.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="ad-buscar" style="font-size: 15px; font-weight: 600">Buscar por nombre o código</label>
+<input id="ad-buscar" value="{{buscar}}" onChange="{{onBuscar}}" autocomplete="off" placeholder="EMP-000 o nombre" style="height: 44px; width: 260px; padding: 0 12px; border: 2px solid var(--borde-fuerte); border-radius: 6px; background: var(--superficie); font: 500 17px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+</div>
+</div>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 20px 12px; overflow-x: auto">
+<sc-if value="{{sinPersonal}}" hint-placeholder-val="{{false}}">
+<div role="status" style="padding: 28px 8px; display: flex; flex-direction: column; gap: 6px"><strong style="font-size: 20px">Nadie coincide con la búsqueda</strong><span style="font-size: 16px; color: var(--texto-2)">Revisa el código (EMP-000) o escribe parte del nombre.</span></div>
+</sc-if>
+<sc-if value="{{hayPersonal}}" hint-placeholder-val="{{true}}">
+<table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 16px">
+<thead>
+<tr style="text-align: left; color: var(--texto-2); font-size: 15px">
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Código</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Nombre</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Documento</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Rol</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Estado</th>
+<th scope="col" style="position: relative; padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600"><span style="position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Acción</span></th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{personal}}" as="p" hint-placeholder-count="6">
+<tr>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2); font-weight: 700">{{p.codigo}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)">{{p.nombre}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)">{{p.documento}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)">{{p.rol}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)"><span style="padding: 4px 8px; border-radius: 4px; background: {{p.estadoFondo}}; color: {{p.estadoColor}}; font-size: 14px; font-weight: 700">{{p.estado}}</span></td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right"><button type="button" class="ps-secundario" onClick="{{p.alternar}}" aria-label="{{p.accionAria}}" style="height: 44px; padding: 0 14px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 16px; font-weight: 600; white-space: nowrap">{{p.accion}}</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</sc-if>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{verInfra}}" hint-placeholder-val="{{false}}">
+<section aria-labelledby="t-infra" style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-infra" style="margin: 0; font-size: 32px; font-weight: 700">Estaciones y casetas</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Consulta de solo lectura en esta versión del diseño.</p>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(420px, 100%), 1fr)); gap: 20px">
+<sc-for list="{{estaciones}}" as="e" hint-placeholder-count="2">
+<article style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px"><div style="display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-size: 22px; font-weight: 700">{{e.nombre}}</h2><span style="font-size: 15px; color: var(--texto-2)">{{e.codigo}} · {{e.ubicacion}} · sentido {{e.sentido}}</span></div><span style="padding: 4px 8px; border-radius: 4px; background: var(--correcto-fondo); color: var(--correcto-texto); font-size: 14px; font-weight: 700">{{e.estado}}</span></div>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+<sc-for list="{{e.casetas}}" as="c" hint-placeholder-count="3">
+<li style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--superficie-2); font-size: 17px"><span><strong>Carril {{c.carril}}</strong> · {{c.tipo}}</span><span style="font-size: 15px; font-weight: 700; color: var(--correcto-texto)">{{c.estado}}</span></li>
+</sc-for>
+</ul>
+</article>
+</sc-for>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{verCategorias}}" hint-placeholder-val="{{false}}">
+<section aria-labelledby="t-categorias" style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-categorias" style="margin: 0; font-size: 32px; font-weight: 700">Categorías vehiculares</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Esquema de siete categorías (Res. INVÍAS 0228 de 2013 y concesiones ANI). Consulta de solo lectura.</p>
+</div>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 20px 12px; overflow-x: auto">
+<table style="width: 100%; min-width: 720px; border-collapse: collapse; font-size: 16px">
+<thead>
+<tr style="text-align: left; color: var(--texto-2); font-size: 15px">
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Categoría</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Código</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Ejes</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600; text-align: right">Peso máximo</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{categorias}}" as="c" hint-placeholder-count="7">
+<tr>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)"><span style="display: flex; align-items: center; gap: 12px"><img class="ps-silueta" src="{{c.img}}" alt="" width="96" height="36" style="width: 96px; height: 36px; object-fit: contain"><span style="display: flex; flex-direction: column"><strong>{{c.roman}}</strong><span style="font-size: 14px; color: var(--texto-2)">{{c.desc}}</span></span></span></td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)">{{c.code}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2)">{{c.ejes}}</td>
+<td style="padding: 10px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right">{{c.peso}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</sc-if>
+</sc-if>
+</main>
+
+<sc-if value="{{editando}}" hint-placeholder-val="{{false}}">
+<div style="position: fixed; inset: 0; background: rgba(31,29,25,0.6); display: flex; align-items: flex-start; justify-content: center; padding: 96px 16px 16px; box-sizing: border-box">
+<div role="dialog" aria-modal="true" aria-labelledby="t-editar" onKeyDown="{{teclaDialogo}}" style="width: 100%; max-width: 520px; background: var(--superficie); border-radius: 10px; border: 3px solid var(--texto); padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+<h2 id="t-editar" style="margin: 0; font-size: 26px; font-weight: 700">{{dlg.titulo}}</h2>
+<p style="margin: 0; font-size: 16px; color: var(--texto-2)">{{dlg.subtitulo}}</p>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="ad-monto" style="font-size: 16px; font-weight: 600">Monto en pesos</label>
+<input id="ad-monto" value="{{dlg.monto}}" onChange="{{onMonto}}" inputmode="numeric" autocomplete="off" placeholder="0" style="height: 52px; padding: 0 14px; border: 2px solid {{dlg.montoBorde}}; border-radius: 6px; font: 700 24px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="ad-res" style="font-size: 16px; font-weight: 600">Resolución que la autoriza</label>
+<input id="ad-res" value="{{dlg.resolucion}}" onChange="{{onRes}}" autocomplete="off" style="height: 48px; padding: 0 14px; border: 2px solid {{dlg.resBorde}}; border-radius: 6px; font: 500 18px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="ad-desde" style="font-size: 16px; font-weight: 600">Vigente desde</label>
+<input id="ad-desde" type="date" value="{{dlg.desde}}" onChange="{{onDesde}}" style="height: 48px; padding: 0 14px; border: 2px solid {{dlg.desdeBorde}}; border-radius: 6px; font: 500 18px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+</div>
+<sc-if value="{{dlg.error}}" hint-placeholder-val="{{false}}">
+<p role="alert" style="margin: 0; padding: 10px 14px; border-radius: 6px; background: var(--error-fondo); color: var(--error); font-size: 16px; font-weight: 600">{{dlg.error}}</p>
+</sc-if>
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px">
+<button type="button" class="ps-secundario" onClick="{{cancelar}}" style="height: 52px; padding: 0 20px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">Cancelar</button>
+<button type="button" onClick="{{guardar}}" class="ps-primario" style="height: 52px; padding: 0 20px; border: 3px solid var(--texto); border-radius: 6px; background: #FCBD17; color: var(--sobre-acento); font-size: 17px; font-weight: 700">Guardar tarifa</button>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["sistema","claro","oscuro"],"default":"sistema","section":"Vista"},"estadoDatos":{"editor":"enum","options":["normal","cargando","error"],"default":"normal","section":"Vista"},"$preview":{"width":1440,"height":1100}}'>
+const CATS = [
+  { id: 1, code: 'CAT_I', roman: 'I', desc: 'Automóviles, camperos y camionetas', ejes: '2', peso: '3,5 t', img: '/_blob/1333bc12073e3f88924122dca21b7970' },
+  { id: 2, code: 'CAT_II', roman: 'II', desc: 'Buses y busetas', ejes: '2', peso: '8 t', img: '/_blob/15df5bbddfd93b192ee4cd61f4fcd198' },
+  { id: 3, code: 'CAT_III', roman: 'III', desc: 'Camiones de 2 ejes pequeños', ejes: '2', peso: '10 t', img: '/_blob/4f7fff75a04aa8b7599acb78f61cc3bd' },
+  { id: 4, code: 'CAT_IV', roman: 'IV', desc: 'Camiones de 2 ejes grandes (C2)', ejes: '2', peso: '16 t', img: '/_blob/9d055fe0edf8ff15b9245956bb1bea9f' },
+  { id: 5, code: 'CAT_V', roman: 'V', desc: 'Camiones de 3 y 4 ejes (C3-C4)', ejes: '3 a 4', peso: '28 t', img: '/_blob/046e22c18ee75cc3906562ca798baf17' },
+  { id: 6, code: 'CAT_VI', roman: 'VI', desc: 'Camiones de 5 ejes (C5)', ejes: '5', peso: '40 t', img: '/_blob/03f1b280afbea1f0e42b17d645c0cba8' },
+  { id: 7, code: 'CAT_VII', roman: 'VII', desc: 'Camiones de 6 o más ejes (C6)', ejes: '6 a 10', peso: '52 t', img: '/_blob/ce956fcfea7364ecb7a8b59d85b2ab6d' }
+];
+const TARIFAS_INICIALES = {
+  '1-1': { monto: 10500, resolucion: 'Res. MinTransporte 0045/2026', desde: '2026-01-01' },
+  '1-2': { monto: 12800, resolucion: 'Res. MinTransporte 0045/2026', desde: '2026-01-01' },
+  '1-3': { monto: 15300, resolucion: 'Res. MinTransporte 0045/2026', desde: '2026-01-01' },
+  '1-4': { monto: 22000, resolucion: 'Res. MinTransporte 0045/2026', desde: '2026-01-01' },
+  '1-5': { monto: 31500, resolucion: 'Res. MinTransporte 0045/2026', desde: '2026-01-01' },
+  '1-6': { monto: 42000, resolucion: 'Res. MinTransporte 0045/2026', desde: '2026-01-01' },
+  '1-7': { monto: 48500, resolucion: 'Res. MinTransporte 0045/2026', desde: '2026-01-01' },
+  '2-1': { monto: 11000, resolucion: 'Res. MinTransporte 0046/2026', desde: '2026-01-01' },
+  '2-2': { monto: 13500, resolucion: 'Res. MinTransporte 0046/2026', desde: '2026-01-01' },
+  '2-3': { monto: 16000, resolucion: 'Res. MinTransporte 0046/2026', desde: '2026-01-01' }
+};
+const ESTACIONES = {
+  '1': { nombre: 'Gambote', codigo: 'PEA-GAM-01', ubicacion: 'Km 25 Vía Ruta del Sol, tramo Gambote', sentido: 'Bogotá-Cartagena', estado: 'ACTIVA', casetas: [
+    { carril: 1, tipo: 'Manual', estado: 'OPERATIVA' }, { carril: 2, tipo: 'Manual', estado: 'OPERATIVA' },
+    { carril: 3, tipo: 'Telepeaje exclusivo', estado: 'OPERATIVA' }, { carril: 4, tipo: 'Mixto', estado: 'OPERATIVA' }] },
+  '2': { nombre: 'La Ceballos', codigo: 'PEA-CEB-02', ubicacion: 'Km 12 Variante Mamonal', sentido: 'Cartagena-Barranquilla', estado: 'ACTIVA', casetas: [
+    { carril: 1, tipo: 'Manual', estado: 'OPERATIVA' }, { carril: 2, tipo: 'Telepeaje exclusivo', estado: 'OPERATIVA' }] }
+};
+const PERSONAL = [
+  { codigo: 'EMP-001', nombre: 'Carlos Alberto Gómez Pérez', documento: '1047123456', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-002', nombre: 'María Fernanda López Martínez', documento: '1047654321', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-003', nombre: 'Juan David Rodríguez Silva', documento: '1047987654', rol: 'SUPERVISOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-004', nombre: 'Ana Milena Castro Ramos', documento: '1047111222', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-005', nombre: 'Luis Eduardo Mendoza Torres', documento: '1047333444', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-006', nombre: 'Laura Patricia Díaz Morales', documento: '1047555666', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-007', nombre: 'Andrés Felipe Herrera Vega', documento: '1047777888', rol: 'SUPERVISOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-008', nombre: 'Diana Marcela Suárez Ruiz', documento: '1047999000', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+  { codigo: 'EMP-009', nombre: 'Jorge Luis Vargas Romero', documento: '1047123987', rol: 'RECAUDADOR', estado: 'INACTIVO' },
+  { codigo: 'EMP-010', nombre: 'Claudia Patricia Gutiérrez Polo', documento: '1047456123', rol: 'RECAUDADOR', estado: 'ACTIVO' }
+];
+function fmt(n) {
+  return '$ ' + String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function fechaLarga(iso) {
+  const p = String(iso || '').split('-');
+  return p.length === 3 ? p[2] + '/' + p[1] + '/' + p[0] : iso;
+}
+function sinTildes(t) {
+  return String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+}
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      tab: 'tarifas', estacion: '1', tarifas: { ...TARIFAS_INICIALES }, historial: [],
+      dlg: null, aviso: '', buscar: '', estados: {}
+    };
+  }
+  componentDidUpdate(prev) {
+    if (prev.estadoDatos !== this.props.estadoDatos && this.state.forzarNormal) this.setState({ forzarNormal: false });
+  }
+  renderVals() {
+    const s = this.state;
+    const prefiereOscuro = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const temaBase = this.props.tema ?? "sistema";
+    const tema = s.tema || (temaBase === "sistema" ? (prefiereOscuro ? "oscuro" : "claro") : temaBase);
+    const temaTxt = tema === "oscuro" ? "Usar modo claro" : "Usar modo oscuro";
+    const alternarTema = () => this.setState({ tema: tema === "oscuro" ? "claro" : "oscuro" });
+    const estadoDatos = s.forzarNormal ? 'normal' : (this.props.estadoDatos ?? 'normal');
+    const tabs = [
+      { id: 'tarifas', label: 'Tarifas' }, { id: 'personal', label: 'Personal' },
+      { id: 'infra', label: 'Estaciones y casetas' }, { id: 'categorias', label: 'Categorías' }
+    ].map((t) => ({ ...t, activa: s.tab === t.id, inactiva: s.tab !== t.id, ir: () => this.setState({ tab: t.id, aviso: '' }) }));
+
+    const est = ESTACIONES[s.estacion];
+    const tarifas = CATS.map((c) => {
+      const t = s.tarifas[s.estacion + '-' + c.id];
+      const abrir = () => this.setState({ dlg: {
+        clave: s.estacion + '-' + c.id, nueva: !t, roman: c.roman,
+        monto: t ? String(t.monto) : '', resolucion: t ? t.resolucion : '', desde: t ? t.desde : '2026-01-01',
+        error: '', campo: ''
+      } });
+      return {
+        ...c,
+        montoTxt: t ? fmt(t.monto) : 'SIN TARIFA', montoColor: t ? 'var(--texto)' : 'var(--error)',
+        resolucion: t ? t.resolucion : 'No definida', desde: t ? fechaLarga(t.desde) : 'No definida',
+        accion: t ? 'Editar' : 'Definir tarifa',
+        accionAria: (t ? 'Editar tarifa de la categoría ' : 'Definir tarifa de la categoría ') + c.roman,
+        editar: abrir
+      };
+    });
+    const faltan = CATS.filter((c) => !s.tarifas[s.estacion + '-' + c.id]).map((c) => c.roman);
+
+    const dlg = s.dlg;
+    const guardar = (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      if (!dlg) return;
+      const monto = parseInt(String(dlg.monto).replace(/\D/g, ''), 10) || 0;
+      if (monto <= 0) return this.setState({ dlg: { ...dlg, error: 'El monto debe ser mayor que 0.', campo: 'monto' } });
+      if (!dlg.resolucion.trim()) return this.setState({ dlg: { ...dlg, error: 'Indica la resolución que autoriza la tarifa.', campo: 'res' } });
+      if (!dlg.desde) return this.setState({ dlg: { ...dlg, error: 'Indica desde qué fecha rige.', campo: 'desde' } });
+      const antes = s.tarifas[dlg.clave];
+      const d = new Date();
+      const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+      const entrada = {
+        titulo: est.nombre + ' · categoría ' + dlg.roman,
+        cambio: (antes ? fmt(antes.monto) : 'Sin tarifa') + ' → ' + fmt(monto),
+        meta: hora + ' · ADMIN-01 · ' + dlg.resolucion.trim()
+      };
+      this.setState({
+        tarifas: { ...s.tarifas, [dlg.clave]: { monto, resolucion: dlg.resolucion.trim(), desde: dlg.desde } },
+        historial: [entrada].concat(s.historial), dlg: null,
+        aviso: 'Tarifa de la categoría ' + dlg.roman + ' en ' + est.nombre + ' guardada: ' + fmt(monto) + '.'
+      });
+    };
+    const cancelar = () => this.setState({ dlg: null });
+
+    const q = sinTildes(s.buscar.trim());
+    const personal = PERSONAL
+      .map((p) => ({ ...p, estado: s.estados[p.codigo] || p.estado }))
+      .filter((p) => !q || sinTildes(p.nombre).includes(q) || sinTildes(p.codigo).includes(q))
+      .map((p) => {
+        const activo = p.estado === 'ACTIVO';
+        return {
+          ...p,
+          estadoFondo: activo ? 'var(--correcto-fondo)' : 'var(--superficie-2)', estadoColor: activo ? 'var(--correcto-texto)' : 'var(--texto-3)',
+          accion: activo ? 'Desactivar' : 'Activar',
+          accionAria: (activo ? 'Desactivar a ' : 'Activar a ') + p.nombre,
+          alternar: () => this.setState({
+            estados: { ...s.estados, [p.codigo]: activo ? 'INACTIVO' : 'ACTIVO' },
+            aviso: p.nombre + ' ahora está ' + (activo ? 'INACTIVO' : 'ACTIVO') + '.'
+          })
+        };
+      });
+
+    const estaciones = Object.keys(ESTACIONES).map((k) => ESTACIONES[k]);
+
+    return {
+      tema, temaTxt, alternarTema,
+      datosNormal: estadoDatos === 'normal', datosCargando: estadoDatos === 'cargando', datosError: estadoDatos === 'error',
+      reintentar: () => this.setState({ forzarNormal: true }),
+      tabs, aviso: s.aviso,
+      verTarifas: s.tab === 'tarifas', verPersonal: s.tab === 'personal', verInfra: s.tab === 'infra', verCategorias: s.tab === 'categorias',
+      estacion: s.estacion, tarifas,
+      faltanTarifas: faltan.length > 0,
+      faltanTxt: est.nombre + ' no tiene tarifa para las categorías ' + faltan.join(', ') + ': esos vehículos no se podrían cobrar.',
+      historial: s.historial, sinHistorial: s.historial.length === 0,
+      editando: !!dlg,
+      dlg: dlg ? {
+        ...dlg,
+        titulo: (dlg.nueva ? 'Definir tarifa · categoría ' : 'Editar tarifa · categoría ') + dlg.roman,
+        subtitulo: 'Estación ' + est.nombre + '. El cambio queda en el historial.',
+        montoBorde: dlg.campo === 'monto' ? 'var(--error)' : 'var(--texto)',
+        resBorde: dlg.campo === 'res' ? 'var(--error)' : 'var(--borde-fuerte)',
+        desdeBorde: dlg.campo === 'desde' ? 'var(--error)' : 'var(--borde-fuerte)'
+      } : {},
+      guardar, cancelar,
+      teclaDialogo: (e) => {
+        if (e.key === 'Escape') cancelar();
+        if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT') guardar();
+      },
+      onMonto: (e) => this.setState({ dlg: { ...dlg, monto: String(e.target.value || '').replace(/\D/g, '').slice(0, 9), error: '', campo: '' } }),
+      onRes: (e) => this.setState({ dlg: { ...dlg, resolucion: e.target.value.slice(0, 60), error: '', campo: '' } }),
+      onDesde: (e) => this.setState({ dlg: { ...dlg, desde: e.target.value, error: '', campo: '' } }),
+      onEstacion: (e) => this.setState({ estacion: e.target.value, aviso: '' }),
+      buscar: s.buscar, personal, sinPersonal: personal.length === 0, hayPersonal: personal.length > 0,
+      onBuscar: (e) => this.setState({ buscar: e.target.value }),
+      estaciones, categorias: CATS
+    };
+  }
+}
+</script>
+</body>
+</html>

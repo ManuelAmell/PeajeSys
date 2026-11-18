@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PeajeSys · Terminal de cobro</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+.ps-tema{--fondo:#f6f4ef;--superficie:#ffffff;--superficie-2:#ece8e0;--borde:#d9d4ca;--borde-fuerte:#b5afa3;--texto:#1f1d19;--texto-2:#5c574d;--texto-3:#3d3a33;--sobre-acento:#1f1d19;--asfalto:#1f1d19;--acento-texto:#a84f00;--hover:#f1eee7;--correcto:#1e7a46;--correcto-texto:#145232;--correcto-fondo:#e3f1e8;--error:#b42318;--error-fondo:#fbe7e5;--aviso-texto:#7a4a00;--aviso-fondo:#fdf0d2;--peligro:#b42318;color-scheme:light}
+.ps-tema[data-tema="oscuro"]{--fondo:#121110;--superficie:#1e1c19;--superficie-2:#2a2723;--borde:#3a3631;--borde-fuerte:#5e584f;--texto:#f3f0ea;--texto-2:#b8b1a5;--texto-3:#d4cec3;--asfalto:#0a0908;--acento-texto:#ffb15c;--hover:#2a2723;--correcto:#5cc08a;--correcto-texto:#8fddb0;--correcto-fondo:#15301f;--error:#ff8a7a;--error-fondo:#3a1714;--aviso-texto:#ffc870;--aviso-fondo:#3a2b0a;color-scheme:dark}
+.ps-oscuro:hover:not(:disabled){background:rgba(255,255,255,0.14) !important}
+.ps-tema[data-tema="oscuro"] .ps-silueta{background:#ebe6dc;border-radius:6px;box-sizing:border-box;padding:3px}
+body{margin:0}
+a{color:var(--acento-texto)}a:hover{color:var(--texto)}
+label[for]{cursor:pointer}
+button{cursor:pointer;font-family:'Barlow',system-ui,sans-serif;transition:background-color 120ms}
+button:disabled{cursor:not-allowed}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--texto);outline-offset:2px}
+.ps-primario:hover:not(:disabled){background:#E5A800 !important}
+.ps-primario:active:not(:disabled){background:#CC9600 !important}
+.ps-secundario:hover:not(:disabled){background:var(--hover) !important}
+
+.ps-opcion:hover:not(:disabled){border-color:var(--texto) !important}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div class="ps-tema" data-tema="{{tema}}" style="position: relative; min-height: 100vh; box-sizing: border-box; background: var(--fondo); color: var(--texto); font-family: 'Barlow', system-ui, sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+
+<header style="background: var(--asfalto); color: #ffffff; padding: 14px clamp(16px, 3vw, 32px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px 32px">
+<img src="/_blob/57e50eaf28f8047c226a70b55cec93e3" alt="PeajeSys" width="150" height="40" style="width: 150px; height: 40px; object-fit: contain; object-position: left center">
+<dl style="margin: 0; display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 16px">
+<div style="display: flex; flex-direction: column"><dt style="color: #C9C3B7; font-size: 14px">Estación</dt><dd style="margin: 0; font-weight: 600">Gambote · {{carrilTxt}}</dd></div>
+<div style="display: flex; flex-direction: column"><dt style="color: #C9C3B7; font-size: 14px">Turno</dt><dd style="margin: 0; font-weight: 600">9 · 06/10/2026 · diurno</dd></div>
+<div style="display: flex; flex-direction: column"><dt style="color: #C9C3B7; font-size: 14px">Operadora</dt><dd style="margin: 0; font-weight: 600">María Fernanda López Martínez</dd></div>
+</dl>
+<div style="display: flex; align-items: center; gap: 14px">
+<sc-if value="{{cerrado}}" hint-placeholder-val="{{false}}">
+<span style="padding: 5px 10px; border-radius: 4px; background: var(--superficie-2); color: var(--texto-3); font-size: 15px; font-weight: 700">CERRADO</span>
+</sc-if>
+<sc-if value="{{abierto}}" hint-placeholder-val="{{true}}">
+<span style="padding: 5px 10px; border-radius: 4px; background: var(--correcto-fondo); color: var(--correcto); font-size: 15px; font-weight: 700">ABIERTO</span>
+</sc-if>
+<button type="button" class="ps-oscuro" onClick="{{alternarTema}}" style="height: 44px; padding: 0 14px; border: 2px solid #ffffff; border-radius: 6px; background: transparent; color: #ffffff; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>{{temaTxt}}</button>
+<button type="button" class="ps-oscuro" onClick="{{abrirCierre}}" disabled="{{cerrado}}" style="height: 44px; padding: 0 18px; border: 2px solid #ffffff; border-radius: 6px; background: transparent; color: #ffffff; font-size: 16px; font-weight: 600">Cerrar turno</button>
+</div>
+</header>
+<div aria-hidden="true" style="height: 8px; background: repeating-linear-gradient(135deg, #FCBD17 0 16px, #1f1d19 16px 32px)"></div>
+
+<sc-if value="{{datosCargando}}" hint-placeholder-val="{{false}}">
+<main style="flex: 1; padding: 24px 32px 32px; display: flex; justify-content: center; align-items: flex-start">
+<div role="status" style="width: 100%; max-width: 640px; box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<strong style="font-size: 24px">Cargando el turno y las tarifas vigentes…</strong>
+<div aria-hidden="true" style="height: 10px; border-radius: 2px; background: repeating-linear-gradient(135deg, #FCBD17 0 12px, #1f1d19 12px 24px)"></div>
+<span style="font-size: 17px; color: var(--texto-2)">El cobro se habilita cuando lleguen los datos del servidor.</span>
+</div>
+</main>
+</sc-if>
+<sc-if value="{{datosError}}" hint-placeholder-val="{{false}}">
+<main style="flex: 1; padding: 24px 32px 32px; display: flex; justify-content: center; align-items: flex-start">
+<div role="alert" style="width: 100%; max-width: 640px; box-sizing: border-box; background: var(--superficie); border: 2px solid var(--error); border-radius: 10px; padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<strong style="font-size: 24px; color: var(--error)">No se pudo cargar el turno</strong>
+<span style="font-size: 17px; color: var(--texto-3)">El servidor no respondió, así que no se puede cobrar todavía. Revisa la conexión y vuelve a intentarlo; si sigue fallando, avisa al supervisor.</span>
+<button type="button" class="ps-secundario" onClick="{{reintentar}}" style="align-self: flex-start; height: 48px; padding: 0 20px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">Reintentar</button>
+</div>
+</main>
+</sc-if>
+<sc-if value="{{datosNormal}}" hint-placeholder-val="{{true}}">
+<main style="flex: 1; padding: 24px clamp(12px, 3vw, 32px) 32px; display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<section aria-labelledby="titulo-paso" style="flex: 999 1 620px; min-width: 0; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: clamp(16px, 3vw, 28px); display: flex; flex-direction: column; gap: 24px">
+<h1 id="titulo-paso" style="margin: 0; font-size: 28px; font-weight: 700">Registrar paso</h1>
+
+<sc-if value="{{aviso}}" hint-placeholder-val="{{false}}">
+<div role="status" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 14px 18px; border-radius: 8px; background: var(--correcto-fondo); border: 2px solid var(--correcto)">
+<div style="display: flex; flex-direction: column; gap: 2px"><strong style="font-size: 18px; color: var(--correcto-texto)">Ticket {{aviso.ticket}} emitido</strong><span style="font-size: 16px; color: var(--texto)">{{aviso.texto}}</span></div>
+<button type="button" class="ps-secundario" onClick="{{cerrarAviso}}" style="height: 44px; padding: 0 16px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 16px; font-weight: 600">Siguiente vehículo</button>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="op-placa" style="font-size: 16px; font-weight: 600">Placa</label>
+<input id="op-placa" value="{{placa}}" onChange="{{onPlaca}}" maxlength="6" autocomplete="off" spellcheck="false" placeholder="ABC123" aria-describedby="op-placa-ayuda" style="height: 76px; width: 100%; max-width: 360px; padding: 0 20px; border: 3px solid var(--texto); border-radius: 6px; background: var(--superficie); font: 700 42px 'Barlow', sans-serif; letter-spacing: 0.12em; color: var(--texto); text-transform: uppercase; box-sizing: border-box">
+<span id="op-placa-ayuda" style="font-size: 16px; font-weight: 500; color: {{placaAyudaColor}}">{{placaAyuda}}</span>
+</div>
+
+<fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 10px">
+<legend style="padding: 0; margin-bottom: 10px; font-size: 16px; font-weight: 600">Categoría · tarifa vigente Res. MinTransporte 0045/2026</legend>
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px">
+<sc-for list="{{cats}}" as="c" hint-placeholder-count="7">
+<sc-if value="{{c.selected}}" hint-placeholder-val="{{false}}">
+<button type="button" aria-pressed="true" onClick="{{c.pick}}" style="min-height: 168px; padding: 12px; border: 3px solid var(--texto); border-radius: 8px; background: #FCBD17; color: var(--sobre-acento); text-align: left; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; justify-content: space-between; align-items: center; width: 100%"><strong style="font-size: 20px">{{c.roman}}</strong><kbd style="font: 600 14px 'Barlow', sans-serif; background: #1f1d19; color: #FCBD17; border-radius: 4px; padding: 2px 8px">{{c.n}}</kbd></span>
+<img class="ps-silueta" src="{{c.img}}" alt="" width="144" height="52" style="width: 100%; height: 52px; object-fit: contain">
+<span style="font-size: 15px; line-height: 1.25">{{c.desc}}</span>
+<strong style="font-size: 22px; margin-top: auto">{{c.tarifaTxt}}</strong>
+</button>
+</sc-if>
+<sc-if value="{{c.unselected}}" hint-placeholder-val="{{true}}">
+<button type="button" aria-pressed="false" class="ps-opcion" onClick="{{c.pick}}" style="min-height: 168px; padding: 12px; border: 2px solid var(--borde); border-radius: 8px; background: var(--superficie); color: var(--texto); text-align: left; display: flex; flex-direction: column; gap: 6px">
+<span style="display: flex; justify-content: space-between; align-items: center; width: 100%"><strong style="font-size: 20px">{{c.roman}}</strong><kbd style="font: 600 14px 'Barlow', sans-serif; background: var(--superficie-2); color: var(--texto); border-radius: 4px; padding: 2px 8px">{{c.n}}</kbd></span>
+<img class="ps-silueta" src="{{c.img}}" alt="" width="144" height="52" style="width: 100%; height: 52px; object-fit: contain">
+<span style="font-size: 15px; line-height: 1.25; color: var(--texto-3)">{{c.desc}}</span>
+<strong style="font-size: 22px; margin-top: auto">{{c.tarifaTxt}}</strong>
+</button>
+</sc-if>
+</sc-for>
+</div>
+<sc-if value="{{catAviso}}" hint-placeholder-val="{{false}}">
+<p role="alert" style="margin: 0; padding: 10px 14px; border-radius: 6px; background: var(--aviso-fondo); color: var(--aviso-texto); font-size: 16px; font-weight: 600">{{catAviso}}</p>
+</sc-if>
+</fieldset>
+
+<fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 10px">
+<legend style="padding: 0; margin-bottom: 10px; font-size: 16px; font-weight: 600">Método de pago</legend>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px">
+<sc-for list="{{metodos}}" as="m" hint-placeholder-count="3">
+<sc-if value="{{m.selected}}" hint-placeholder-val="{{false}}">
+<button type="button" aria-pressed="true" onClick="{{m.pick}}" style="height: 60px; padding: 0 16px; border: 3px solid var(--texto); border-radius: 6px; background: #FCBD17; color: var(--sobre-acento); font-size: 19px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 8px">{{m.label}}<kbd style="font: 600 14px 'Barlow', sans-serif; background: #1f1d19; color: #FCBD17; border-radius: 4px; padding: 2px 8px">{{m.key}}</kbd></button>
+</sc-if>
+<sc-if value="{{m.unselected}}" hint-placeholder-val="{{true}}">
+<button type="button" aria-pressed="false" class="ps-opcion" onClick="{{m.pick}}" disabled="{{m.disabled}}" style="height: 60px; padding: 0 16px; border: 2px solid {{m.borde}}; border-radius: 6px; background: {{m.fondo}}; color: {{m.color}}; font-size: 19px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 8px">{{m.label}}<kbd style="font: 600 14px 'Barlow', sans-serif; background: var(--superficie-2); color: var(--texto); border-radius: 4px; padding: 2px 8px">{{m.key}}</kbd></button>
+</sc-if>
+</sc-for>
+</div>
+<sc-if value="{{tagNoDisponible}}" hint-placeholder-val="{{true}}">
+<p style="margin: 0; font-size: 15px; color: var(--texto-2)">Telepeaje no disponible: este carril es manual. Los pasos con TAG van por los carriles 3 y 4.</p>
+</sc-if>
+</fieldset>
+
+<sc-if value="{{esEfectivo}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: stretch">
+<div style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<label for="op-recibido" style="font-size: 16px; font-weight: 600">Valor recibido</label>
+<input id="op-recibido" value="{{recibido}}" onChange="{{onRecibido}}" inputmode="numeric" autocomplete="off" placeholder="0" style="height: 60px; width: 100%; padding: 0 16px; border: 2px solid var(--borde-fuerte); border-radius: 6px; background: var(--superficie); font: 700 30px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{rapidos}}" as="r" hint-placeholder-count="4">
+<button type="button" class="ps-secundario" onClick="{{r.pick}}" style="height: 44px; padding: 0 14px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 16px; font-weight: 600">{{r.label}}</button>
+</sc-for>
+</div>
+</div>
+<div aria-live="polite" style="flex: 1 1 240px; min-height: 140px; box-sizing: border-box; border-radius: 8px; padding: 18px 20px; background: {{cambioFondo}}; color: {{cambioColor}}; display: flex; flex-direction: column; justify-content: center; gap: 4px">
+<span style="font-size: 16px; font-weight: 600">{{cambioTitulo}}</span>
+<strong style="font-size: 44px; line-height: 1.05">{{cambioTxt}}</strong>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{esTag}}" hint-placeholder-val="{{false}}">
+<div aria-live="polite" style="display: flex; flex-wrap: wrap; gap: 12px 32px; padding: 18px 20px; border-radius: 8px; border: 2px solid {{tagBorde}}; background: var(--superficie)">
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; color: var(--texto-2)">TAG</span><strong style="font-size: 20px">{{tagSerial}}</strong></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; color: var(--texto-2)">Saldo actual</span><strong style="font-size: 20px">{{saldoTxt}}</strong></div>
+<div style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; color: var(--texto-2)">Saldo después del cobro</span><strong style="font-size: 20px">{{saldoDespuesTxt}}</strong></div>
+</div>
+</sc-if>
+
+<sc-if value="{{esExento}}" hint-placeholder-val="{{false}}">
+<p style="margin: 0; padding: 16px 18px; border-radius: 8px; border: 2px dashed var(--texto-2); font-size: 17px">El paso se registra con estado EXENTO y monto $ 0, y queda en la auditoría de transacciones.</p>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<button type="button" class="ps-primario" onClick="{{cobrar}}" disabled="{{noPuedeCobrar}}" aria-describedby="op-bloqueo" style="min-height: 76px; padding: 12px clamp(16px, 3vw, 28px); border: 3px solid {{cobrarBorde}}; border-radius: 6px; background: {{cobrarFondo}}; color: {{cobrarColor}}; font-size: clamp(20px, 5vw, 26px); text-align: left; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 16px">{{cobrarTxt}}<kbd style="font: 600 16px 'Barlow', sans-serif; background: {{kbdFondo}}; color: {{kbdColor}}; border-radius: 4px; padding: 4px 10px">Enter</kbd></button>
+<span id="op-bloqueo" role="status" style="font-size: 16px; font-weight: 600; color: {{bloqueoColor}}">{{bloqueo}}</span>
+<span style="font-size: 14px; color: var(--texto-2)">Los atajos de teclado (1 a 7, F1 a F3, Enter) se activan en la versión en código.</span>
+</div>
+</section>
+
+<aside aria-labelledby="titulo-turno" style="flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+<section style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+<h2 id="titulo-turno" style="margin: 0; font-size: 22px; font-weight: 700">Caja del turno</h2>
+<div style="display: flex; justify-content: space-between; font-size: 17px"><span style="color: var(--texto-2)">Fondo inicial</span><span>$ 100.000</span></div>
+<div style="display: flex; justify-content: space-between; font-size: 17px"><span style="color: var(--texto-2)">Recaudado en efectivo</span><span>{{recaudadoTxt}}</span></div>
+<div style="display: flex; justify-content: space-between; align-items: baseline; padding-top: 12px; border-top: 2px solid var(--texto)"><span style="font-size: 17px; font-weight: 600">Efectivo esperado en caja</span><strong style="font-size: 28px; white-space: nowrap">{{esperadoTxt}}</strong></div>
+<div style="display: flex; justify-content: space-between; font-size: 17px"><span style="color: var(--texto-2)">Pasos registrados</span><span>{{pasosN}}</span></div>
+</section>
+
+<section style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 22px; font-weight: 700">Últimos pasos</h2>
+<sc-if value="{{sinPasos}}" hint-placeholder-val="{{false}}">
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Aún no hay pasos en este turno. Cuando registres el primer vehículo aparecerá aquí con su ticket.</p>
+</sc-if>
+<ol style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+<sc-for list="{{pasos}}" as="p" hint-placeholder-count="2">
+<li style="padding: 12px 0; border-bottom: 1px solid var(--superficie-2); display: flex; flex-direction: column; gap: 2px">
+<span style="display: flex; justify-content: space-between; gap: 12px"><strong style="font-size: 20px; letter-spacing: 0.06em">{{p.placa}}</strong><strong style="font-size: 20px">{{p.montoTxt}}</strong></span>
+<span style="font-size: 15px; color: var(--texto-2)">{{p.hora}} · Cat. {{p.cat}} · {{p.metodo}} · {{p.ticket}}</span>
+</li>
+</sc-for>
+</ol>
+</section>
+</aside>
+</main>
+</sc-if>
+
+<sc-if value="{{cierre}}" hint-placeholder-val="{{false}}">
+<div style="position: fixed; inset: 0; background: rgba(31,29,25,0.6); display: flex; align-items: flex-start; justify-content: center; padding: 96px 16px 16px; box-sizing: border-box">
+<div role="dialog" aria-modal="true" aria-labelledby="titulo-cierre" onKeyDown="{{teclaCierre}}" style="width: 100%; max-width: 520px; background: var(--superficie); border-radius: 10px; border: 3px solid var(--texto); padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 18px">
+<h2 id="titulo-cierre" style="margin: 0; font-size: 26px; font-weight: 700">Cerrar turno 9</h2>
+<div style="display: flex; justify-content: space-between; font-size: 17px"><span style="color: var(--texto-2)">Recaudado en efectivo según el sistema</span><strong>{{recaudadoTxt}}</strong></div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="op-declarado" style="font-size: 16px; font-weight: 600">Efectivo recaudado que entregas (sin el fondo inicial)</label>
+<input id="op-declarado" value="{{declarado}}" onChange="{{onDeclarado}}" inputmode="numeric" autocomplete="off" placeholder="0" style="height: 56px; padding: 0 16px; border: 2px solid var(--texto); border-radius: 6px; font: 700 26px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+</div>
+<div aria-live="polite" style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 8px; background: {{diagFondo}}">
+<span style="font-size: 17px; font-weight: 600; color: {{diagColor}}">{{diagTxt}}</span>
+<strong style="font-size: 24px; color: {{diagColor}}">{{difTxt}}</strong>
+</div>
+<div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px">
+<button type="button" class="ps-secundario" onClick="{{cancelarCierre}}" style="height: 52px; padding: 0 20px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">Cancelar</button>
+<button type="button" class="ps-primario" onClick="{{confirmarCierre}}" disabled="{{sinDeclarado}}" style="height: 52px; padding: 0 20px; border: 3px solid {{confBorde}}; border-radius: 6px; background: {{confFondo}}; color: {{confColor}}; font-size: 17px; font-weight: 700">Confirmar cierre</button>
+</div>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["sistema","claro","oscuro"],"default":"sistema","section":"Vista"},"carrilMixto":{"editor":"boolean","default":false,"section":"Vista"},"estadoDatos":{"editor":"enum","options":["normal","cargando","error"],"default":"normal","section":"Vista"},"$preview":{"width":1440,"height":1000}}'>
+const CATS = [
+  { code: 'CAT_I', roman: 'I', desc: 'Automóviles, camperos y camionetas', tarifa: 10500, img: '/_blob/1333bc12073e3f88924122dca21b7970' },
+  { code: 'CAT_II', roman: 'II', desc: 'Buses y busetas', tarifa: 12800, img: '/_blob/15df5bbddfd93b192ee4cd61f4fcd198' },
+  { code: 'CAT_III', roman: 'III', desc: 'Camiones de 2 ejes pequeños', tarifa: 15300, img: '/_blob/4f7fff75a04aa8b7599acb78f61cc3bd' },
+  { code: 'CAT_IV', roman: 'IV', desc: 'Camiones de 2 ejes grandes (C2)', tarifa: 22000, img: '/_blob/9d055fe0edf8ff15b9245956bb1bea9f' },
+  { code: 'CAT_V', roman: 'V', desc: 'Camiones de 3 y 4 ejes (C3-C4)', tarifa: 31500, img: '/_blob/046e22c18ee75cc3906562ca798baf17' },
+  { code: 'CAT_VI', roman: 'VI', desc: 'Camiones de 5 ejes (C5)', tarifa: 42000, img: '/_blob/03f1b280afbea1f0e42b17d645c0cba8' },
+  { code: 'CAT_VII', roman: 'VII', desc: 'Camiones de 6 o más ejes (C6)', tarifa: 48500, img: '/_blob/ce956fcfea7364ecb7a8b59d85b2ab6d' }
+];
+const VEH = {
+  HKL123: { cat: 'CAT_I', tag: 'TAG-COL-9900112233', saldo: 150000, estado: 'ACTIVA' },
+  UYT890: { cat: 'CAT_I', tag: 'TAG-COL-9900112234', saldo: 45000, estado: 'ACTIVA' },
+  KJN456: { cat: 'CAT_II', tag: 'TAG-COL-9900112235', saldo: 300000, estado: 'ACTIVA' },
+  QWE321: { cat: 'CAT_III', tag: 'TAG-COL-9900112236', saldo: 8000, estado: 'ACTIVA' },
+  RTY654: { cat: 'CAT_IV', tag: 'TAG-COL-9900112237', saldo: 500000, estado: 'ACTIVA' },
+  ZXC987: { cat: 'CAT_V', tag: 'TAG-COL-9900112238', saldo: 0, estado: 'SUSPENDIDA' },
+  BNM741: { cat: 'CAT_VI', tag: 'TAG-COL-9900112239', saldo: 250000, estado: 'ACTIVA' },
+  OPL852: { cat: 'CAT_VII', tag: 'TAG-COL-9900112240', saldo: 120000, estado: 'ACTIVA' },
+  ASD159: { cat: 'CAT_I', tag: 'TAG-COL-9900112241', saldo: 95000, estado: 'ACTIVA' },
+  GHJ357: { cat: 'CAT_I', tag: 'TAG-COL-9900112242', saldo: 32000, estado: 'ACTIVA' }
+};
+function fmt(n) {
+  return '$ ' + String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function digitos(v) {
+  return String(v || '').replace(/\D/g, '').slice(0, 9);
+}
+function dos(n) {
+  return String(n).padStart(2, '0');
+}
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      placa: '', cat: 'CAT_I', metodo: 'EFECTIVO', recibido: '',
+      pasos: [{ ticket: 'TCK-20261006-00011', hora: '14:30', placa: 'GHJ357', cat: 'I', metodo: 'EFECTIVO', monto: 10500 }],
+      recaudado: 10500, seq: 20, aviso: null, saldos: {},
+      cierre: false, declarado: '', cerrado: false
+    };
+  }
+  componentDidUpdate(prev) {
+    if (prev.estadoDatos !== this.props.estadoDatos && this.state.forzarNormal) this.setState({ forzarNormal: false });
+  }
+  renderVals() {
+    const s = this.state;
+    const prefiereOscuro = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const temaBase = this.props.tema ?? "sistema";
+    const tema = s.tema || (temaBase === "sistema" ? (prefiereOscuro ? "oscuro" : "claro") : temaBase);
+    const temaTxt = tema === "oscuro" ? "Usar modo claro" : "Usar modo oscuro";
+    const alternarTema = () => this.setState({ tema: tema === "oscuro" ? "claro" : "oscuro" });
+    const estadoDatos = s.forzarNormal ? 'normal' : (this.props.estadoDatos ?? 'normal');
+    const mixto = this.props.carrilMixto ?? false;
+    const metodo = (!mixto && s.metodo === 'TELEPEAJE') ? 'EFECTIVO' : s.metodo;
+    const placa = s.placa;
+    const placaCompleta = /^[A-Z]{3}[0-9]{3}$/.test(placa);
+    const v = placaCompleta ? VEH[placa] : null;
+    const cat = CATS.find((c) => c.code === s.cat) || CATS[0];
+    const tarifa = cat.tarifa;
+    const saldo = v ? (s.saldos[placa] ?? v.saldo) : 0;
+    const rec = parseInt(digitos(s.recibido), 10) || 0;
+
+    let placaAyuda = 'Tres letras y tres números. Si el vehículo está registrado, la categoría se elige sola.';
+    let placaAyudaColor = 'var(--texto-2)';
+    if (placa.length === 6 && !placaCompleta) { placaAyuda = 'Formato no válido: deben ser tres letras y tres números.'; placaAyudaColor = 'var(--error)'; }
+    else if (v) { placaAyuda = 'Vehículo registrado · categoría ' + (CATS.find((c) => c.code === v.cat) || CATS[0]).roman + ' · TAG ' + v.estado; placaAyudaColor = 'var(--correcto-texto)'; }
+    else if (placaCompleta) { placaAyuda = 'Vehículo no registrado: elige la categoría por sus ejes.'; }
+
+    let metodoOk = false;
+    let metodoMsg = '';
+    if (metodo === 'EFECTIVO') {
+      if (!s.recibido) metodoMsg = 'Ingresa el valor recibido.';
+      else if (rec < tarifa) metodoMsg = 'Faltan ' + fmt(tarifa - rec) + ' para cubrir el peaje.';
+      else metodoOk = true;
+    } else if (metodo === 'TELEPEAJE') {
+      if (!v) metodoMsg = 'La placa no tiene cuenta de telepeaje registrada.';
+      else if (v.estado !== 'ACTIVA') metodoMsg = 'La cuenta ' + v.tag + ' está ' + v.estado + ': cobra en efectivo.';
+      else if (saldo < tarifa) metodoMsg = 'Saldo insuficiente: la cuenta tiene ' + fmt(saldo) + ' y el peaje cuesta ' + fmt(tarifa) + '.';
+      else metodoOk = true;
+    } else {
+      metodoOk = true;
+    }
+
+    let bloqueo = '';
+    if (s.cerrado) bloqueo = 'El turno está cerrado: ya no se pueden registrar pasos.';
+    else if (!placa) bloqueo = 'Escribe la placa del vehículo.';
+    else if (!placaCompleta) bloqueo = 'La placa debe tener tres letras y tres números.';
+    else if (!metodoOk) bloqueo = metodoMsg;
+    const puede = !bloqueo;
+    const montoCobro = metodo === 'EXENTO' ? 0 : tarifa;
+
+    const catAviso = (v && v.cat !== cat.code && !s.cerrado)
+      ? 'La categoría registrada de ' + placa + ' es ' + (CATS.find((c) => c.code === v.cat) || CATS[0]).roman + '. Revisa los ejes antes de cobrar.'
+      : '';
+
+    const cats = CATS.map((c, i) => ({
+      ...c, n: i + 1, tarifaTxt: fmt(c.tarifa),
+      selected: c.code === cat.code, unselected: c.code !== cat.code,
+      pick: () => this.setState({ cat: c.code, aviso: null })
+    }));
+    const metodos = [
+      { id: 'EFECTIVO', label: 'Efectivo', key: 'F1' },
+      { id: 'TELEPEAJE', label: 'Telepeaje', key: 'F2' },
+      { id: 'EXENTO', label: 'Exento', key: 'F3' }
+    ].map((m) => {
+      const disabled = m.id === 'TELEPEAJE' && !mixto;
+      return {
+        ...m, selected: metodo === m.id, unselected: metodo !== m.id, disabled,
+        borde: disabled ? 'var(--borde)' : 'var(--borde-fuerte)', fondo: disabled ? 'var(--superficie-2)' : 'var(--superficie)', color: disabled ? 'var(--texto-2)' : 'var(--texto)',
+        pick: () => this.setState({ metodo: m.id, aviso: null })
+      };
+    });
+    const rapidos = [
+      { label: 'Exacto', val: tarifa }, { label: '$ 20.000', val: 20000 },
+      { label: '$ 50.000', val: 50000 }, { label: '$ 100.000', val: 100000 }
+    ].map((r) => ({ ...r, pick: () => this.setState({ recibido: String(r.val) }) }));
+
+    let cambioTitulo = 'Cambio a entregar';
+    let cambioTxt = '$ 0';
+    let cambioFondo = 'var(--superficie-2)';
+    if (!s.recibido) { cambioTitulo = 'Cambio a entregar'; cambioTxt = 'Pendiente'; }
+    else if (rec < tarifa) { cambioTitulo = 'Falta por cobrar'; cambioTxt = fmt(tarifa - rec); cambioFondo = 'var(--error-fondo)'; }
+    else { cambioTxt = fmt(rec - tarifa); cambioFondo = '#EC7502'; }
+
+    const tagOk = metodo === 'TELEPEAJE' && metodoOk;
+
+    const cobrar = () => {
+      if (!puede) return;
+      const ticket = 'TCK-20261006-' + String(s.seq).padStart(5, '0');
+      const d = new Date();
+      const hora = dos(d.getHours()) + ':' + dos(d.getMinutes());
+      const paso = { ticket, hora, placa, cat: cat.roman, metodo, monto: montoCobro };
+      let texto = placa + ' · Cat. ' + cat.roman + ' · ' + metodo + ' · ' + fmt(montoCobro);
+      if (metodo === 'EFECTIVO') texto += ' · cambio ' + fmt(rec - tarifa);
+      if (metodo === 'TELEPEAJE') texto += ' · saldo restante ' + fmt(saldo - tarifa);
+      this.setState({
+        pasos: [paso].concat(s.pasos),
+        recaudado: s.recaudado + (metodo === 'EFECTIVO' ? tarifa : 0),
+        saldos: metodo === 'TELEPEAJE' ? { ...s.saldos, [placa]: saldo - tarifa } : s.saldos,
+        seq: s.seq + 1, aviso: { ticket, texto }, placa: '', recibido: '', cat: 'CAT_I'
+      });
+    };
+
+    const decl = parseInt(digitos(s.declarado), 10) || 0;
+    const dif = decl - s.recaudado;
+    let diagTxt = 'Escribe el efectivo que entregas';
+    let diagColor = 'var(--texto-3)';
+    let diagFondo = 'var(--superficie-2)';
+    if (s.declarado) {
+      if (dif === 0) { diagTxt = 'CUADRADO'; diagColor = 'var(--correcto-texto)'; diagFondo = 'var(--correcto-fondo)'; }
+      else if (dif > 0) { diagTxt = 'SOBRANTE (+)'; diagColor = 'var(--aviso-texto)'; diagFondo = 'var(--aviso-fondo)'; }
+      else { diagTxt = 'FALTANTE (−)'; diagColor = 'var(--error)'; diagFondo = 'var(--error-fondo)'; }
+    }
+    const difTxt = s.declarado ? (dif > 0 ? '+ ' : dif < 0 ? '− ' : '') + fmt(dif) : '';
+
+    return {
+      tema, temaTxt, alternarTema,
+      datosNormal: estadoDatos === 'normal', datosCargando: estadoDatos === 'cargando', datosError: estadoDatos === 'error',
+      reintentar: () => this.setState({ forzarNormal: true }),
+      carrilTxt: mixto ? 'Carril 4 · mixto (vista de diseño)' : 'Carril 2 · manual',
+      cerrado: s.cerrado, abierto: !s.cerrado,
+      aviso: s.aviso,
+      placa, placaAyuda, placaAyudaColor,
+      cats, catAviso, metodos, tagNoDisponible: !mixto,
+      esEfectivo: metodo === 'EFECTIVO', esTag: metodo === 'TELEPEAJE', esExento: metodo === 'EXENTO',
+      recibido: s.recibido ? String(rec).replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '', rapidos, cambioTitulo, cambioTxt, cambioFondo, cambioColor: cambioFondo === '#EC7502' ? 'var(--sobre-acento)' : 'var(--texto)',
+      tagSerial: v ? v.tag : 'Sin cuenta', saldoTxt: v ? fmt(saldo) : 'No aplica',
+      saldoDespuesTxt: tagOk ? fmt(saldo - tarifa) : 'No aplica',
+      tagBorde: tagOk ? 'var(--correcto)' : 'var(--error)',
+      noPuedeCobrar: !puede,
+      cobrarTxt: s.cerrado ? 'Turno cerrado' : (metodo === 'EXENTO' ? 'Registrar paso exento' : 'Cobrar ' + fmt(montoCobro) + ' y emitir ticket'),
+      cobrarFondo: puede ? '#FCBD17' : 'var(--superficie-2)', cobrarColor: puede ? 'var(--sobre-acento)' : 'var(--texto-2)', cobrarBorde: puede ? 'var(--texto)' : 'var(--borde-fuerte)',
+      bloqueo: (s.aviso && !placa) ? 'Ticket ' + s.aviso.ticket + ' emitido. Escribe la placa del siguiente vehículo.' : (puede ? 'Todo listo para cobrar.' : bloqueo),
+      bloqueoColor: (puede || (s.aviso && !placa)) ? 'var(--correcto-texto)' : (placa ? 'var(--error)' : 'var(--texto-2)'),
+      kbdFondo: puede ? '#1f1d19' : 'var(--borde)', kbdColor: puede ? '#FCBD17' : 'var(--texto-2)',
+      confFondo: s.declarado ? '#FCBD17' : 'var(--superficie-2)', confColor: s.declarado ? 'var(--sobre-acento)' : 'var(--texto-2)', confBorde: s.declarado ? 'var(--texto)' : 'var(--borde-fuerte)',
+      recaudadoTxt: fmt(s.recaudado), esperadoTxt: fmt(100000 + s.recaudado),
+      pasosN: String(s.pasos.length), sinPasos: s.pasos.length === 0,
+      pasos: s.pasos.map((p) => ({ ...p, montoTxt: fmt(p.monto) })),
+      cierre: s.cierre, declarado: s.declarado, sinDeclarado: !s.declarado,
+      diagTxt, diagColor, diagFondo, difTxt,
+      onPlaca: (e) => {
+        const val = String(e.target.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+        const reg = /^[A-Z]{3}[0-9]{3}$/.test(val) ? VEH[val] : null;
+        this.setState(reg ? { placa: val, cat: reg.cat, aviso: null } : { placa: val, aviso: null });
+      },
+      onRecibido: (e) => this.setState({ recibido: digitos(e.target.value) }),
+      cobrar,
+      cerrarAviso: () => this.setState({ aviso: null }),
+      abrirCierre: () => this.setState({ cierre: true }),
+      cancelarCierre: () => this.setState({ cierre: false, declarado: '' }),
+      onDeclarado: (e) => this.setState({ declarado: digitos(e.target.value) }),
+      teclaCierre: (e) => { if (e.key === 'Escape') this.setState({ cierre: false, declarado: '' }); },
+      confirmarCierre: () => { if (s.declarado) this.setState({ cerrado: true, cierre: false, aviso: null }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

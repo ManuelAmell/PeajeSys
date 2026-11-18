@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PeajeSys · Supervisión</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+.ps-tema{--fondo:#f6f4ef;--superficie:#ffffff;--superficie-2:#ece8e0;--borde:#d9d4ca;--borde-fuerte:#b5afa3;--texto:#1f1d19;--texto-2:#5c574d;--texto-3:#3d3a33;--sobre-acento:#1f1d19;--asfalto:#1f1d19;--acento-texto:#a84f00;--hover:#f1eee7;--correcto:#1e7a46;--correcto-texto:#145232;--correcto-fondo:#e3f1e8;--error:#b42318;--error-fondo:#fbe7e5;--aviso-texto:#7a4a00;--aviso-fondo:#fdf0d2;--peligro:#b42318;color-scheme:light}
+.ps-tema[data-tema="oscuro"]{--fondo:#121110;--superficie:#1e1c19;--superficie-2:#2a2723;--borde:#3a3631;--borde-fuerte:#5e584f;--texto:#f3f0ea;--texto-2:#b8b1a5;--texto-3:#d4cec3;--asfalto:#0a0908;--acento-texto:#ffb15c;--hover:#2a2723;--correcto:#5cc08a;--correcto-texto:#8fddb0;--correcto-fondo:#15301f;--error:#ff8a7a;--error-fondo:#3a1714;--aviso-texto:#ffc870;--aviso-fondo:#3a2b0a;color-scheme:dark}
+.ps-oscuro:hover:not(:disabled){background:rgba(255,255,255,0.14) !important}
+.ps-tema[data-tema="oscuro"] .ps-silueta{background:#ebe6dc;border-radius:6px;box-sizing:border-box;padding:3px}
+body{margin:0}
+a{color:#ffffff}a:hover{color:#FCBD17}
+label[for]{cursor:pointer}
+button,select{cursor:pointer;font-family:'Barlow',system-ui,sans-serif;transition:background-color 120ms}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #FCBD17;outline-offset:2px}
+main button:focus-visible,main input:focus-visible,main select:focus-visible{outline-color:var(--texto)}
+.ps-tab:hover{background:var(--hover) !important}
+.ps-filtro:hover{border-color:var(--texto) !important}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div class="ps-tema" data-tema="{{tema}}" style="min-height: 100vh; box-sizing: border-box; background: var(--fondo); color: var(--texto); font-family: 'Barlow', system-ui, sans-serif; font-variant-numeric: tabular-nums; display: flex; flex-direction: column">
+
+<header style="background: var(--asfalto); color: #ffffff; padding: 14px clamp(16px, 3vw, 32px); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 32px">
+<div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap">
+<img src="/_blob/57e50eaf28f8047c226a70b55cec93e3" alt="PeajeSys" width="150" height="40" style="width: 150px; height: 40px; object-fit: contain; object-position: left center">
+<span style="font-size: 18px; font-weight: 600">Supervisión · Estación Gambote</span>
+</div>
+<div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap; font-size: 16px">
+<span>Juan David Rodríguez Silva · Supervisor</span>
+<button type="button" class="ps-oscuro" onClick="{{alternarTema}}" style="height: 44px; padding: 0 14px; border: 2px solid #ffffff; border-radius: 6px; background: transparent; color: #ffffff; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>{{temaTxt}}</button>
+<a href="Login.dc.html" style="font-weight: 600">Cerrar sesión</a>
+</div>
+</header>
+<div aria-hidden="true" style="height: 8px; background: repeating-linear-gradient(135deg, #FCBD17 0 16px, #1f1d19 16px 32px)"></div>
+
+<main style="flex: 1; padding: 24px clamp(12px, 3vw, 32px) 40px; display: flex; flex-direction: column; gap: 24px; max-width: 1400px; width: 100%; box-sizing: border-box; margin: 0 auto">
+<nav aria-label="Secciones de supervisión" style="display: flex; flex-wrap: wrap; gap: 8px">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4">
+<sc-if value="{{t.activa}}" hint-placeholder-val="{{false}}">
+<button type="button" aria-pressed="true" onClick="{{t.ir}}" style="height: 48px; padding: 0 18px; border: 3px solid var(--texto); border-radius: 6px; background: #FCBD17; color: var(--sobre-acento); font-size: 17px; font-weight: 700">{{t.label}}</button>
+</sc-if>
+<sc-if value="{{t.inactiva}}" hint-placeholder-val="{{true}}">
+<button type="button" aria-pressed="false" class="ps-tab" onClick="{{t.ir}}" style="height: 48px; padding: 0 18px; border: 2px solid var(--borde); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">{{t.label}}</button>
+</sc-if>
+</sc-for>
+</nav>
+
+<sc-if value="{{datosCargando}}" hint-placeholder-val="{{false}}">
+<div role="status" style="max-width: 640px; box-sizing: border-box; background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<strong style="font-size: 24px">Cargando turnos, recaudo y auditoría…</strong>
+<div aria-hidden="true" style="height: 10px; border-radius: 2px; background: repeating-linear-gradient(135deg, #FCBD17 0 12px, #1f1d19 12px 24px)"></div>
+<span style="font-size: 17px; color: var(--texto-2)">Las cifras aparecen cuando el servidor termine de responder.</span>
+</div>
+</sc-if>
+<sc-if value="{{datosError}}" hint-placeholder-val="{{false}}">
+<div role="alert" style="max-width: 640px; box-sizing: border-box; background: var(--superficie); border: 2px solid var(--error); border-radius: 10px; padding: 32px; display: flex; flex-direction: column; gap: 14px">
+<strong style="font-size: 24px; color: var(--error)">No se pudieron cargar los datos de la estación</strong>
+<span style="font-size: 17px; color: var(--texto-3)">El servidor no respondió. Las cifras que veías antes pueden estar desactualizadas, así que no se muestran.</span>
+<button type="button" onClick="{{reintentar}}" class="ps-tab" style="align-self: flex-start; height: 48px; padding: 0 20px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">Reintentar</button>
+</div>
+</sc-if>
+<sc-if value="{{datosNormal}}" hint-placeholder-val="{{true}}">
+
+<sc-if value="{{verArqueo}}" hint-placeholder-val="{{true}}">
+<section aria-labelledby="t-arqueo" style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-arqueo" style="margin: 0; font-size: 32px; font-weight: 700">Arqueo y conciliación de turnos</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Compara lo que dice cada turno con la suma de sus pasos en efectivo y con lo que entregó el recaudador.</p>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="sp-fecha" style="font-size: 15px; font-weight: 600">Fecha</label>
+<select id="sp-fecha" value="{{fecha}}" onChange="{{onFecha}}" class="ps-filtro" style="height: 44px; min-width: 180px; padding: 0 12px; border: 2px solid var(--borde-fuerte); border-radius: 6px; background: var(--superficie); font-size: 17px; color: var(--texto)">
+<option value="todas">Todas</option>
+<option value="01/10/2026">01/10/2026</option>
+<option value="02/10/2026">02/10/2026</option>
+<option value="06/10/2026">06/10/2026</option>
+</select>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; color: var(--texto-2)">Turnos abiertos</span><strong style="font-size: 36px">{{kAbiertos}}</strong></div>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; color: var(--texto-2)">Con faltante o sobrante</span><strong style="font-size: 36px">{{kDescuadre}}</strong></div>
+<div style="background: #FCBD17; color: var(--sobre-acento); border: 3px solid var(--texto); border-radius: 10px; padding: 16px 18px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 600">Sin conciliar con sus pasos</span><strong style="font-size: 36px">{{kSinConciliar}}</strong></div>
+</div>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 20px 12px; overflow-x: auto">
+<table style="width: 100%; min-width: 1060px; border-collapse: collapse; font-size: 16px">
+<caption style="text-align: left; padding: 12px 0; font-size: 15px; color: var(--texto-2)">Datos del DML del Avance 2. "Pasos en efectivo" es la suma de TRANSACCION_PEAJE de cada turno.</caption>
+<thead>
+<tr style="text-align: left; color: var(--texto-2); font-size: 15px">
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Turno</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Fecha</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Carril</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Recaudador</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600; text-align: right">Según turno</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600; text-align: right">Pasos en efectivo</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600; text-align: right">Declarado</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Arqueo</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Conciliación</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{turnos}}" as="t" hint-placeholder-count="6">
+<tr>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); font-weight: 700">{{t.id}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{t.fecha}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{t.carril}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{t.operador}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right; white-space: nowrap">{{t.recaudadoTxt}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right; white-space: nowrap">{{t.pasosTxt}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right; white-space: nowrap">{{t.declaradoTxt}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)"><span style="padding: 4px 8px; border-radius: 4px; background: {{t.diagFondo}}; color: {{t.diagColor}}; font-size: 14px; font-weight: 700; white-space: nowrap">{{t.diag}}</span></td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)"><span style="font-size: 15px; font-weight: 700; color: {{t.concColor}}; white-space: nowrap">{{t.conc}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{verRecaudo}}" hint-placeholder-val="{{false}}">
+<section aria-labelledby="t-recaudo" style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-recaudo" style="margin: 0; font-size: 32px; font-weight: 700">Recaudo diario</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Vista vw_resumen_diario_estacion · Estación Gambote</p>
+</div>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 16px">
+<span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 18px; height: 18px; border-radius: 3px; background: var(--texto)"></span>Efectivo</span>
+<span style="display: inline-flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 18px; height: 18px; border-radius: 3px; background: #FCBD17; border: 2px solid var(--texto); box-sizing: border-box"></span>Telepeaje</span>
+</div>
+<sc-for list="{{dias}}" as="d" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; font-size: 17px"><strong>{{d.fecha}}</strong><span>{{d.veh}} vehículos · total <strong>{{d.totalTxt}}</strong></span></div>
+<div role="img" aria-label="{{d.aria}}" style="display: flex; height: 36px; width: {{d.ancho}}; min-width: 120px; border: 2px solid var(--texto); border-radius: 4px; overflow: hidden">
+<div style="width: {{d.pctEf}}; background: var(--texto)"></div>
+<div style="flex: 1; background: #FCBD17"></div>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 20px; font-size: 15px; color: var(--texto-2)"><span>Efectivo {{d.efTxt}}</span><span>Telepeaje {{d.tagTxt}}</span></div>
+</div>
+</sc-for>
+<p style="margin: 0; font-size: 15px; color: var(--texto-2)">Se omite un paso con fecha 18/11/2026: el DML lo inserta con NOW() y queda fuera del periodo de prueba (anotado en pendientes).</p>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{verAuditoria}}" hint-placeholder-val="{{false}}">
+<section aria-labelledby="t-auditoria" style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-auditoria" style="margin: 0; font-size: 32px; font-weight: 700">Auditoría de transacciones</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Registro inmutable: el trigger trg_auditoria_inmutable impide editarlo o borrarlo.</p>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="sp-buscar" style="font-size: 15px; font-weight: 600">Buscar ticket o usuario</label>
+<input id="sp-buscar" value="{{buscar}}" onChange="{{onBuscar}}" placeholder="TCK-... o usuario" autocomplete="off" style="height: 44px; width: 240px; padding: 0 12px; border: 2px solid var(--borde-fuerte); border-radius: 6px; background: var(--superficie); font: 500 17px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="sp-tipo" style="font-size: 15px; font-weight: 600">Operación</label>
+<select id="sp-tipo" value="{{tipo}}" onChange="{{onTipo}}" class="ps-filtro" style="height: 44px; min-width: 150px; padding: 0 12px; border: 2px solid var(--borde-fuerte); border-radius: 6px; background: var(--superficie); font-size: 17px; color: var(--texto)">
+<option value="todas">Todas</option>
+<option value="INSERT">INSERT</option>
+<option value="UPDATE">UPDATE</option>
+<option value="VOID">VOID</option>
+</select>
+</div>
+</div>
+</div>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 20px 12px; overflow-x: auto">
+<sc-if value="{{sinEventos}}" hint-placeholder-val="{{false}}">
+<div role="status" style="padding: 32px 8px; display: flex; flex-direction: column; gap: 6px">
+<strong style="font-size: 20px">No hay eventos con ese filtro</strong>
+<span style="font-size: 16px; color: var(--texto-2)">Prueba con otra operación o borra la búsqueda.</span>
+</div>
+</sc-if>
+<sc-if value="{{hayEventos}}" hint-placeholder-val="{{true}}">
+<table style="width: 100%; min-width: 900px; border-collapse: collapse; font-size: 16px">
+<thead>
+<tr style="text-align: left; color: var(--texto-2); font-size: 15px">
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Evento</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Ticket</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Fecha del paso</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Operación</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Usuario</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Motivo</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{eventos}}" as="e" hint-placeholder-count="6">
+<tr>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); font-weight: 700">{{e.id}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); white-space: nowrap">{{e.ticket}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); white-space: nowrap">{{e.fecha}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)"><span style="padding: 3px 8px; border-radius: 4px; border: 2px solid {{e.tipoBorde}}; background: {{e.tipoFondo}}; font-size: 14px; font-weight: 700">{{e.tipo}}</span></td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{e.usuario}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{e.motivo}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</sc-if>
+</div>
+</section>
+</sc-if>
+
+<sc-if value="{{verCuentas}}" hint-placeholder-val="{{false}}">
+<section aria-labelledby="t-cuentas" style="display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h1 id="t-cuentas" style="margin: 0; font-size: 32px; font-weight: 700">Cuentas de telepeaje</h1>
+<p style="margin: 0; font-size: 17px; color: var(--texto-2)">Vista vw_estado_cuentas_telepeaje, de menor a mayor saldo.</p>
+</div>
+<div style="background: var(--superficie); border: 1px solid var(--borde); border-radius: 10px; padding: 8px 20px 12px; overflow-x: auto">
+<table style="width: 100%; min-width: 760px; border-collapse: collapse; font-size: 16px">
+<thead>
+<tr style="text-align: left; color: var(--texto-2); font-size: 15px">
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Placa</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Categoría</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">TAG</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600; text-align: right">Saldo</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Cuenta</th>
+<th scope="col" style="padding: 10px 8px; border-bottom: 2px solid var(--texto); font-weight: 600">Condición</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{cuentas}}" as="c" hint-placeholder-count="6">
+<tr>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); font-weight: 700; letter-spacing: 0.06em">{{c.placa}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{c.cat}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{c.tag}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2); text-align: right; white-space: nowrap">{{c.saldoTxt}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)">{{c.estado}}</td>
+<td style="padding: 12px 8px; border-bottom: 1px solid var(--superficie-2)"><span style="padding: 4px 8px; border-radius: 4px; background: {{c.condFondo}}; color: {{c.condColor}}; font-size: 14px; font-weight: 700; white-space: nowrap">{{c.cond}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</sc-if>
+</sc-if>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["sistema","claro","oscuro"],"default":"sistema","section":"Vista"},"estadoDatos":{"editor":"enum","options":["normal","cargando","error"],"default":"normal","section":"Vista"},"$preview":{"width":1440,"height":1100}}'>
+const TURNOS = [
+  { id: 1, fecha: '01/10/2026', carril: '1 · manual', operador: 'Carlos Alberto Gómez Pérez', abierto: false, recaudado: 315000, pasos: 32500, declarado: 315000 },
+  { id: 2, fecha: '01/10/2026', carril: '2 · manual', operador: 'María Fernanda López Martínez', abierto: false, recaudado: 250000, pasos: 10500, declarado: 248000 },
+  { id: 3, fecha: '01/10/2026', carril: '3 · telepeaje', operador: 'Ana Milena Castro Ramos', abierto: false, recaudado: 0, pasos: 0, declarado: 0 },
+  { id: 4, fecha: '01/10/2026', carril: '4 · mixto', operador: 'Luis Eduardo Mendoza Torres', abierto: false, recaudado: 180000, pasos: 42000, declarado: 180000 },
+  { id: 5, fecha: '02/10/2026', carril: '1 · manual', operador: 'Laura Patricia Díaz Morales', abierto: false, recaudado: 420000, pasos: 48500, declarado: 425000 },
+  { id: 6, fecha: '02/10/2026', carril: '2 · manual', operador: 'Diana Marcela Suárez Ruiz', abierto: false, recaudado: 190000, pasos: 0, declarado: 190000 },
+  { id: 7, fecha: '02/10/2026', carril: '3 · telepeaje', operador: 'Claudia Patricia Gutiérrez Polo', abierto: false, recaudado: 0, pasos: 0, declarado: 0 },
+  { id: 8, fecha: '06/10/2026', carril: '1 · manual', operador: 'Carlos Alberto Gómez Pérez', abierto: false, recaudado: 52500, pasos: 52500, declarado: 52500 },
+  { id: 9, fecha: '06/10/2026', carril: '2 · manual', operador: 'María Fernanda López Martínez', abierto: true, recaudado: 10500, pasos: 10500, declarado: null },
+  { id: 10, fecha: '06/10/2026', carril: '3 · telepeaje', operador: 'Ana Milena Castro Ramos', abierto: true, recaudado: 0, pasos: 0, declarado: null }
+];
+const DIAS = [
+  { fecha: '01/10/2026', veh: 7, ef: 43000, tag: 74500 },
+  { fecha: '02/10/2026', veh: 6, ef: 90500, tag: 103300 },
+  { fecha: '06/10/2026', veh: 5, ef: 52500, tag: 31500 }
+];
+const EVENTOS = [
+  { id: 1, ticket: 'TCK-20261001-00001', fecha: '01/10/2026 12:15', tipo: 'INSERT', usuario: 'carlos_gomez', motivo: 'Paso de vehículo registrado en caja manual' },
+  { id: 2, ticket: 'TCK-20261001-00002', fecha: '01/10/2026 13:30', tipo: 'INSERT', usuario: 'carlos_gomez', motivo: 'Paso de vehículo registrado en caja manual' },
+  { id: 3, ticket: 'TCK-20261001-00003', fecha: '01/10/2026 14:10', tipo: 'INSERT', usuario: 'maria_lopez', motivo: 'Paso de vehículo registrado en caja manual' },
+  { id: 4, ticket: 'TCK-20261001-00004', fecha: '01/10/2026 15:05', tipo: 'INSERT', usuario: 'sistema_telepeaje', motivo: 'Cobro automático por antena RFID' },
+  { id: 5, ticket: 'TCK-20261001-00005', fecha: '01/10/2026 16:20', tipo: 'INSERT', usuario: 'sistema_telepeaje', motivo: 'Cobro automático por antena RFID, saldo agotado' },
+  { id: 6, ticket: 'TCK-20261001-00005', fecha: '01/10/2026 16:20', tipo: 'UPDATE', usuario: 'juan_rodriguez', motivo: 'Ajuste supervisor por revisión de categoría' },
+  { id: 7, ticket: 'TCK-20261001-00006', fecha: '02/10/2026 03:45', tipo: 'INSERT', usuario: 'luis_mendoza', motivo: 'Paso nocturno en efectivo' },
+  { id: 8, ticket: 'TCK-20261002-00007', fecha: '02/10/2026 11:50', tipo: 'INSERT', usuario: 'laura_diaz', motivo: 'Paso de vehículo pesado' },
+  { id: 9, ticket: 'TCK-20261002-00008', fecha: '02/10/2026 13:00', tipo: 'INSERT', usuario: 'diana_suarez', motivo: 'Paso de vehículo institucional exento de pago' },
+  { id: 10, ticket: 'TCK-20261002-00009', fecha: '02/10/2026 19:15', tipo: 'INSERT', usuario: 'sistema_telepeaje', motivo: 'Cobro automático por antena RFID' },
+  { id: 11, ticket: 'TCK-20261001-00013', fecha: '01/10/2026 17:10', tipo: 'INSERT', usuario: 'sistema_telepeaje', motivo: 'Débito exitoso tag RFID carril exclusivo' },
+  { id: 12, ticket: 'TCK-20261001-00014', fecha: '01/10/2026 18:40', tipo: 'INSERT', usuario: 'sistema_telepeaje', motivo: 'Débito exitoso carril mixto' },
+  { id: 13, ticket: 'TCK-20261006-00019', fecha: '18/11/2026 (fecha del DML con NOW())', tipo: 'INSERT', usuario: 'carlos_gomez', motivo: 'Cobro manual en efectivo exitoso' }
+];
+const CUENTAS = [
+  { placa: 'ZXC987', cat: 'V', tag: 'TAG-COL-9900112238', saldo: 0, estado: 'SUSPENDIDA', cond: 'SIN SALDO' },
+  { placa: 'QWE321', cat: 'III', tag: 'TAG-COL-9900112236', saldo: 8000, estado: 'ACTIVA', cond: 'SALDO CRÍTICO' },
+  { placa: 'GHJ357', cat: 'I', tag: 'TAG-COL-9900112242', saldo: 32000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' },
+  { placa: 'UYT890', cat: 'I', tag: 'TAG-COL-9900112234', saldo: 45000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' },
+  { placa: 'ASD159', cat: 'I', tag: 'TAG-COL-9900112241', saldo: 95000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' },
+  { placa: 'OPL852', cat: 'VII', tag: 'TAG-COL-9900112240', saldo: 120000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' },
+  { placa: 'HKL123', cat: 'I', tag: 'TAG-COL-9900112233', saldo: 150000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' },
+  { placa: 'BNM741', cat: 'VI', tag: 'TAG-COL-9900112239', saldo: 250000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' },
+  { placa: 'KJN456', cat: 'II', tag: 'TAG-COL-9900112235', saldo: 300000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' },
+  { placa: 'RTY654', cat: 'IV', tag: 'TAG-COL-9900112237', saldo: 500000, estado: 'ACTIVA', cond: 'SALDO SUFICIENTE' }
+];
+function fmt(n) {
+  return '$ ' + String(Math.round(Math.abs(n))).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'arqueo', fecha: 'todas', buscar: '', tipo: 'todas' };
+  }
+  componentDidUpdate(prev) {
+    if (prev.estadoDatos !== this.props.estadoDatos && this.state.forzarNormal) this.setState({ forzarNormal: false });
+  }
+  renderVals() {
+    const s = this.state;
+    const prefiereOscuro = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const temaBase = this.props.tema ?? "sistema";
+    const tema = s.tema || (temaBase === "sistema" ? (prefiereOscuro ? "oscuro" : "claro") : temaBase);
+    const temaTxt = tema === "oscuro" ? "Usar modo claro" : "Usar modo oscuro";
+    const alternarTema = () => this.setState({ tema: tema === "oscuro" ? "claro" : "oscuro" });
+    const estadoDatos = s.forzarNormal ? 'normal' : (this.props.estadoDatos ?? 'normal');
+    const tabs = [
+      { id: 'arqueo', label: 'Arqueo de turnos' },
+      { id: 'recaudo', label: 'Recaudo diario' },
+      { id: 'auditoria', label: 'Auditoría' },
+      { id: 'cuentas', label: 'Cuentas de telepeaje' }
+    ].map((t) => ({ ...t, activa: s.tab === t.id, inactiva: s.tab !== t.id, ir: () => this.setState({ tab: t.id }) }));
+
+    const filtrados = TURNOS.filter((t) => s.fecha === 'todas' || t.fecha === s.fecha);
+    const turnos = filtrados.map((t) => {
+      let diag = 'EN PROCESO'; let diagFondo = 'var(--superficie-2)'; let diagColor = 'var(--texto-3)';
+      if (!t.abierto) {
+        const dif = t.declarado - t.recaudado;
+        if (dif === 0) { diag = 'CUADRADO'; diagFondo = 'var(--correcto-fondo)'; diagColor = 'var(--correcto-texto)'; }
+        else if (dif > 0) { diag = 'SOBRANTE (+) ' + fmt(dif); diagFondo = 'var(--aviso-fondo)'; diagColor = 'var(--aviso-texto)'; }
+        else { diag = 'FALTANTE (−) ' + fmt(dif); diagFondo = 'var(--error-fondo)'; diagColor = 'var(--error)'; }
+      }
+      const concilia = t.recaudado === t.pasos;
+      return {
+        ...t, diag, diagFondo, diagColor,
+        recaudadoTxt: fmt(t.recaudado), pasosTxt: fmt(t.pasos),
+        declaradoTxt: t.declarado === null ? 'Turno abierto' : fmt(t.declarado),
+        conc: concilia ? 'Concilia' : 'No concilia: ' + fmt(t.recaudado - t.pasos) + ' sin pasos',
+        concColor: concilia ? 'var(--correcto-texto)' : 'var(--error)'
+      };
+    });
+    const kAbiertos = filtrados.filter((t) => t.abierto).length;
+    const kDescuadre = filtrados.filter((t) => !t.abierto && t.declarado !== t.recaudado).length;
+    const kSinConciliar = filtrados.filter((t) => t.recaudado !== t.pasos).length;
+
+    const maxTotal = Math.max.apply(null, DIAS.map((d) => d.ef + d.tag));
+    const dias = DIAS.map((d) => {
+      const total = d.ef + d.tag;
+      return {
+        ...d, totalTxt: fmt(total), efTxt: fmt(d.ef), tagTxt: fmt(d.tag),
+        ancho: Math.round((total / maxTotal) * 100) + '%',
+        pctEf: Math.round((d.ef / total) * 100) + '%',
+        aria: d.fecha + ': efectivo ' + fmt(d.ef) + ', telepeaje ' + fmt(d.tag)
+      };
+    });
+
+    const q = s.buscar.trim().toLowerCase();
+    const eventos = EVENTOS
+      .filter((e) => s.tipo === 'todas' || e.tipo === s.tipo)
+      .filter((e) => !q || e.ticket.toLowerCase().includes(q) || e.usuario.toLowerCase().includes(q))
+      .map((e) => ({ ...e, tipoBorde: e.tipo === 'UPDATE' ? 'var(--aviso-texto)' : 'var(--texto)', tipoFondo: e.tipo === 'UPDATE' ? 'var(--aviso-fondo)' : 'var(--superficie)' }));
+
+    const cuentas = CUENTAS.map((c) => {
+      let condFondo = 'var(--correcto-fondo)'; let condColor = 'var(--correcto-texto)';
+      if (c.cond === 'SIN SALDO') { condFondo = 'var(--error-fondo)'; condColor = 'var(--error)'; }
+      if (c.cond === 'SALDO CRÍTICO') { condFondo = 'var(--aviso-fondo)'; condColor = 'var(--aviso-texto)'; }
+      return { ...c, saldoTxt: fmt(c.saldo), condFondo, condColor };
+    });
+
+    return {
+      tema, temaTxt, alternarTema,
+      datosNormal: estadoDatos === 'normal', datosCargando: estadoDatos === 'cargando', datosError: estadoDatos === 'error',
+      reintentar: () => this.setState({ forzarNormal: true }),
+      tabs,
+      verArqueo: s.tab === 'arqueo', verRecaudo: s.tab === 'recaudo', verAuditoria: s.tab === 'auditoria', verCuentas: s.tab === 'cuentas',
+      fecha: s.fecha, turnos, kAbiertos: String(kAbiertos), kDescuadre: String(kDescuadre), kSinConciliar: String(kSinConciliar),
+      dias, buscar: s.buscar, tipo: s.tipo, eventos, sinEventos: eventos.length === 0, hayEventos: eventos.length > 0,
+      cuentas,
+      onFecha: (e) => this.setState({ fecha: e.target.value }),
+      onBuscar: (e) => this.setState({ buscar: e.target.value }),
+      onTipo: (e) => this.setState({ tipo: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>

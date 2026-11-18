@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PeajeSys · Inicio de sesión</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+.ps-tema{--fondo:#f6f4ef;--superficie:#ffffff;--superficie-2:#ece8e0;--borde:#d9d4ca;--borde-fuerte:#b5afa3;--texto:#1f1d19;--texto-2:#5c574d;--texto-3:#3d3a33;--sobre-acento:#1f1d19;--asfalto:#1f1d19;--acento-texto:#a84f00;--hover:#f1eee7;--correcto:#1e7a46;--correcto-texto:#145232;--correcto-fondo:#e3f1e8;--error:#b42318;--error-fondo:#fbe7e5;--aviso-texto:#7a4a00;--aviso-fondo:#fdf0d2;--peligro:#b42318;color-scheme:light}
+.ps-tema[data-tema="oscuro"]{--fondo:#121110;--superficie:#1e1c19;--superficie-2:#2a2723;--borde:#3a3631;--borde-fuerte:#5e584f;--texto:#f3f0ea;--texto-2:#b8b1a5;--texto-3:#d4cec3;--asfalto:#0a0908;--acento-texto:#ffb15c;--hover:#2a2723;--correcto:#5cc08a;--correcto-texto:#8fddb0;--correcto-fondo:#15301f;--error:#ff8a7a;--error-fondo:#3a1714;--aviso-texto:#ffc870;--aviso-fondo:#3a2b0a;color-scheme:dark}
+.ps-oscuro:hover:not(:disabled){background:rgba(255,255,255,0.14) !important}
+.ps-tema[data-tema="oscuro"] .ps-silueta{background:#ebe6dc;border-radius:6px;box-sizing:border-box;padding:3px}
+body{margin:0}
+a{color:var(--acento-texto)}a:hover{color:var(--texto)}
+label[for]{cursor:pointer}
+button{cursor:pointer;font-family:'Barlow',system-ui,sans-serif;transition:background-color 120ms}
+button:disabled{cursor:not-allowed}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(--texto);outline-offset:2px}
+.ps-primario:hover:not(:disabled){background:#E5A800 !important}
+.ps-primario:active:not(:disabled){background:#CC9600 !important}
+.ps-secundario:hover:not(:disabled){background:var(--hover) !important}
+.ps-enlace:hover{background:#E5A800 !important;color:var(--texto) !important}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+</helmet>
+<div class="ps-tema" data-tema="{{tema}}" style="min-height: 100vh; box-sizing: border-box; background: var(--fondo); color: var(--texto); font-family: 'Barlow', system-ui, sans-serif; display: flex; flex-wrap: wrap">
+
+<header style="flex: 1 1 520px; min-height: 360px; position: relative; background: var(--texto); display: flex; flex-direction: column; overflow: hidden">
+<img src="/_blob/cc4ec7cd894e6b42484c34a61b9fccb2" alt="Estación de peaje al atardecer, con casetas bajo una cubierta, barreras amarillas y negras y conos naranjas" width="1280" height="1589" fetchpriority="high" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 70%">
+<div style="position: relative; margin: 32px; padding: 24px 28px; background: rgba(31,29,25,0.9); border-radius: 8px; color: #ffffff; display: flex; flex-direction: column; gap: 14px; max-width: 460px">
+<img src="/_blob/57e50eaf28f8047c226a70b55cec93e3" alt="PeajeSys" width="200" height="54" style="width: 200px; height: 54px; object-fit: contain; object-position: left center">
+<p style="margin: 0; font-size: 20px; line-height: 1.4">Control, recaudo y arqueo de las estaciones de peaje Gambote y La Ceballos.</p>
+</div>
+<div aria-hidden="true" style="position: relative; margin-top: auto; height: 10px; background: repeating-linear-gradient(135deg, #FCBD17 0 18px, #1f1d19 18px 36px)"></div>
+</header>
+
+<main style="flex: 1 1 420px; min-width: 0; display: flex; align-items: center; justify-content: center; padding: 48px 24px; box-sizing: border-box">
+<div style="width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 24px">
+<button type="button" class="ps-secundario" onClick="{{alternarTema}}" style="align-self: flex-end; height: 44px; padding: 0 14px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>{{temaTxt}}</button>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h1 style="margin: 0; font-size: 40px; font-weight: 700">Inicia sesión</h1>
+<p style="margin: 0; font-size: 18px; color: var(--texto-2)">Entra con tu código de empleado. El menú que ves depende de tu rol.</p>
+</div>
+
+<sc-if value="{{noEntro}}" hint-placeholder-val="{{true}}">
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="lg-codigo" style="font-size: 16px; font-weight: 600">Código de empleado</label>
+<input id="lg-codigo" value="{{codigo}}" onChange="{{onCodigo}}" onKeyDown="{{enter}}" autocomplete="username" placeholder="EMP-000" style="height: 56px; padding: 0 16px; border: 2px solid {{codigoBorde}}; border-radius: 6px; background: var(--superficie); font: 600 22px 'Barlow', sans-serif; letter-spacing: 0.04em; color: var(--texto); text-transform: uppercase; box-sizing: border-box">
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label for="lg-clave" style="font-size: 16px; font-weight: 600">Contraseña</label>
+<input id="lg-clave" type="password" value="{{clave}}" onChange="{{onClave}}" onKeyDown="{{enter}}" autocomplete="current-password" style="height: 56px; padding: 0 16px; border: 2px solid {{claveBorde}}; border-radius: 6px; background: var(--superficie); font: 500 20px 'Barlow', sans-serif; color: var(--texto); box-sizing: border-box">
+</div>
+<sc-if value="{{error}}" hint-placeholder-val="{{false}}">
+<p role="alert" style="margin: 0; padding: 12px 14px; border-radius: 6px; background: var(--error-fondo); color: var(--error); font-size: 16px; font-weight: 600">{{error}}</p>
+</sc-if>
+<button type="button" onClick="{{ingresar}}" class="ps-primario" style="height: 60px; border: 3px solid var(--texto); border-radius: 6px; background: #FCBD17; color: var(--sobre-acento); font-size: 20px; font-weight: 700">Ingresar</button>
+</div>
+</sc-if>
+
+<sc-if value="{{entro}}" hint-placeholder-val="{{false}}">
+<div role="status" style="padding: 24px; border-radius: 8px; border: 2px solid var(--correcto); background: var(--superficie); display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<strong style="font-size: 24px">Hola, {{usuario.nombre}}</strong>
+<span style="font-size: 17px; color: var(--texto-2)">{{usuario.rolTxt}} · {{usuario.codigo}}</span>
+</div>
+<a class="ps-enlace" href="{{usuario.destino}}" style="height: 56px; display: flex; align-items: center; justify-content: center; border: 3px solid var(--texto); border-radius: 6px; background: #FCBD17; color: var(--sobre-acento); font-size: 19px; font-weight: 700; text-decoration: none">{{usuario.destinoTxt}}</a>
+<button type="button" class="ps-secundario" onClick="{{salir}}" style="height: 48px; border: 2px solid var(--texto); border-radius: 6px; background: var(--superficie); color: var(--texto); font-size: 17px; font-weight: 600">No soy yo, volver</button>
+</div>
+</sc-if>
+
+<section aria-labelledby="lg-prueba" style="border-top: 1px solid var(--borde); padding-top: 20px; display: flex; flex-direction: column; gap: 10px">
+<h2 id="lg-prueba" style="margin: 0; font-size: 18px; font-weight: 700">Usuarios de prueba</h2>
+<p style="margin: 0; font-size: 15px; color: var(--texto-2)">Simulación sin backend: cualquier contraseña sirve. Los empleados salen del DML del Avance 2.</p>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{demo}}" as="d" hint-placeholder-count="5">
+<button type="button" class="ps-secundario" onClick="{{d.usar}}" style="min-height: 48px; padding: 8px 14px; border: 2px solid var(--borde); border-radius: 6px; background: var(--superficie); color: var(--texto); text-align: left; display: flex; justify-content: space-between; align-items: center; gap: 12px">
+<span style="display: flex; flex-direction: column"><strong style="font-size: 16px">{{d.codigo}} · {{d.nombre}}</strong><span style="font-size: 14px; color: var(--texto-2)">{{d.nota}}</span></span>
+<span style="font-size: 15px; font-weight: 600; color: var(--acento-texto)">Usar</span>
+</button>
+</sc-for>
+</div>
+</section>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tema":{"editor":"enum","options":["sistema","claro","oscuro"],"default":"sistema","section":"Vista"},"$preview":{"width":1440,"height":900}}'>
+const EMPLEADOS = {
+  'EMP-001': { nombre: 'Carlos Alberto Gómez Pérez', rol: 'RECAUDADOR', estado: 'ACTIVO', turno: null },
+  'EMP-002': { nombre: 'María Fernanda López Martínez', rol: 'RECAUDADOR', estado: 'ACTIVO', turno: 9 },
+  'EMP-003': { nombre: 'Juan David Rodríguez Silva', rol: 'SUPERVISOR', estado: 'ACTIVO' },
+  'EMP-004': { nombre: 'Ana Milena Castro Ramos', rol: 'RECAUDADOR', estado: 'ACTIVO', turno: 10 },
+  'EMP-005': { nombre: 'Luis Eduardo Mendoza Torres', rol: 'RECAUDADOR', estado: 'ACTIVO', turno: null },
+  'EMP-006': { nombre: 'Laura Patricia Díaz Morales', rol: 'RECAUDADOR', estado: 'ACTIVO', turno: null },
+  'EMP-007': { nombre: 'Andrés Felipe Herrera Vega', rol: 'SUPERVISOR', estado: 'ACTIVO' },
+  'EMP-008': { nombre: 'Diana Marcela Suárez Ruiz', rol: 'RECAUDADOR', estado: 'ACTIVO', turno: null },
+  'EMP-009': { nombre: 'Jorge Luis Vargas Romero', rol: 'RECAUDADOR', estado: 'INACTIVO', turno: null },
+  'EMP-010': { nombre: 'Claudia Patricia Gutiérrez Polo', rol: 'RECAUDADOR', estado: 'ACTIVO', turno: null },
+  'ADMIN-01': { nombre: 'Administración', rol: 'ADMINISTRADOR', estado: 'ACTIVO' }
+};
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { codigo: '', clave: '', error: '', campo: '', usuario: null };
+  }
+  renderVals() {
+    const s = this.state;
+    const prefiereOscuro = typeof window !== "undefined" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const temaBase = this.props.tema ?? "sistema";
+    const tema = s.tema || (temaBase === "sistema" ? (prefiereOscuro ? "oscuro" : "claro") : temaBase);
+    const temaTxt = tema === "oscuro" ? "Usar modo claro" : "Usar modo oscuro";
+    const alternarTema = () => this.setState({ tema: tema === "oscuro" ? "claro" : "oscuro" });
+    const ingresar = (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      const codigo = s.codigo.trim().toUpperCase();
+      if (!codigo) return this.setState({ error: 'Escribe tu código de empleado.', campo: 'codigo' });
+      if (!s.clave) return this.setState({ error: 'Escribe tu contraseña.', campo: 'clave' });
+      const emp = EMPLEADOS[codigo];
+      if (!emp) return this.setState({ error: 'No existe un empleado con el código ' + codigo + '.', campo: 'codigo' });
+      if (emp.estado !== 'ACTIVO') return this.setState({ error: 'El usuario ' + codigo + ' está INACTIVO. Pide a un administrador que lo active.', campo: 'codigo' });
+      if (emp.rol === 'RECAUDADOR' && !emp.turno) return this.setState({ error: emp.nombre + ' no tiene un turno abierto. El supervisor debe asignarle una caseta antes de cobrar.', campo: 'codigo' });
+      let destino = 'Operador.dc.html';
+      let destinoTxt = 'Ir a la terminal de cobro (turno ' + emp.turno + ')';
+      let rolTxt = 'Recaudador';
+      if (emp.rol === 'SUPERVISOR') { destino = 'Supervisor.dc.html'; destinoTxt = 'Ir al panel del supervisor'; rolTxt = 'Supervisor'; }
+      if (emp.rol === 'ADMINISTRADOR') { destino = 'Admin.dc.html'; destinoTxt = 'Ir a la administración'; rolTxt = 'Administrador'; }
+      this.setState({ error: '', campo: '', usuario: { nombre: emp.nombre.split(' ').slice(0, 2).join(' '), codigo, rolTxt, destino, destinoTxt } });
+    };
+    const demo = [
+      { codigo: 'EMP-002', nombre: 'María Fernanda López', nota: 'Recaudadora con el turno 9 abierto' },
+      { codigo: 'EMP-003', nombre: 'Juan David Rodríguez', nota: 'Supervisor' },
+      { codigo: 'ADMIN-01', nombre: 'Administración', nota: 'Usuario solo del front: el rol ADMINISTRADOR aún no existe en la BD' },
+      { codigo: 'EMP-001', nombre: 'Carlos Alberto Gómez', nota: 'Recaudador sin turno abierto (muestra el aviso)' },
+      { codigo: 'EMP-009', nombre: 'Jorge Luis Vargas', nota: 'Usuario INACTIVO (muestra el error)' }
+    ].map((d) => ({ ...d, usar: () => this.setState({ codigo: d.codigo, clave: 'prueba', error: '', campo: '' }) }));
+    return {
+      tema, temaTxt, alternarTema,
+      codigo: s.codigo, clave: s.clave, error: s.error,
+      codigoBorde: s.campo === 'codigo' ? 'var(--error)' : 'var(--borde-fuerte)',
+      claveBorde: s.campo === 'clave' ? 'var(--error)' : 'var(--borde-fuerte)',
+      entro: !!s.usuario, noEntro: !s.usuario, usuario: s.usuario || {},
+      demo, ingresar,
+      enter: (e) => { if (e.key === 'Enter') ingresar(); },
+      onCodigo: (e) => this.setState({ codigo: String(e.target.value || '').toUpperCase().slice(0, 8), error: '', campo: '' }),
+      onClave: (e) => this.setState({ clave: e.target.value, error: '', campo: '' }),
+      salir: () => this.setState({ usuario: null, clave: '' })
+    };
+  }
+}
+</script>
+</body>
+</html>
