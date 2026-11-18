@@ -35,6 +35,24 @@ export const operadoresHandlers = [
     return HttpResponse.json(lista);
   }),
 
+  http.get('/api/operadores/:id', async ({ params, request }) => {
+    const { errorResponse } = await procesarControlLectura(request);
+    if (errorResponse) return errorResponse;
+
+    const id = parseInt(String(params.id), 10);
+    const db = getDb();
+    const op = db.operadores.find((o) => o.id_operador === id);
+
+    if (!op) {
+      return HttpResponse.json(
+        { error: { codigo: 'OPERADOR_NO_ENCONTRADO', mensaje: `Operador ${id} no encontrado.` } },
+        { status: 404 },
+      );
+    }
+
+    return HttpResponse.json(op);
+  }),
+
   http.post('/api/operadores', async ({ request }) => {
     let body: unknown;
     try {

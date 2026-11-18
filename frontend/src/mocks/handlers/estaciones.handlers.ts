@@ -18,7 +18,7 @@ export const estacionesHandlers = [
     if (esVacio) return HttpResponse.json([]);
 
     const url = new URL(request.url);
-    const estacionParam = url.searchParams.get('estacion');
+    const estacionParam = url.searchParams.get('estacion') || url.searchParams.get('id_estacion');
     const db = getDb();
 
     if (estacionParam) {
