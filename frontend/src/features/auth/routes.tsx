@@ -1,44 +1,53 @@
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { useSesion } from '@/lib/sesion';
+import { rutaPorDefectoSegunRol } from '@/lib/roles';
 import { BotonTema } from '@/components/layout/BotonTema';
 import { Franja } from '@/components/layout/Franja';
-import { Button } from '@/components/ui/button';
+import { FormularioLogin, PrecargaCredenciales } from './FormularioLogin';
+import { SeccionUsuariosPrueba } from './SeccionUsuariosPrueba';
+import { CLAVE_PRUEBA, UsuarioDemo } from './usuariosDemo';
 
+/**
+ * Vista de inicio de sesión de Login.dc.html: panel izquierdo con la foto de la
+ * estación, el logo y el texto; panel derecho con el formulario, el botón de
+ * tema, los mensajes de error y, tras entrar, la tarjeta «Ir a …».
+ */
 export default function AuthPage() {
-  const { iniciarSesion } = useSesion();
-  const navigate = useNavigate();
+  const { usuario } = useSesion();
+  const usarMocks = import.meta.env.VITE_USAR_MOCKS === 'true';
+  const [precarga, setPrecarga] = useState<PrecargaCredenciales | null>(null);
 
-  // TODO(B2): sustituir por el inicio de sesión real con formulario, validaciones Zod y API
-  const handleEntrarComo = (
-    rol: 'RECAUDADOR' | 'SUPERVISOR' | 'ADMIN',
-    nombre: string,
-    id: string,
-  ) => {
-    iniciarSesion({ id, nombre, rol });
-    if (rol === 'RECAUDADOR') navigate('/operador');
-    else if (rol === 'SUPERVISOR') navigate('/supervisor');
-    else navigate('/admin');
+  // Si ya hay sesión al llegar a /login, redirige a la página del rol.
+  const [sesionPrevia] = useState(() => usuario);
+  if (sesionPrevia) {
+    return <Navigate to={rutaPorDefectoSegunRol(sesionPrevia.rol)} replace />;
+  }
+
+  const usarDemo = (demo: UsuarioDemo) => {
+    setPrecarga({ codigo: demo.codigo, clave: CLAVE_PRUEBA });
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-fondo text-texto font-sans">
-      {/* Columna visual izquierda inspirada en Login.dc.html */}
-      <header className="flex-1 min-h-[320px] md:min-h-screen relative bg-asfalto flex flex-col justify-between overflow-hidden">
+    <div className="flex min-h-screen flex-wrap bg-fondo font-sans text-texto">
+      <header className="relative flex min-h-[360px] flex-1 basis-[520px] flex-col overflow-hidden bg-asfalto md:min-h-screen">
         <img
           src="/img/login-estacion.webp"
-          alt="Estación de peaje al atardecer"
+          alt="Estación de peaje al atardecer, con casetas bajo una cubierta, barreras amarillas y negras y conos naranjas"
+          width={1280}
+          height={1589}
           fetchPriority="high"
-          className="absolute inset-0 w-full h-full object-cover object-center opacity-40"
+          className="absolute inset-0 h-full w-full object-cover object-[center_70%]"
         />
-        <div className="relative z-10 m-6 md:m-10 p-6 rounded-[8px] bg-[#1f1d19]/90 text-white max-w-[460px] flex flex-col gap-3.5">
+        <div className="relative z-10 m-[32px] flex max-w-[460px] flex-col gap-[14px] rounded-[8px] bg-[#1f1d19]/90 p-[24px] text-white md:px-[28px]">
           <img
             src="/img/logo-horizontal-claro.png"
             alt="PeajeSys"
-            width="200"
-            height="54"
-            className="w-[180px] md:w-[200px] h-auto object-contain object-left"
+            width={200}
+            height={54}
+            className="h-[54px] w-[200px] object-contain object-left"
           />
-          <p className="m-0 text-[18px] md:text-[20px] text-[#E4E0D6] leading-snug">
+          <p className="m-0 text-[18px] leading-[1.4] md:text-[20px]">
             Control, recaudo y arqueo de las estaciones de peaje Gambote y La
             Ceballos.
           </p>
@@ -46,72 +55,29 @@ export default function AuthPage() {
         <Franja className="relative z-10 mt-auto" />
       </header>
 
-      {/* Columna derecha con formulario y stubs de acceso */}
       <main
         id="contenido-principal"
         tabIndex={-1}
-        className="flex-1 flex flex-col items-center justify-center p-6 md:p-12 outline-none"
+        className="flex min-w-0 flex-1 basis-[420px] items-center justify-center px-[24px] py-[48px] outline-none"
       >
-        <div className="w-full max-w-[440px] flex flex-col gap-6">
+        <div className="flex w-full max-w-[440px] flex-col gap-[24px]">
           <div className="self-end">
             <BotonTema variante="secundario" />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <h1 className="text-[36px] md:text-[40px] font-bold tracking-tight text-texto">
-              Inicio de sesión
+          <div className="flex flex-col gap-[6px]">
+            <h1 className="m-0 text-[36px] font-bold tracking-tight md:text-[40px]">
+              Inicia sesión
             </h1>
-            <p className="text-[17px] text-texto-2">En construcción</p>
+            <p className="m-0 text-[17px] text-texto-2 md:text-[18px]">
+              Entra con tu código de empleado. El menú que ves depende de tu
+              rol.
+            </p>
           </div>
 
-          <div className="rounded-[8px] border-2 border-borde bg-superficie p-6 flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-[15px] font-semibold text-texto">
-                Accesos rápidos de prueba (DML):
-              </span>
-              <span className="text-[13px] text-texto-2">
-                Usuarios temporales para desarrollo (TODO(B2): sustituir por el
-                inicio de sesión real).
-              </span>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Button
-                type="button"
-                variant="primario"
-                onClick={() =>
-                  handleEntrarComo(
-                    'RECAUDADOR',
-                    'María Fernanda López Martínez',
-                    'EMP-002',
-                  )
-                }
-              >
-                Entrar como Recaudador (EMP-002)
-              </Button>
-              <Button
-                type="button"
-                variant="secundario"
-                onClick={() =>
-                  handleEntrarComo(
-                    'SUPERVISOR',
-                    'Juan David Rodríguez Silva',
-                    'EMP-003',
-                  )
-                }
-              >
-                Entrar como Supervisor (EMP-003)
-              </Button>
-              <Button
-                type="button"
-                variant="secundario"
-                onClick={() =>
-                  handleEntrarComo('ADMIN', 'Administración', 'ADMIN-01')
-                }
-              >
-                Entrar como Administrador (ADMIN-01)
-              </Button>
-            </div>
-          </div>
+          <FormularioLogin precarga={precarga} />
+
+          {usarMocks && <SeccionUsuariosPrueba alUsar={usarDemo} />}
         </div>
       </main>
     </div>

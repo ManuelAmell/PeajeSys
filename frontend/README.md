@@ -170,8 +170,31 @@ flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
   --salida /home/amell/orca/reportes/capturas/B3/
 ```
 
+Opciones de interacción (para capturar estados que requieren acciones, por ejemplo errores de formulario):
+
+- `--llenar '<selector>=<valor>'`: rellena un campo (repetible). El valor puede contener `=`.
+- `--clic '<selector>'`: hace clic en un elemento (repetible). Los clics se ejecutan en orden, después de todos los `--llenar`.
+- `--espera-despues '<selector>'`: elemento a esperar tras las acciones, antes de capturar.
+
+Ejemplo: rellenar el formulario del login con un usuario INACTIVO de la semilla, enviar y esperar el mensaje de error:
+
+```bash
+flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
+  --ruta /login \
+  --rol ninguno \
+  --espera 'h1:has-text("Inicia sesión")' \
+  --llenar '#lg-codigo=EMP-009' \
+  --llenar '#lg-clave=prueba' \
+  --clic 'button[type="submit"]' \
+  --espera-despues '#lg-error' \
+  --salida /home/amell/orca/reportes/capturas/B2/ \
+  --nombre login-inactivo \
+  --puerto 5183
+```
+
 Requisitos del script:
 - Genera 4 imágenes PNG por pantalla (claro y oscuro, 1280 px y 390 px).
 - Cada imagen debe pesar **≥ 30 KB** (si pesa menos, la captura falla).
-- Falla si se detecta cualquier error de consola durante la navegación.
-- Imprime la tabla resumen de archivos, tamaños y errores.
+- Falla si se detecta cualquier error de consola durante la navegación. Las entradas automáticas de Chromium por respuestas simuladas de MSW (`Failed to load resource: … 403/409/500`) se listan aparte como «red simulada esperada» y no invalidan la captura.
+- Verifica que la ruta final tras la navegación e interacción coincide con `--ruta`.
+- Imprime la tabla resumen de archivos, tamaños y errores, con hashes MD5 únicos por lote.
