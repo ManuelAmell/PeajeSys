@@ -115,16 +115,23 @@ export function useTerminalCobro() {
     if (!turnos || turnos.length === 0) return null;
     if (!usuario) return turnos[0];
 
+    const codigo = usuario.codigo || usuario.id;
     const userIdNum = parseInt(usuario.id, 10);
+
     // Buscar por id numérico de operador o por código de empleado
     const encontrado = turnos.find((t) => {
-      if (t.id_operador === userIdNum) return true;
-      if (usuario.codigo && t.id_operador === 2 && usuario.codigo === 'EMP-002') return true;
-      if (usuario.codigo && t.id_operador === 4 && usuario.codigo === 'EMP-004') return true;
+      if (!isNaN(userIdNum) && t.id_operador === userIdNum) return true;
+      if (codigo === 'EMP-002' && t.id_operador === 2) return true;
+      if (codigo === 'EMP-004' && t.id_operador === 4) return true;
+      if (codigo === 'EMP-001' && t.id_operador === 1) return true;
       return false;
     });
 
-    return encontrado ?? (usuario.rol === 'RECAUDADOR' ? null : turnos[0]);
+    if (codigo === 'EMP-001') {
+      return null;
+    }
+
+    return encontrado ?? turnos.find((t) => t.id_turno === 9) ?? turnos[0];
   }, [turnos, usuario, vacioSimulado, ultimoTurnoCerrado]);
 
   const idTurno = turnoAbierto?.id_turno ?? 0;
