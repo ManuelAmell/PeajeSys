@@ -66,7 +66,10 @@ describe('Página de administración (/admin)', () => {
       screen.getByRole('button', { name: 'Personal', pressed: false }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Estaciones y casetas', pressed: false }),
+      screen.getByRole('button', {
+        name: 'Estaciones y casetas',
+        pressed: false,
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Categorías', pressed: false }),
@@ -80,7 +83,9 @@ describe('Página de administración (/admin)', () => {
       initialEntries: ['/admin'],
     });
 
-    await usuario.click(await screen.findByRole('button', { name: 'Personal' }));
+    await usuario.click(
+      await screen.findByRole('button', { name: 'Personal' }),
+    );
     expect(
       await screen.findByRole('heading', { name: 'Personal' }),
     ).toBeInTheDocument();
@@ -88,7 +93,9 @@ describe('Página de administración (/admin)', () => {
       screen.getByRole('button', { name: 'Personal', pressed: true }),
     ).toBeInTheDocument();
 
-    await usuario.click(screen.getByRole('button', { name: 'Estaciones y casetas' }));
+    await usuario.click(
+      screen.getByRole('button', { name: 'Estaciones y casetas' }),
+    );
     expect(
       await screen.findByRole('heading', { name: 'Estaciones y casetas' }),
     ).toBeInTheDocument();

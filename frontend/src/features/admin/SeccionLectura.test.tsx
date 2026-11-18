@@ -19,21 +19,31 @@ describe('Sección Estaciones y casetas (solo lectura, datos del DML)', () => {
     expect(
       await screen.findByRole('heading', { name: 'Estaciones y casetas' }),
     ).toBeInTheDocument();
-    expect(screen.getByText('Estación Gambote')).toBeInTheDocument();
-    expect(screen.getByText('PEA-GAM-01 · Km 25 Vía Ruta del Sol - Tramo Gambote · sentido BOGOTA-CARTAGENA')).toBeInTheDocument();
+    expect(await screen.findByText('Estación Gambote')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'PEA-GAM-01 · Km 25 Vía Ruta del Sol - Tramo Gambote · sentido BOGOTA-CARTAGENA',
+      ),
+    ).toBeInTheDocument();
     expect(screen.getByText('Estación La Ceballos')).toBeInTheDocument();
-    expect(screen.getByText('PEA-CEB-02 · Km 12 Variante Mamonal · sentido CARTAGENA-BARRANQUILLA')).toBeInTheDocument();
-    expect(screen.getByText('Consulta de solo lectura en esta versión del diseño.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'PEA-CEB-02 · Km 12 Variante Mamonal · sentido CARTAGENA-BARRANQUILLA',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('Consulta de solo lectura en esta versión del diseño.'),
+    ).toBeInTheDocument();
     expect(screen.getAllByText('ACTIVA')).toHaveLength(2);
   });
 
   it('lista las 6 casetas por carril con tipo y estado', async () => {
     renderConProveedores(<SeccionEstaciones />, { usuarioInicial: admin });
 
-    expect(await screen.findByText('Carril 4')).toBeInTheDocument();
-    expect(screen.getByText('Carril 1')).toBeInTheDocument();
-    expect(screen.getByText('Telepeaje exclusivo')).toBeInTheDocument();
-    expect(screen.getByText('Mixto')).toBeInTheDocument();
+    expect(await screen.findByText(/Carril 4/)).toBeInTheDocument();
+    expect(screen.getAllByText(/Carril 1/)).toHaveLength(2);
+    expect(screen.getAllByText(/Telepeaje exclusivo/)).toHaveLength(2);
+    expect(screen.getByText(/Mixto/)).toBeInTheDocument();
     expect(screen.getAllByText('OPERATIVA').length).toBeGreaterThanOrEqual(6);
   });
 
@@ -49,7 +59,10 @@ describe('Sección Estaciones y casetas (solo lectura, datos del DML)', () => {
       http.get('*/api/casetas', () =>
         HttpResponse.json(
           {
-            error: { codigo: 'ERROR_SIMULADO', mensaje: 'Error de servidor simulado.' },
+            error: {
+              codigo: 'ERROR_SIMULADO',
+              mensaje: 'Error de servidor simulado.',
+            },
           },
           { status: 500 },
         ),
@@ -60,7 +73,9 @@ describe('Sección Estaciones y casetas (solo lectura, datos del DML)', () => {
     expect(
       await screen.findByText('No se pudieron cargar los datos'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Reintentar' }),
+    ).toBeInTheDocument();
   });
 
   it('muestra estado vacío cuando no hay estaciones', async () => {
@@ -85,15 +100,22 @@ describe('Sección Categorías vehiculares (solo lectura, datos del DML)', () =>
         'Esquema de siete categorías (Res. INVÍAS 0228 de 2013 y concesiones ANI). Consulta de solo lectura.',
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText('CAT_I')).toBeInTheDocument();
-    expect(screen.getByText('Automóviles, camperos y camionetas')).toBeInTheDocument();
+    expect(await screen.findByText('CAT_I')).toBeInTheDocument();
+    expect(
+      screen.getByText('Automóviles, camperos y camionetas'),
+    ).toBeInTheDocument();
     expect(screen.getByText('CAT_VII')).toBeInTheDocument();
-    expect(screen.getByText('Camiones de 6 o más ejes (C6)')).toBeInTheDocument();
+    expect(
+      screen.getByText('Camiones de 6 o más ejes (C6)'),
+    ).toBeInTheDocument();
     expect(screen.getByText('3 a 4')).toBeInTheDocument();
     expect(screen.getByText('3,5 t')).toBeInTheDocument();
     expect(screen.getByText('52 t')).toBeInTheDocument();
-    expect(screen.getByAltText('')).toHaveLength(7);
-    expect(screen.getAllByAltText('')[0]).toHaveAttribute('src', '/img/cat-1.png');
+    expect(screen.getAllByAltText('')).toHaveLength(7);
+    expect(screen.getAllByAltText('')[0]).toHaveAttribute(
+      'src',
+      '/img/cat-1.png',
+    );
   });
 
   it('no ofrece ninguna acción de edición', async () => {
@@ -108,7 +130,10 @@ describe('Sección Categorías vehiculares (solo lectura, datos del DML)', () =>
       http.get('*/api/categorias', () =>
         HttpResponse.json(
           {
-            error: { codigo: 'ERROR_SIMULADO', mensaje: 'Error de servidor simulado.' },
+            error: {
+              codigo: 'ERROR_SIMULADO',
+              mensaje: 'Error de servidor simulado.',
+            },
           },
           { status: 500 },
         ),
@@ -119,7 +144,9 @@ describe('Sección Categorías vehiculares (solo lectura, datos del DML)', () =>
     expect(
       await screen.findByText('No se pudieron cargar los datos'),
     ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Reintentar' }),
+    ).toBeInTheDocument();
   });
 
   it('muestra estado vacío cuando no hay categorías', async () => {

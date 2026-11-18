@@ -33,7 +33,9 @@ describe('Ayudas del panel de administración (Admin.dc.html)', () => {
 
   it('etiquetaTipoCarril presenta el CHECK del DDL en texto del prototipo', () => {
     expect(etiquetaTipoCarril('MANUAL')).toBe('Manual');
-    expect(etiquetaTipoCarril('TELEPEAJE_EXCLUSIVO')).toBe('Telepeaje exclusivo');
+    expect(etiquetaTipoCarril('TELEPEAJE_EXCLUSIVO')).toBe(
+      'Telepeaje exclusivo',
+    );
     expect(etiquetaTipoCarril('MIXTO')).toBe('Mixto');
   });
 

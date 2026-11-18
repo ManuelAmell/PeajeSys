@@ -31,7 +31,10 @@ describe('Esquema del diálogo de tarifa', () => {
   });
 
   it('rechaza monto 0 con el mensaje del esquema Zod de tarifas', () => {
-    const resultado = esquemaFormularioTarifa.safeParse({ ...base, monto: '0' });
+    const resultado = esquemaFormularioTarifa.safeParse({
+      ...base,
+      monto: '0',
+    });
     expect(resultado.success).toBe(false);
     if (!resultado.success) {
       expect(resultado.error.issues[0]?.message).toBe(
@@ -42,9 +45,9 @@ describe('Esquema del diálogo de tarifa', () => {
   });
 
   it('rechaza monto negativo o no numérico', () => {
-    expect(esquemaFormularioTarifa.safeParse({ ...base, monto: '-5' }).success).toBe(
-      false,
-    );
+    expect(
+      esquemaFormularioTarifa.safeParse({ ...base, monto: '-5' }).success,
+    ).toBe(false);
     expect(
       esquemaFormularioTarifa.safeParse({ ...base, monto: 'abc' }).success,
     ).toBe(false);
@@ -97,7 +100,8 @@ describe('Esquema del diálogo de tarifa', () => {
 
   it('rechaza fechas con formato distinto a AAAA-MM-DD', () => {
     expect(
-      esquemaFormularioTarifa.safeParse({ ...base, desde: '01/03/2026' }).success,
+      esquemaFormularioTarifa.safeParse({ ...base, desde: '01/03/2026' })
+        .success,
     ).toBe(false);
   });
 });
