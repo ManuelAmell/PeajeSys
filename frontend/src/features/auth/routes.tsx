@@ -8,6 +8,7 @@ export default function AuthPage() {
   const { iniciarSesion } = useSesion();
   const navigate = useNavigate();
 
+  // TODO(B2): sustituir por el inicio de sesión real con formulario, validaciones Zod y API
   const handleEntrarComo = (
     rol: 'RECAUDADOR' | 'SUPERVISOR' | 'ADMIN',
     nombre: string,
@@ -64,9 +65,15 @@ export default function AuthPage() {
           </div>
 
           <div className="rounded-[8px] border-2 border-borde bg-superficie p-6 flex flex-col gap-4">
-            <span className="text-[15px] font-semibold text-texto-2">
-              Accesos rápidos para desarrollo y pruebas:
-            </span>
+            <div className="flex flex-col gap-1">
+              <span className="text-[15px] font-semibold text-texto">
+                Accesos rápidos de prueba (DML):
+              </span>
+              <span className="text-[13px] text-texto-2">
+                Usuarios temporales para desarrollo (TODO(B2): sustituir por el
+                inicio de sesión real).
+              </span>
+            </div>
             <div className="flex flex-col gap-3">
               <Button
                 type="button"
@@ -75,11 +82,11 @@ export default function AuthPage() {
                   handleEntrarComo(
                     'RECAUDADOR',
                     'María Fernanda López Martínez',
-                    'EMP-001',
+                    'EMP-002',
                   )
                 }
               >
-                Entrar como Operador (Recaudador)
+                Entrar como Recaudador (EMP-002)
               </Button>
               <Button
                 type="button"
@@ -88,24 +95,20 @@ export default function AuthPage() {
                   handleEntrarComo(
                     'SUPERVISOR',
                     'Juan David Rodríguez Silva',
-                    'SUP-001',
+                    'EMP-003',
                   )
                 }
               >
-                Entrar como Supervisor
+                Entrar como Supervisor (EMP-003)
               </Button>
               <Button
                 type="button"
                 variant="secundario"
                 onClick={() =>
-                  handleEntrarComo(
-                    'ADMIN',
-                    'ADMIN-01 (usuario de prueba)',
-                    'ADM-001',
-                  )
+                  handleEntrarComo('ADMIN', 'Administración', 'ADMIN-01')
                 }
               >
-                Entrar como Administrador
+                Entrar como Administrador (ADMIN-01)
               </Button>
             </div>
           </div>

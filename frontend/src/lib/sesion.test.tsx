@@ -6,15 +6,21 @@ import { SesionProvider, useSesion, RequireRol } from './sesion';
 import { Usuario } from './roles';
 
 const usuarioOperador: Usuario = {
-  id: 'EMP-001',
-  nombre: 'María López',
+  id: 'EMP-002',
+  nombre: 'María Fernanda López Martínez',
   rol: 'RECAUDADOR',
 };
 
 const usuarioSupervisor: Usuario = {
-  id: 'SUP-001',
-  nombre: 'Juan Rodríguez',
+  id: 'EMP-003',
+  nombre: 'Juan David Rodríguez Silva',
   rol: 'SUPERVISOR',
+};
+
+const usuarioAdmin: Usuario = {
+  id: 'ADMIN-01',
+  nombre: 'Administración',
+  rol: 'ADMIN',
 };
 
 function ComponentePruebaSesion() {
@@ -55,29 +61,40 @@ describe('Sesión y autenticación (sesion.tsx)', () => {
       </SesionProvider>,
     );
 
-    expect(screen.getByTestId('usuario-nombre')).toHaveTextContent(
-      'Sin sesión',
-    );
+    expect(screen.getByTestId('usuario-nombre')).toHaveTextContent('Sin sesión');
+    expect(screen.getByTestId('usuario-rol')).toHaveTextContent('Sin rol');
   });
 
   it('permite iniciar y cerrar sesión persistiendo en sessionStorage', async () => {
     const user = userEvent.setup();
+
     render(
       <SesionProvider>
         <ComponentePruebaSesion />
       </SesionProvider>,
     );
 
-    await user.click(screen.getByTestId('btn-login'));
+    const btnLogin = screen.getByTestId('btn-login');
+    await user.click(btnLogin);
+
     expect(screen.getByTestId('usuario-nombre')).toHaveTextContent(
-      'María López',
+      'María Fernanda López Martínez',
     );
     expect(screen.getByTestId('usuario-rol')).toHaveTextContent('RECAUDADOR');
 
-    await user.click(screen.getByTestId('btn-logout'));
-    expect(screen.getByTestId('usuario-nombre')).toHaveTextContent(
-      'Sin sesión',
+    const guardado = JSON.parse(
+      window.sessionStorage.getItem('peajesys_sesion') || '{}',
     );
+    expect(guardado.id).toBe('EMP-002');
+    expect(guardado.rol).toBe('RECAUDADOR');
+
+    const btnLogout = screen.getByTestId('btn-logout');
+    await user.click(btnLogout);
+
+    expect(screen.getByTestId('usuario-nombre')).toHaveTextContent('Sin sesión');
+    expect(
+      window.sessionStorage.getItem('peajesys_sesion'),
+    ).toBeNull();
   });
 
   it('carga la sesión inicial si se pasa en props', () => {
@@ -88,9 +105,25 @@ describe('Sesión y autenticación (sesion.tsx)', () => {
     );
 
     expect(screen.getByTestId('usuario-nombre')).toHaveTextContent(
-      'Juan Rodríguez',
+      'Juan David Rodríguez Silva',
     );
     expect(screen.getByTestId('usuario-rol')).toHaveTextContent('SUPERVISOR');
+  });
+
+  it('restaura sesión automáticamente desde sessionStorage al montar sin props', () => {
+    window.sessionStorage.setItem(
+      'peajesys_sesion',
+      JSON.stringify(usuarioAdmin),
+    );
+
+    render(
+      <SesionProvider>
+        <ComponentePruebaSesion />
+      </SesionProvider>,
+    );
+
+    expect(screen.getByTestId('usuario-nombre')).toHaveTextContent('Administración');
+    expect(screen.getByTestId('usuario-rol')).toHaveTextContent('ADMIN');
   });
 
   describe('RequireRol (Guardia de rutas)', () => {
@@ -117,10 +150,37 @@ describe('Sesión y autenticación (sesion.tsx)', () => {
       expect(screen.queryByText('Página de Operador')).not.toBeInTheDocument();
     });
 
-    it('permite el acceso si el rol coincide', () => {
+    it('permite el acceso si el rol coincide vía props', () => {
       render(
         <MemoryRouter initialEntries={['/operador']}>
           <SesionProvider usuarioInicial={usuarioOperador}>
+            <Routes>
+              <Route path="/login" element={<div>Página de Login</div>} />
+              <Route
+                path="/operador"
+                element={
+                  <RequireRol rolPermitido="RECAUDADOR">
+                    <div>Página de Operador</div>
+                  </RequireRol>
+                }
+              />
+            </Routes>
+          </SesionProvider>
+        </MemoryRouter>,
+      );
+
+      expect(screen.getByText('Página de Operador')).toBeInTheDocument();
+    });
+
+    it('permite el acceso si el rol coincide hidratado desde sessionStorage', () => {
+      window.sessionStorage.setItem(
+        'peajesys_sesion',
+        JSON.stringify(usuarioOperador),
+      );
+
+      render(
+        <MemoryRouter initialEntries={['/operador']}>
+          <SesionProvider>
             <Routes>
               <Route path="/login" element={<div>Página de Login</div>} />
               <Route

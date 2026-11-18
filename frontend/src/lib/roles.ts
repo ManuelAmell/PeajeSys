@@ -15,8 +15,6 @@ export interface Usuario {
   nombre: string;
   rol: Rol;
   codigo?: string;
-  estacion?: string;
-  carril?: string;
 }
 
 /**
