@@ -148,14 +148,14 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
   describe('Recursos API y funciones de llamada', () => {
     it('login autentica credenciales válidas y retorna usuario con turno abierto', async () => {
       const respuesta = await login({
-        codigo: 'EMP-001',
+        codigo: 'EMP-002',
         clave: 'Turno123*',
       });
 
-      expect(respuesta.usuario.codigo).toBe('EMP-001');
+      expect(respuesta.usuario.codigo).toBe('EMP-002');
       expect(respuesta.usuario.rol).toBe('RECAUDADOR');
       expect(respuesta.turno_abierto).toBeDefined();
-      expect(respuesta.turno_abierto?.id_turno).toBe(8);
+      expect(respuesta.turno_abierto?.id_turno).toBe(9);
       expect(respuesta.turno_abierto?.estacion_nombre).toBe('Estación Gambote');
     });
 
@@ -260,7 +260,9 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
       const turno8 = await obtenerTurno(8);
       expect(turno8.id_turno).toBe(8);
-      expect(turno8.estado).toBe('ABIERTO');
+      expect(turno8.estado).toBe('CERRADO');
+      expect(turno8.total_declarado_cierre).toBe(52500);
+      expect(turno8.diferencia_descuadre).toBe(0);
 
       const transaccionesTurno8 = await obtenerTransaccionesTurno(8);
       expect(Array.isArray(transaccionesTurno8)).toBe(true);
@@ -277,7 +279,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
     it('transacciones registra cobro en efectivo y calcula cambio', async () => {
       const res = await registrarTransaccion({
-        id_turno: 8,
+        id_turno: 9,
         id_tarifa: 1,
         id_categoria: 1,
         placa_detectada: 'XYZ789',
@@ -337,12 +339,12 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
       const { result } = renderHook(() => useLogin(), { wrapper });
 
       result.current.mutate({
-        codigo: 'EMP-001',
+        codigo: 'EMP-002',
         clave: 'Turno123*',
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
-      expect(result.current.data?.usuario.codigo).toBe('EMP-001');
+      expect(result.current.data?.usuario.codigo).toBe('EMP-002');
 
       // Verificar que el usuario quedó guardado en la caché de React Query
       const usuarioEnCache = queryClient.getQueryData(['auth', 'usuario']);
