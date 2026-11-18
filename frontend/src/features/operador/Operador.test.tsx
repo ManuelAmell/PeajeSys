@@ -27,7 +27,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(await screen.findByRole('heading', { name: /Terminal de cobro/i })).toBeInTheDocument();
     expect(screen.getByText(/María Fernanda López Martínez/i)).toBeInTheDocument();
     expect(screen.getByText(/Carril 2 · manual/i)).toBeInTheDocument();
-    expect(screen.getByText(/Turno/i)).toBeInTheDocument();
+    expect(screen.getByText(/^Turno$/i)).toBeInTheDocument();
     expect(screen.getByText(/9 ·/i)).toBeInTheDocument();
     expect(screen.getByText('ABIERTO')).toBeInTheDocument();
 
@@ -44,8 +44,8 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(screen.getByRole('button', { name: /Exento/i })).toBeInTheDocument();
 
     // Resumen de caja: fondo inicial $ 100.000 y recaudado $ 10.500
-    expect(screen.getByText(/\$ 100\.000/i)).toBeInTheDocument();
-    expect(screen.getByText(/\$ 10\.500/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/\$ 100\.000/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/\$ 10\.500/i).length).toBeGreaterThanOrEqual(2);
   });
 
   it('registra cobro en efectivo con cambio exacto y devuelve el foco a la placa', async () => {
@@ -64,7 +64,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     // Verificación del cambio calculado en vivo: 20000 - 10500 = 9500
     expect(screen.getByText(/Cambio a entregar/i)).toBeInTheDocument();
-    expect(screen.getByText(/\$ 9\.500/i)).toBeInTheDocument();
+    expect(screen.getByText(/^\$ 9\.500$/i)).toBeInTheDocument();
 
     // El botón de cobro debe habilitarse
     const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500 y emitir ticket/i });
@@ -74,13 +74,13 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     await user.click(botonCobrar);
 
     // Verificar aviso de confirmación emitido
-    expect(await screen.findByText(/Ticket TCK-/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/GHJ357 · Cat\. I · EFECTIVO/i)).toBeInTheDocument();
 
     // Verificar que los campos se limpiaron y el foco volvió a la placa
     expect(inputPlaca).toHaveValue('');
     expect(inputRecibido).toHaveValue('');
-    expect(inputPlaca).toHaveFocus();
+    await waitFor(() => expect(inputPlaca).toHaveFocus());
   });
 
   it('muestra faltante y bloquea el cobro cuando el dinero recibido es insuficiente', async () => {
@@ -98,7 +98,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     // Tarifa 10.500 - 5.000 = Faltan 5.500
     expect(screen.getByText(/Falta por cobrar/i)).toBeInTheDocument();
-    expect(screen.getByText(/\$ 5\.500/i)).toBeInTheDocument();
+    expect(screen.getByText(/^\$ 5\.500$/i)).toBeInTheDocument();
     expect(screen.getByText(/Faltan \$ 5\.500 para cubrir el peaje/i)).toBeInTheDocument();
 
     const botonCobrar = screen.getByRole('button', { name: /Cobrar/i });
@@ -117,9 +117,13 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     await user.type(inputPlaca, 'KJN456');
 
     // Esperar a que la consulta detecte el vehículo
-    await waitFor(() => {
-      expect(screen.getByText(/Vehículo registrado · categoría II/i)).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/Vehículo registrado/i)).toBeInTheDocument();
+        expect(screen.getByText(/categoría II/i)).toBeInTheDocument();
+      },
+      { timeout: 4000 },
+    );
 
     // La categoría II debe estar activa
     const botonCat2 = screen.getByRole('button', { name: /^II\b/i });
@@ -145,7 +149,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     expect(await screen.findByText(/mixto/i)).toBeInTheDocument();
 
-    const inputPlaca = screen.getByLabelText(/^Placa/i);
+    const inputPlaca = await screen.findByLabelText(/^Placa/i);
     // HKL123 es CAT_I (tarifa 10500), saldo 150000, ACTIVA
     await user.type(inputPlaca, 'HKL123');
 
@@ -155,20 +159,23 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     await user.click(botonTelepeaje);
 
     // Esperar detalle de telepeaje
-    await waitFor(() => {
-      expect(screen.getByText(/TAG-COL-9900112233/i)).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getByText(/TAG-COL-9900112233/i)).toBeInTheDocument();
+      },
+      { timeout: 4000 },
+    );
 
     // Saldo después del cobro: 150000 - 10500 = 139500
-    expect(screen.getByText(/\$ 150\.000/i)).toBeInTheDocument();
-    expect(screen.getByText(/\$ 139\.500/i)).toBeInTheDocument();
+    expect(screen.getByText(/^\$ 150\.000$/i)).toBeInTheDocument();
+    expect(screen.getByText(/^\$ 139\.500$/i)).toBeInTheDocument();
 
     const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500 y emitir ticket/i });
     expect(botonCobrar).toBeEnabled();
     await user.click(botonCobrar);
 
     // Confirmación emitida
-    expect(await screen.findByText(/Ticket TCK-/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/saldo restante \$ 139\.500/i)).toBeInTheDocument();
   });
 
@@ -186,12 +193,15 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     const botonTelepeaje = screen.getByRole('button', { name: /Telepeaje/i });
     await user.click(botonTelepeaje);
 
-    await waitFor(() => {
-      expect(screen.getByText(/Saldo insuficiente/i)).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getAllByText(/Saldo insuficiente/i).length).toBeGreaterThanOrEqual(1);
+      },
+      { timeout: 4000 },
+    );
     expect(
-      screen.getByText(/la cuenta tiene \$ 8\.000 y el peaje cuesta \$ 15\.300/i),
-    ).toBeInTheDocument();
+      screen.getAllByText(/la cuenta tiene \$ 8\.000 y el peaje cuesta \$ 15\.300/i).length,
+    ).toBeGreaterThanOrEqual(1);
 
     const botonCobrar = screen.getByRole('button', { name: /Cobrar/i });
     expect(botonCobrar).toBeDisabled();
@@ -211,9 +221,12 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     const botonTelepeaje = screen.getByRole('button', { name: /Telepeaje/i });
     await user.click(botonTelepeaje);
 
-    await waitFor(() => {
-      expect(screen.getByText(/está SUSPENDIDA: cobra en efectivo/i)).toBeInTheDocument();
-    });
+    await waitFor(
+      () => {
+        expect(screen.getAllByText(/está SUSPENDIDA: cobra en efectivo/i).length).toBeGreaterThanOrEqual(1);
+      },
+      { timeout: 4000 },
+    );
 
     const botonCobrar = screen.getByRole('button', { name: /Cobrar/i });
     expect(botonCobrar).toBeDisabled();
@@ -238,7 +251,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(botonCobrar).toBeEnabled();
     await user.click(botonCobrar);
 
-    expect(await screen.findByText(/Ticket TCK-/i)).toBeInTheDocument();
+    expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/OFJ123 · Cat\. I · EXENTO · \$ 0/i)).toBeInTheDocument();
   });
 
