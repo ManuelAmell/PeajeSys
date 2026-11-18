@@ -276,7 +276,8 @@ async function ejecutar() {
 
         // Verificación estricta de ruta (C1): evitar que redirecciones pasen inadvertidas
         const rutaActual = new URL(page.url()).pathname;
-        if (rutaActual !== opts.ruta) {
+        const rutaEsperada = new URL(opts.ruta, 'http://localhost').pathname;
+        if (rutaActual !== rutaEsperada) {
           throw new Error(
             `❌ Redirección inesperada: se solicitó "${opts.ruta}" pero el navegador navegó a "${rutaActual}".`,
           );
