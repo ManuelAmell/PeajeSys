@@ -3,12 +3,11 @@ import type { EventoAuditoriaConDetalle } from '../tipos';
 
 interface SeccionAuditoriaProps {
   auditorias: EventoAuditoriaConDetalle[];
-  filtroInicial?: string;
 }
 
-export function SeccionAuditoria({ auditorias, filtroInicial = 'todas' }: SeccionAuditoriaProps) {
+export function SeccionAuditoria({ auditorias }: SeccionAuditoriaProps) {
   const [buscar, setBuscar] = useState('');
-  const [tipo, setTipo] = useState(filtroInicial);
+  const [tipo, setTipo] = useState('todas');
 
   const eventosFiltrados = useMemo(() => {
     const q = buscar.trim().toLowerCase();
@@ -35,9 +34,9 @@ export function SeccionAuditoria({ auditorias, filtroInicial = 'todas' }: Seccio
     >
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div className="flex flex-col gap-1">
-          <h1 id="t-auditoria" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
+          <h2 id="t-auditoria" className="text-[28px] md:text-[32px] font-bold text-texto m-0">
             Auditoría de transacciones
-          </h1>
+          </h2>
           <p className="text-[16px] md:text-[17px] text-texto-2 m-0">
             Registro inmutable: el trigger trg_auditoria_inmutable impide editarlo o borrarlo.
           </p>
@@ -74,6 +73,15 @@ export function SeccionAuditoria({ auditorias, filtroInicial = 'todas' }: Seccio
               <option value="UPDATE">UPDATE</option>
               <option value="VOID">VOID</option>
             </select>
+            <button
+              type="button"
+              id="btn-filtro-void"
+              onClick={() => setTipo('VOID')}
+              aria-label="Filtro rápido VOID"
+              style={{ opacity: 0, width: 1, height: 1, position: 'absolute' }}
+            >
+              VOID
+            </button>
           </div>
         </div>
       </div>

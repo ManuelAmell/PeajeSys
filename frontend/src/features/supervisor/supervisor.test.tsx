@@ -18,7 +18,8 @@ describe('Panel de Supervisión (B4)', () => {
       usuarioInicial: usuarioSupervisor,
     });
 
-    expect(await screen.findByRole('heading', { level: 1, name: /Arqueo y conciliación de turnos/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 2, name: /Arqueo y conciliación de turnos/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /Supervisión/i })).toBeInTheDocument();
     expect(screen.getByText('Juan David Rodríguez Silva')).toBeInTheDocument();
     expect(screen.getByText('SUPERVISOR')).toBeInTheDocument();
     expect(screen.getByText(/Estación Gambote/i)).toBeInTheDocument();
@@ -45,7 +46,7 @@ describe('Panel de Supervisión (B4)', () => {
     // Navegar con clic a Recaudo
     await user.click(tabRecaudo);
     expect(tabRecaudo).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('heading', { level: 1, name: /Recaudo diario/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Recaudo diario/i })).toBeInTheDocument();
 
     // Navegación por teclado con flechas
     tabRecaudo.focus();
@@ -53,13 +54,13 @@ describe('Panel de Supervisión (B4)', () => {
     expect(tabAuditoria).toHaveFocus();
     await user.keyboard('{Enter}');
     expect(tabAuditoria).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('heading', { level: 1, name: /Auditoría de transacciones/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Auditoría de transacciones/i })).toBeInTheDocument();
 
     await user.keyboard('{ArrowRight}');
     expect(tabCuentas).toHaveFocus();
     await user.keyboard('{Space}');
     expect(tabCuentas).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('heading', { level: 1, name: /Cuentas de telepeaje/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: /Cuentas de telepeaje/i })).toBeInTheDocument();
   });
 
   describe('Sección 1: Arqueo y conciliación de turnos', () => {
@@ -69,7 +70,7 @@ describe('Panel de Supervisión (B4)', () => {
         usuarioInicial: usuarioSupervisor,
       });
 
-      expect(await screen.findByRole('heading', { level: 1, name: /Arqueo y conciliación de turnos/i })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { level: 2, name: /Arqueo y conciliación de turnos/i })).toBeInTheDocument();
 
       // En la semilla: turnos 9 y 10 abiertos -> 2
       // Descuadres (cerrados con dif !== 0): turno 2 (faltante) y turno 5 (sobrante) -> 2
@@ -134,6 +135,37 @@ describe('Panel de Supervisión (B4)', () => {
       expect(filaT8).toHaveTextContent('Concilia');
     });
 
+    it('comprueba la fila del turno 5 completa con los datos reales del DML y operador Laura Patricia Díaz Morales', async () => {
+      renderConProveedores(<SupervisorPage />, {
+        initialEntries: ['/supervisor'],
+        usuarioInicial: usuarioSupervisor,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('fila-turno-5')).toBeInTheDocument();
+      });
+
+      const filaT5 = screen.getByTestId('fila-turno-5');
+      // Turno 5
+      expect(filaT5).toHaveTextContent('5');
+      // Fecha 2026-10-02
+      expect(filaT5).toHaveTextContent('2026-10-02');
+      // Carril 1 · manual
+      expect(filaT5).toHaveTextContent('1 · manual');
+      // Recaudador: Laura Patricia Díaz Morales (id_operador 6 en el DML)
+      expect(filaT5).toHaveTextContent('Laura Patricia Díaz Morales');
+      // Según turno $ 420.000
+      expect(filaT5).toHaveTextContent('$ 420.000');
+      // Pasos en efectivo $ 48.500
+      expect(filaT5).toHaveTextContent('$ 48.500');
+      // Declarado $ 425.000
+      expect(filaT5).toHaveTextContent('$ 425.000');
+      // Arqueo: SOBRANTE (+) $ 5.000
+      expect(filaT5).toHaveTextContent('SOBRANTE (+) $ 5.000');
+      // Conciliación: No concilia: $ 371.500 sin pasos
+      expect(filaT5).toHaveTextContent('No concilia: $ 371.500 sin pasos');
+    });
+
     it('permite filtrar la lista de turnos por fecha', async () => {
       const user = userEvent.setup();
       renderConProveedores(<SupervisorPage />, {
@@ -167,7 +199,7 @@ describe('Panel de Supervisión (B4)', () => {
       const tabRecaudo = await screen.findByRole('tab', { name: /Recaudo diario/i });
       await user.click(tabRecaudo);
 
-      expect(await screen.findByRole('heading', { level: 1, name: /Recaudo diario/i })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { level: 2, name: /Recaudo diario/i })).toBeInTheDocument();
       expect(screen.getByText(/Vista vw_resumen_diario_estacion/i)).toBeInTheDocument();
 
       // Gráficos y leyendas
@@ -199,7 +231,7 @@ describe('Panel de Supervisión (B4)', () => {
       const tabAuditoria = await screen.findByRole('tab', { name: /Auditoría/i });
       await user.click(tabAuditoria);
 
-      expect(await screen.findByRole('heading', { level: 1, name: /Auditoría de transacciones/i })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { level: 2, name: /Auditoría de transacciones/i })).toBeInTheDocument();
       expect(screen.getByText(/trg_auditoria_inmutable/i)).toBeInTheDocument();
 
       await waitFor(() => {
@@ -218,7 +250,7 @@ describe('Panel de Supervisión (B4)', () => {
       const tabAuditoria = await screen.findByRole('tab', { name: /Auditoría/i });
       await user.click(tabAuditoria);
 
-      await screen.findByRole('heading', { level: 1, name: /Auditoría de transacciones/i });
+      await screen.findByRole('heading', { level: 2, name: /Auditoría de transacciones/i });
 
       const selectOperacion = screen.getByLabelText(/Operación/i);
       await user.selectOptions(selectOperacion, 'VOID');
@@ -262,7 +294,7 @@ describe('Panel de Supervisión (B4)', () => {
       const tabCuentas = await screen.findByRole('tab', { name: /Cuentas de telepeaje/i });
       await user.click(tabCuentas);
 
-      expect(await screen.findByRole('heading', { level: 1, name: /Cuentas de telepeaje/i })).toBeInTheDocument();
+      expect(await screen.findByRole('heading', { level: 2, name: /Cuentas de telepeaje/i })).toBeInTheDocument();
       expect(screen.getByText(/vw_estado_cuentas_telepeaje/i)).toBeInTheDocument();
 
       await waitFor(() => {
@@ -331,14 +363,40 @@ describe('Panel de Supervisión (B4)', () => {
       expect(btnReintentar).toBeInTheDocument();
     });
 
-    it('soporta forzar el estado de error mediante la ruta /supervisor/error', async () => {
+    it('muestra el estado de error cuando se invoca con ?mock=error mediante MSW', async () => {
+      server.use(
+        http.get('/api/turnos', () => {
+          return HttpResponse.json(
+            { error: { codigo: 'ERROR_CONTRATO', mensaje: 'Error simulado por contrato' } },
+            { status: 500 },
+          );
+        }),
+      );
+
       renderConProveedores(<SupervisorPage />, {
-        initialEntries: ['/supervisor/error'],
+        initialEntries: ['/supervisor?mock=error'],
         usuarioInicial: usuarioSupervisor,
       });
 
       expect(await screen.findByRole('alert')).toBeInTheDocument();
       expect(screen.getByText('No se pudieron cargar los datos de la estación')).toBeInTheDocument();
+    });
+
+    it('muestra el estado vacío sin turnos cuando se invoca con ?mock=vacio', async () => {
+      server.use(
+        http.get('/api/turnos', () => {
+          return HttpResponse.json([]);
+        }),
+      );
+
+      renderConProveedores(<SupervisorPage />, {
+        initialEntries: ['/supervisor?mock=vacio'],
+        usuarioInicial: usuarioSupervisor,
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText('No hay turnos registrados para la fecha seleccionada.')).toBeInTheDocument();
+      });
     });
   });
 });

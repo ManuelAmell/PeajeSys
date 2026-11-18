@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
 import { LayoutApp } from '@/components/layout/LayoutApp';
 import { PestanasSupervision } from './components/PestanasSupervision';
 import { SeccionArqueo } from './components/SeccionArqueo';
@@ -9,41 +8,12 @@ import { SeccionRecaudo } from './components/SeccionRecaudo';
 import { useSupervisorDatos } from './hooks/useSupervisorDatos';
 import type { IdPestanaSupervisor } from './tipos';
 
-export interface SupervisorPageProps {
-  tabInicial?: IdPestanaSupervisor;
-  filtroAuditoriaInicial?: string;
-  forzarError?: boolean;
-}
-
-export function SupervisorPage({
-  tabInicial = 'arqueo',
-  filtroAuditoriaInicial,
-  forzarError = false,
-}: SupervisorPageProps) {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // Tab activo: por prop, por query param ?tab= o defecto
-  const tabParam = searchParams.get('tab') as IdPestanaSupervisor | null;
-  const [pestanaActiva, setPestanaActiva] = useState<IdPestanaSupervisor>(
-    tabParam && ['arqueo', 'recaudo', 'auditoria', 'cuentas'].includes(tabParam)
-      ? tabParam
-      : tabInicial,
-  );
-
-  // Sincronizar si cambia tabInicial
-  useEffect(() => {
-    if (tabInicial) {
-      setPestanaActiva(tabInicial);
-    }
-  }, [tabInicial]);
-
-  // Manejar modo simulado desde URL (?mock=error | vacio | lento)
-  const mockParam = searchParams.get('mock');
-  const errorSimulado = forzarError || mockParam === 'error';
+export function SupervisorPage() {
+  const [pestanaActiva, setPestanaActiva] = useState<IdPestanaSupervisor>('arqueo');
 
   const {
     isPending,
-    isError: errorConsulta,
+    isError,
     refetchTodo,
     turnos,
     metricas,
@@ -51,41 +21,20 @@ export function SupervisorPage({
     diasGrafico,
     cuentas,
     auditorias,
-  } = useSupervisorDatos({
-    forzarError: errorSimulado,
-  });
-
-  const [forzarNormal, setForzarNormal] = useState(false);
-  const mostrarError = (errorSimulado || errorConsulta) && !forzarNormal;
+  } = useSupervisorDatos();
 
   const handleCambiarPestana = (id: IdPestanaSupervisor) => {
     setPestanaActiva(id);
-    setSearchParams(
-      (prev) => {
-        prev.set('tab', id);
-        return prev;
-      },
-      { replace: true },
-    );
   };
 
   const handleReintentar = () => {
-    setForzarNormal(true);
-    if (mockParam === 'error') {
-      setSearchParams(
-        (prev) => {
-          prev.delete('mock');
-          return prev;
-        },
-        { replace: true },
-      );
-    }
     refetchTodo();
   };
 
   return (
     <LayoutApp titulo="Supervisión" subtitulo="Estación Gambote">
       <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
+        <h1 className="sr-only">Supervisión</h1>
         {/* Barra de navegación por pestañas accesibles */}
         <PestanasSupervision
           pestanaActiva={pestanaActiva}
@@ -93,7 +42,7 @@ export function SupervisorPage({
         />
 
         {/* Estado de carga */}
-        {isPending && !mostrarError && (
+        {isPending && !isError && (
           <div
             role="status"
             className="max-w-[640px] w-full bg-superficie border border-borde rounded-[10px] p-8 flex flex-col gap-3.5 shadow-sm"
@@ -112,7 +61,7 @@ export function SupervisorPage({
         )}
 
         {/* Estado de error */}
-        {mostrarError && (
+        {isError && (
           <div
             role="alert"
             className="max-w-[640px] w-full bg-superficie border-2 border-error rounded-[10px] p-8 flex flex-col gap-3.5 shadow-sm"
@@ -134,7 +83,7 @@ export function SupervisorPage({
         )}
 
         {/* Contenido normal de la sección activa */}
-        {!isPending && !mostrarError && (
+        {!isPending && !isError && (
           <>
             {pestanaActiva === 'arqueo' && (
               <SeccionArqueo turnos={turnos} metricas={metricas} />
@@ -145,10 +94,7 @@ export function SupervisorPage({
             )}
 
             {pestanaActiva === 'auditoria' && (
-              <SeccionAuditoria
-                auditorias={auditorias}
-                filtroInicial={filtroAuditoriaInicial}
-              />
+              <SeccionAuditoria auditorias={auditorias} />
             )}
 
             {pestanaActiva === 'cuentas' && (

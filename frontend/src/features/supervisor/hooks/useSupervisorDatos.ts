@@ -22,11 +22,7 @@ import type {
   TurnoConDetalle,
 } from '../tipos';
 
-interface OpcionesSupervisorDatos {
-  forzarError?: boolean;
-}
-
-export function useSupervisorDatos(opciones?: OpcionesSupervisorDatos) {
+export function useSupervisorDatos() {
   const turnosQuery = useTurnos();
   const casetasQuery = useCasetas();
   const operadoresQuery = useOperadores();
@@ -248,7 +244,6 @@ export function useSupervisorDatos(opciones?: OpcionesSupervisorDatos) {
 
   // Estado global de error
   const isError =
-    opciones?.forzarError ||
     turnosQuery.isError ||
     recaudoQuery.isError ||
     auditoriaQuery.isError ||
