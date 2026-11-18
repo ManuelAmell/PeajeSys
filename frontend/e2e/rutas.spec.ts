@@ -24,15 +24,15 @@ test.describe('Protección y navegación por roles (e2e/rutas.spec.ts)', () => {
   }) => {
     await page.goto('/operador');
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.locator('h1')).toContainText('Inicio de sesión');
+    await expect(page.locator('h1')).toContainText('Inicia sesión');
 
     await page.goto('/supervisor');
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.locator('h1')).toContainText('Inicio de sesión');
+    await expect(page.locator('h1')).toContainText('Inicia sesión');
 
     await page.goto('/admin');
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.locator('h1')).toContainText('Inicio de sesión');
+    await expect(page.locator('h1')).toContainText('Inicia sesión');
   });
 
   test('rol RECAUDADOR accede a /operador y es redirigido desde rutas no autorizadas', async ({

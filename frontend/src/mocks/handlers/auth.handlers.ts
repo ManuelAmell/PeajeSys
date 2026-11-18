@@ -1,4 +1,5 @@
 import { http, HttpResponse } from 'msw';
+import { procesarControlLectura } from '../control';
 import { getDb } from '../db';
 
 /**
@@ -7,6 +8,12 @@ import { getDb } from '../db';
  */
 export const authHandlers = [
   http.post('/api/auth/login', async ({ request }) => {
+    // Control de simulación ?mock=error, igual que los handlers de lectura.
+    const { errorResponse } = await procesarControlLectura(request);
+    if (errorResponse) {
+      return errorResponse;
+    }
+
     let body: { codigo?: string; clave?: string } = {};
     try {
       body = (await request.json()) as { codigo?: string; clave?: string };
