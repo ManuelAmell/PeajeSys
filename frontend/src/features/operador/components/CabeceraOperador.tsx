@@ -11,7 +11,7 @@ export interface CabeceraOperadorProps {
   operadorNombre: string;
   cerrado: boolean;
   onAbrirCierre: () => void;
-  botonCierreRef?: React.RefObject<HTMLButtonElement | null>;
+  botonCierreRef?: React.RefObject<HTMLButtonElement>;
 }
 
 export function CabeceraOperador({
