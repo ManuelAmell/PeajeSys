@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { spawn, ChildProcess } from 'child_process';
 import { chromium } from '@playwright/test';
@@ -55,6 +56,12 @@ function parsearArgumentos(): OpcionesCaptura {
     process.exit(1);
   }
 
+  if (opciones.espera === 'h1') {
+    console.warn(
+      '⚠️ ADVERTENCIA: El selector "h1" genérico es ambiguo si la pantalla puede redirigir. Se recomienda especificar "h1:has-text(...)".',
+    );
+  }
+
   return opciones as OpcionesCaptura;
 }
 
@@ -89,24 +96,21 @@ function obtenerUsuarioDeRol(rol: OpcionesCaptura['rol']) {
   switch (rol) {
     case 'RECAUDADOR':
       return {
-        id: 'EMP-001',
+        id: 'EMP-002',
         nombre: 'María Fernanda López Martínez',
-        rol: 'RECAUDADOR',
-        estacion: 'Gambote',
-        carril: 'Carril 1',
+        rol: 'RECAUDADOR' as const,
       };
     case 'SUPERVISOR':
       return {
-        id: 'SUP-001',
+        id: 'EMP-003',
         nombre: 'Juan David Rodríguez Silva',
-        rol: 'SUPERVISOR',
-        estacion: 'Gambote',
+        rol: 'SUPERVISOR' as const,
       };
     case 'ADMIN':
       return {
-        id: 'ADM-001',
-        nombre: 'ADMIN-01 (usuario de prueba)',
-        rol: 'ADMIN',
+        id: 'ADMIN-01',
+        nombre: 'Administración',
+        rol: 'ADMIN' as const,
       };
     case 'ninguno':
       return null;
@@ -118,6 +122,7 @@ interface ResultadoCaptura {
   bytes: number;
   tamanoKb: string;
   erroresConsola: number;
+  md5: string;
   valido: boolean;
 }
 
@@ -182,18 +187,24 @@ async function ejecutar() {
         });
 
         // Inyectar tema y sesión antes de cargar la página
+        // IMPORTANTE: document.documentElement es null antes de parsear el documento,
+        // por lo que no debe accederse directamente antes del DOM para no abortar sessionStorage.setItem.
         await context.addInitScript(
           ({ t, u }) => {
             try {
-              localStorage.setItem('peajesys_tema', t);
-              document.documentElement.setAttribute('data-tema', t);
+              if (t) {
+                localStorage.setItem('peajesys_tema', t);
+                if (document.documentElement) {
+                  document.documentElement.setAttribute('data-tema', t);
+                }
+              }
               if (u) {
                 sessionStorage.setItem('peajesys_sesion', JSON.stringify(u));
               } else {
                 sessionStorage.removeItem('peajesys_sesion');
               }
-            } catch {
-              // noop
+            } catch (e) {
+              console.error('Error al inyectar sesión en initScript:', e);
             }
           },
           { t: tema, u: usuario },
@@ -215,6 +226,14 @@ async function ejecutar() {
         await page.goto(url, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector(opts.espera, { timeout: 15000 });
         await page.evaluate(() => document.fonts.ready);
+
+        // Verificación estricta de ruta (C1): evitar que redirecciones pasen inadvertidas
+        const rutaActual = new URL(page.url()).pathname;
+        if (rutaActual !== opts.ruta) {
+          throw new Error(
+            `❌ Redirección inesperada: se solicitó "${opts.ruta}" pero el navegador navegó a "${rutaActual}".`,
+          );
+        }
 
         // Asegurar que data-tema esté fijado en el DOM
         await page.evaluate((t) => {
@@ -239,6 +258,9 @@ async function ejecutar() {
         const tamanoKb = `${(bytes / 1024).toFixed(1)} KB`;
         const esMayor30Kb = bytes >= 30 * 1024;
         const sinErrores = erroresConsola.length === 0;
+        const contenido = fs.readFileSync(rutaCompleta);
+        const md5 = crypto.createHash('md5').update(contenido).digest('hex');
+
         const esValido = esMayor30Kb && sinErrores;
 
         if (!esValido) {
@@ -250,8 +272,23 @@ async function ejecutar() {
           bytes,
           tamanoKb,
           erroresConsola: erroresConsola.length,
+          md5,
           valido: esValido,
         });
+      }
+    }
+
+    // Comprobación de colisión de hash (C1): garantizar que las capturas dentro del lote no sean idénticas
+    const hashesVistos = new Map<string, string>();
+    for (const r of resultados) {
+      if (hashesVistos.has(r.md5)) {
+        const duplicado = hashesVistos.get(r.md5);
+        console.error(
+          `❌ Colisión de hash detectada: "${r.archivo}" tiene el mismo MD5 (${r.md5}) que "${duplicado}".`,
+        );
+        hayFallos = true;
+      } else {
+        hashesVistos.set(r.md5, r.archivo);
       }
     }
   } finally {
@@ -263,23 +300,23 @@ async function ejecutar() {
 
   // Imprimir tabla de resultados
   console.log('\n### Resultados de capturas');
-  console.log('| Archivo | Bytes | Tamaño | Errores de consola | Estado |');
-  console.log('| --- | --- | --- | --- | --- |');
+  console.log('| Archivo | Bytes | Tamaño | MD5 | Errores de consola | Estado |');
+  console.log('| --- | --- | --- | --- | --- | --- |');
   for (const r of resultados) {
     const estado = r.valido ? 'PASS (≥ 30 KB)' : 'FAIL';
     console.log(
-      `| ${r.archivo} | ${r.bytes} | ${r.tamanoKb} | ${r.erroresConsola} | ${estado} |`,
+      `| ${r.archivo} | ${r.bytes} | ${r.tamanoKb} | \`${r.md5}\` | ${r.erroresConsola} | ${estado} |`,
     );
   }
 
   if (hayFallos) {
     console.error(
-      '\n❌ Error: Una o más capturas pesaron menos de 30 KB o registraron errores de consola.',
+      '\n❌ Error: Una o más capturas pesaron menos de 30 KB, registraron errores o tienen hashes duplicados.',
     );
     process.exit(1);
   } else {
     console.log(
-      '\n✅ Todas las capturas cumplen el umbral de tamaño (≥ 30 KB) y 0 errores de consola.',
+      '\n✅ Todas las capturas cumplen el umbral (≥ 30 KB), 0 errores de consola y hashes únicos.',
     );
   }
 }
