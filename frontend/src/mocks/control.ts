@@ -78,7 +78,14 @@ export async function procesarControlLectura(
   request: Request,
   forzarCeroLatencia = false,
 ): Promise<{ errorResponse?: Response; esVacio: boolean }> {
-  const modo = obtenerModoMock(request.url);
+  const referer = request.headers.get('referer');
+  const modoDirecto = obtenerModoMock(request.url);
+  const modo =
+    modoDirecto !== 'normal'
+      ? modoDirecto
+      : referer
+        ? obtenerModoMock(referer)
+        : obtenerModoMock();
   await aplicarLatencia(modo, forzarCeroLatencia);
 
   if (modo === 'error') {
