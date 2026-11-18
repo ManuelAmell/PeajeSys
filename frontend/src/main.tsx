@@ -5,11 +5,15 @@ import { AppRouter } from '@/app/router';
 import '@/index.css';
 
 async function iniciarApp() {
-  // TODO(B1a): Inicializar MSW en desarrollo cuando VITE_USAR_MOCKS=true
-  // if (import.meta.env.DEV && import.meta.env.VITE_USAR_MOCKS === 'true') {
-  //   const { iniciarMocks } = await import('@/mocks/browser');
-  //   await iniciarMocks();
-  // }
+  if (import.meta.env.VITE_USAR_MOCKS === 'true') {
+    const { worker } = await import('@/mocks/browser');
+    await worker.start({
+      onUnhandledRequest: 'bypass',
+      serviceWorker: {
+        url: '/mockServiceWorker.js',
+      },
+    });
+  }
 
   const rootElement = document.getElementById('root');
   if (!rootElement) {

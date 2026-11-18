@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, vi } from 'vitest';
+import { reiniciarDb } from '@/mocks/db';
+import { server } from '@/mocks/server';
 
 class MockStorage implements Storage {
   private store: Record<string, string> = {};
@@ -51,10 +53,20 @@ Object.defineProperty(globalThis, 'sessionStorage', {
   writable: true,
 });
 
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: 'error' });
+});
+
 afterEach(() => {
   cleanup();
+  server.resetHandlers();
+  reiniciarDb();
   mockLocal.clear();
   mockSession.clear();
+});
+
+afterAll(() => {
+  server.close();
 });
 
 // Mock de matchMedia para pruebas en jsdom

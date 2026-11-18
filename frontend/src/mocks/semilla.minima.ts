@@ -1,0 +1,170 @@
+import type { Semilla } from './semilla.tipos';
+
+/**
+ * Semilla mínima para pruebas y desarrollo de PeajeSys.
+ * Copiada fielmente de los primeros registros de database/02_DML_Datos_PeajeSys.sql.
+ *
+ * Incluye los casos clave para el prototipo:
+ * - HKL123: saldo suficiente ($ 150.000)
+ * - QWE321: saldo insuficiente ($ 8.000 frente a tarifa Cat III de $ 15.300)
+ * - ZXC987: cuenta suspendida (saldo $ 0, estado SUSPENDIDA)
+ * - EMP-002: recaudadora con turno 9 abierto
+ * - EMP-001: recaudador con turno 8 abierto
+ * - EMP-003: supervisor
+ * - EMP-009: recaudador INACTIVO
+ */
+export const SEMILLA_MINIMA: Semilla = {
+  estaciones: [
+    {
+      id_estacion: 1,
+      nombre: 'Estación Gambote',
+      codigo_estacion: 'PEA-GAM-01',
+      ubicacion_geografica: 'Km 25 Vía Ruta del Sol - Tramo Gambote',
+      sentido_via: 'BOGOTA-CARTAGENA',
+      estado: 'ACTIVA',
+      created_at: '2026-10-01T00:00:00-05:00',
+    },
+    {
+      id_estacion: 2,
+      nombre: 'Estación La Ceballos',
+      codigo_estacion: 'PEA-CEB-02',
+      ubicacion_geografica: 'Km 12 Variante Mamonal',
+      sentido_via: 'CARTAGENA-BARRANQUILLA',
+      estado: 'ACTIVA',
+      created_at: '2026-10-01T00:00:00-05:00',
+    },
+  ],
+
+  casetas: [
+    { id_caseta: 1, id_estacion: 1, numero_carril: 1, tipo_carril: 'MANUAL', estado: 'OPERATIVA' },
+    { id_caseta: 2, id_estacion: 1, numero_carril: 2, tipo_carril: 'MANUAL', estado: 'OPERATIVA' },
+    { id_caseta: 3, id_estacion: 1, numero_carril: 3, tipo_carril: 'TELEPEAJE_EXCLUSIVO', estado: 'OPERATIVA' },
+    { id_caseta: 4, id_estacion: 1, numero_carril: 4, tipo_carril: 'MIXTO', estado: 'OPERATIVA' },
+    { id_caseta: 5, id_estacion: 2, numero_carril: 1, tipo_carril: 'MANUAL', estado: 'OPERATIVA' },
+    { id_caseta: 6, id_estacion: 2, numero_carril: 2, tipo_carril: 'TELEPEAJE_EXCLUSIVO', estado: 'OPERATIVA' },
+  ],
+
+  operadores: [
+    { id_operador: 1, numero_documento: '1047123456', nombres: 'Carlos Alberto', apellidos: 'Gómez Pérez', codigo_empleado: 'EMP-001', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+    { id_operador: 2, numero_documento: '1047654321', nombres: 'María Fernanda', apellidos: 'López Martínez', codigo_empleado: 'EMP-002', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+    { id_operador: 3, numero_documento: '1047987654', nombres: 'Juan David', apellidos: 'Rodríguez Silva', codigo_empleado: 'EMP-003', rol: 'SUPERVISOR', estado: 'ACTIVO' },
+    { id_operador: 4, numero_documento: '1047111222', nombres: 'Ana Milena', apellidos: 'Castro Ramos', codigo_empleado: 'EMP-004', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+    { id_operador: 5, numero_documento: '1047333444', nombres: 'Luis Eduardo', apellidos: 'Mendoza Torres', codigo_empleado: 'EMP-005', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+    { id_operador: 6, numero_documento: '1047555666', nombres: 'Laura Patricia', apellidos: 'Díaz Morales', codigo_empleado: 'EMP-006', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+    { id_operador: 7, numero_documento: '1047777888', nombres: 'Andrés Felipe', apellidos: 'Herrera Vega', codigo_empleado: 'EMP-007', rol: 'SUPERVISOR', estado: 'ACTIVO' },
+    { id_operador: 8, numero_documento: '1047999000', nombres: 'Diana Marcela', apellidos: 'Suárez Ruiz', codigo_empleado: 'EMP-008', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+    { id_operador: 9, numero_documento: '1047123987', nombres: 'Jorge Luis', apellidos: 'Vargas Romero', codigo_empleado: 'EMP-009', rol: 'RECAUDADOR', estado: 'INACTIVO' },
+    { id_operador: 10, numero_documento: '1047456123', nombres: 'Claudia Patricia', apellidos: 'Gutiérrez Polo', codigo_empleado: 'EMP-010', rol: 'RECAUDADOR', estado: 'ACTIVO' },
+  ],
+
+  categorias: [
+    { id_categoria: 1, codigo: 'CAT_I', descripcion: 'Automóviles, camperos y camionetas', numero_ejes_min: 2, numero_ejes_max: 2, peso_maximo_ton: 3.5, activo: true },
+    { id_categoria: 2, codigo: 'CAT_II', descripcion: 'Buses y busetas', numero_ejes_min: 2, numero_ejes_max: 2, peso_maximo_ton: 8.0, activo: true },
+    { id_categoria: 3, codigo: 'CAT_III', descripcion: 'Camiones de 2 ejes pequeños', numero_ejes_min: 2, numero_ejes_max: 2, peso_maximo_ton: 10.0, activo: true },
+    { id_categoria: 4, codigo: 'CAT_IV', descripcion: 'Camiones de 2 ejes grandes (C2)', numero_ejes_min: 2, numero_ejes_max: 2, peso_maximo_ton: 16.0, activo: true },
+    { id_categoria: 5, codigo: 'CAT_V', descripcion: 'Camiones de 3 y 4 ejes (C3-C4)', numero_ejes_min: 3, numero_ejes_max: 4, peso_maximo_ton: 28.0, activo: true },
+    { id_categoria: 6, codigo: 'CAT_VI', descripcion: 'Camiones de 5 ejes (C5)', numero_ejes_min: 5, numero_ejes_max: 5, peso_maximo_ton: 40.0, activo: true },
+    { id_categoria: 7, codigo: 'CAT_VII', descripcion: 'Camiones de 6 o más ejes (C6)', numero_ejes_min: 6, numero_ejes_max: 10, peso_maximo_ton: 52.0, activo: true },
+  ],
+
+  tarifas: [
+    { id_tarifa: 1, id_estacion: 1, id_categoria: 1, monto: 10500, resolucion_legal: 'Res. MinTransporte 0045/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 2, id_estacion: 1, id_categoria: 2, monto: 12800, resolucion_legal: 'Res. MinTransporte 0045/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 3, id_estacion: 1, id_categoria: 3, monto: 15300, resolucion_legal: 'Res. MinTransporte 0045/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 4, id_estacion: 1, id_categoria: 4, monto: 22000, resolucion_legal: 'Res. MinTransporte 0045/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 5, id_estacion: 1, id_categoria: 5, monto: 31500, resolucion_legal: 'Res. MinTransporte 0045/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 6, id_estacion: 1, id_categoria: 6, monto: 42000, resolucion_legal: 'Res. MinTransporte 0045/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 7, id_estacion: 1, id_categoria: 7, monto: 48500, resolucion_legal: 'Res. MinTransporte 0045/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 8, id_estacion: 2, id_categoria: 1, monto: 11000, resolucion_legal: 'Res. MinTransporte 0046/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 9, id_estacion: 2, id_categoria: 2, monto: 13500, resolucion_legal: 'Res. MinTransporte 0046/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+    { id_tarifa: 10, id_estacion: 2, id_categoria: 3, monto: 16000, resolucion_legal: 'Res. MinTransporte 0046/2026', fecha_inicio_vigencia: '2026-01-01', fecha_fin_vigencia: null, activa: true },
+  ],
+
+  vehiculos: [
+    { placa: 'HKL123', id_categoria: 1, marca: 'Mazda', modelo: 'CX-5', color: 'Gris' },
+    { placa: 'UYT890', id_categoria: 1, marca: 'Chevrolet', modelo: 'Onix', color: 'Blanco' },
+    { placa: 'KJN456', id_categoria: 2, marca: 'Mercedes-Benz', modelo: 'OF-1721', color: 'Azul' },
+    { placa: 'QWE321', id_categoria: 3, marca: 'Hino', modelo: 'Dutro', color: 'Blanco' },
+    { placa: 'RTY654', id_categoria: 4, marca: 'International', modelo: 'WorkStar', color: 'Rojo' },
+    { placa: 'ZXC987', id_categoria: 5, marca: 'Kenworth', modelo: 'T800', color: 'Amarillo' },
+    { placa: 'BNM741', id_categoria: 6, marca: 'Freightliner', modelo: 'Cascadia', color: 'Negro' },
+    { placa: 'OPL852', id_categoria: 7, marca: 'Mack', modelo: 'Anthem', color: 'Plata' },
+    { placa: 'ASD159', id_categoria: 1, marca: 'Toyota', modelo: 'Prado', color: 'Negro' },
+    { placa: 'GHJ357', id_categoria: 1, marca: 'Renault', modelo: 'Duster', color: 'Rojo' },
+  ],
+
+  cuentas_telepeaje: [
+    { id_cuenta: 1, placa_vehiculo: 'HKL123', tag_rfid_serial: 'TAG-COL-9900112233', saldo_disponible: 150000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 2, placa_vehiculo: 'UYT890', tag_rfid_serial: 'TAG-COL-9900112234', saldo_disponible: 45000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 3, placa_vehiculo: 'KJN456', tag_rfid_serial: 'TAG-COL-9900112235', saldo_disponible: 300000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 4, placa_vehiculo: 'QWE321', tag_rfid_serial: 'TAG-COL-9900112236', saldo_disponible: 8000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 5, placa_vehiculo: 'RTY654', tag_rfid_serial: 'TAG-COL-9900112237', saldo_disponible: 500000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 6, placa_vehiculo: 'ZXC987', tag_rfid_serial: 'TAG-COL-9900112238', saldo_disponible: 0, estado_cuenta: 'SUSPENDIDA' },
+    { id_cuenta: 7, placa_vehiculo: 'BNM741', tag_rfid_serial: 'TAG-COL-9900112239', saldo_disponible: 250000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 8, placa_vehiculo: 'OPL852', tag_rfid_serial: 'TAG-COL-9900112240', saldo_disponible: 120000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 9, placa_vehiculo: 'ASD159', tag_rfid_serial: 'TAG-COL-9900112241', saldo_disponible: 95000, estado_cuenta: 'ACTIVA' },
+    { id_cuenta: 10, placa_vehiculo: 'GHJ357', tag_rfid_serial: 'TAG-COL-9900112242', saldo_disponible: 32000, estado_cuenta: 'ACTIVA' },
+  ],
+
+  turnos: [
+    { id_turno: 1, id_caseta: 1, id_operador: 1, fecha: '2026-10-01', diurno: true, fondo_inicial_caja: 100000, total_recaudado_efectivo: 315000, total_declarado_cierre: 315000, diferencia_descuadre: 0, estado: 'CERRADO' },
+    { id_turno: 2, id_caseta: 2, id_operador: 2, fecha: '2026-10-01', diurno: true, fondo_inicial_caja: 100000, total_recaudado_efectivo: 250000, total_declarado_cierre: 248000, diferencia_descuadre: -2000, estado: 'CERRADO' },
+    { id_turno: 3, id_caseta: 3, id_operador: 4, fecha: '2026-10-01', diurno: true, fondo_inicial_caja: 0, total_recaudado_efectivo: 0, total_declarado_cierre: 0, diferencia_descuadre: 0, estado: 'CERRADO' },
+    { id_turno: 4, id_caseta: 4, id_operador: 5, fecha: '2026-10-01', diurno: false, fondo_inicial_caja: 100000, total_recaudado_efectivo: 180000, total_declarado_cierre: 180000, diferencia_descuadre: 0, estado: 'CERRADO' },
+    { id_turno: 5, id_caseta: 1, id_operador: 6, fecha: '2026-10-02', diurno: true, fondo_inicial_caja: 100000, total_recaudado_efectivo: 420000, total_declarado_cierre: 425000, diferencia_descuadre: 5000, estado: 'CERRADO' },
+    { id_turno: 6, id_caseta: 2, id_operador: 8, fecha: '2026-10-02', diurno: true, fondo_inicial_caja: 100000, total_recaudado_efectivo: 190000, total_declarado_cierre: 190000, diferencia_descuadre: 0, estado: 'CERRADO' },
+    { id_turno: 7, id_caseta: 3, id_operador: 10, fecha: '2026-10-02', diurno: false, fondo_inicial_caja: 0, total_recaudado_efectivo: 0, total_declarado_cierre: 0, diferencia_descuadre: 0, estado: 'CERRADO' },
+    { id_turno: 8, id_caseta: 1, id_operador: 1, fecha: '2026-10-06', diurno: true, fondo_inicial_caja: 100000, total_recaudado_efectivo: 42000, total_declarado_cierre: null, diferencia_descuadre: null, estado: 'ABIERTO' },
+    { id_turno: 9, id_caseta: 2, id_operador: 2, fecha: '2026-10-06', diurno: true, fondo_inicial_caja: 100000, total_recaudado_efectivo: 10500, total_declarado_cierre: null, diferencia_descuadre: null, estado: 'ABIERTO' },
+    { id_turno: 10, id_caseta: 3, id_operador: 4, fecha: '2026-10-06', diurno: true, fondo_inicial_caja: 0, total_recaudado_efectivo: 0, total_declarado_cierre: null, diferencia_descuadre: null, estado: 'ABIERTO' },
+  ],
+
+  transacciones: [
+    { id_transaccion: 1, id_turno: 1, id_tarifa: 1, id_categoria: 1, placa_detectada: 'HKL123', monto_tarifa: 10500, metodo_pago: 'EFECTIVO', numero_ticket: 'TCK-20261001-00001', fecha_hora: '2026-10-01T07:15:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 2, id_turno: 1, id_tarifa: 4, id_categoria: 4, placa_detectada: 'RTY654', monto_tarifa: 22000, metodo_pago: 'EFECTIVO', numero_ticket: 'TCK-20261001-00002', fecha_hora: '2026-10-01T08:30:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 3, id_turno: 2, id_tarifa: 1, id_categoria: 1, placa_detectada: 'UYT890', monto_tarifa: 10500, metodo_pago: 'EFECTIVO', numero_ticket: 'TCK-20261001-00003', fecha_hora: '2026-10-01T09:10:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 4, id_turno: 3, id_tarifa: 1, id_categoria: 1, placa_detectada: 'HKL123', monto_tarifa: 10500, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261001-00004', fecha_hora: '2026-10-01T10:05:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 5, id_turno: 3, id_tarifa: 5, id_categoria: 5, placa_detectada: 'ZXC987', monto_tarifa: 31500, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261001-00005', fecha_hora: '2026-10-01T11:20:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 6, id_turno: 4, id_tarifa: 6, id_categoria: 6, placa_detectada: 'BNM741', monto_tarifa: 42000, metodo_pago: 'EFECTIVO', numero_ticket: 'TCK-20261001-00006', fecha_hora: '2026-10-01T22:45:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 7, id_turno: 5, id_tarifa: 7, id_categoria: 7, placa_detectada: 'OPL852', monto_tarifa: 48500, metodo_pago: 'EFECTIVO', numero_ticket: 'TCK-20261002-00007', fecha_hora: '2026-10-02T06:50:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 8, id_turno: 6, id_tarifa: 1, id_categoria: 1, placa_detectada: 'ASD159', monto_tarifa: 0, metodo_pago: 'EXENTO', numero_ticket: 'TCK-20261002-00008', fecha_hora: '2026-10-02T08:00:00-05:00', estado_paso: 'EXENTO' },
+    { id_transaccion: 9, id_turno: 7, id_tarifa: 2, id_categoria: 2, placa_detectada: 'KJN456', monto_tarifa: 12800, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261002-00009', fecha_hora: '2026-10-02T14:15:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 10, id_turno: 8, id_tarifa: 6, id_categoria: 6, placa_detectada: 'BNM741', monto_tarifa: 42000, metodo_pago: 'EFECTIVO', numero_ticket: 'TCK-20261006-00010', fecha_hora: '2026-10-06T08:10:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 11, id_turno: 9, id_tarifa: 1, id_categoria: 1, placa_detectada: 'GHJ357', monto_tarifa: 10500, metodo_pago: 'EFECTIVO', numero_ticket: 'TCK-20261006-00011', fecha_hora: '2026-10-06T09:30:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 12, id_turno: 10, id_tarifa: 1, id_categoria: 1, placa_detectada: 'HKL123', monto_tarifa: 10500, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261006-00012', fecha_hora: '2026-10-06T10:45:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 13, id_turno: 3, id_tarifa: 1, id_categoria: 1, placa_detectada: 'UYT890', monto_tarifa: 10500, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261001-00013', fecha_hora: '2026-10-01T12:10:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 14, id_turno: 4, id_tarifa: 4, id_categoria: 4, placa_detectada: 'RTY654', monto_tarifa: 22000, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261001-00014', fecha_hora: '2026-10-01T13:40:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 15, id_turno: 7, id_tarifa: 6, id_categoria: 6, placa_detectada: 'BNM741', monto_tarifa: 42000, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261002-00015', fecha_hora: '2026-10-02T15:30:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 16, id_turno: 7, id_tarifa: 7, id_categoria: 7, placa_detectada: 'OPL852', monto_tarifa: 48500, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261002-00016', fecha_hora: '2026-10-02T16:50:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 17, id_turno: 10, id_tarifa: 1, id_categoria: 1, placa_detectada: 'ASD159', monto_tarifa: 10500, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261006-00017', fecha_hora: '2026-10-06T11:15:00-05:00', estado_paso: 'APROBADO' },
+    { id_transaccion: 18, id_turno: 10, id_tarifa: 1, id_categoria: 1, placa_detectada: 'GHJ357', monto_tarifa: 10500, metodo_pago: 'TELEPEAJE', numero_ticket: 'TCK-20261006-00018', fecha_hora: '2026-10-06T11:55:00-05:00', estado_paso: 'APROBADO' },
+  ],
+
+  detalles_telepeaje: [
+    { id_detalle_telepeaje: 1, id_transaccion: 4, id_cuenta: 1, saldo_anterior: 160500, saldo_posterior: 150000, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 2, id_transaccion: 5, id_cuenta: 6, saldo_anterior: 31500, saldo_posterior: 0, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 3, id_transaccion: 9, id_cuenta: 3, saldo_anterior: 312800, saldo_posterior: 300000, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 4, id_transaccion: 12, id_cuenta: 1, saldo_anterior: 150000, saldo_posterior: 139500, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 5, id_transaccion: 13, id_cuenta: 2, saldo_anterior: 55500, saldo_posterior: 45000, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 6, id_transaccion: 14, id_cuenta: 5, saldo_anterior: 522000, saldo_posterior: 500000, antena_lectora_id: 'ANT-CAM-04A' },
+    { id_detalle_telepeaje: 7, id_transaccion: 15, id_cuenta: 7, saldo_anterior: 292000, saldo_posterior: 250000, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 8, id_transaccion: 16, id_cuenta: 8, saldo_anterior: 168500, saldo_posterior: 120000, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 9, id_transaccion: 17, id_cuenta: 9, saldo_anterior: 105500, saldo_posterior: 95000, antena_lectora_id: 'ANT-CAM-03A' },
+    { id_detalle_telepeaje: 10, id_transaccion: 18, id_cuenta: 10, saldo_anterior: 42500, saldo_posterior: 32000, antena_lectora_id: 'ANT-CAM-03A' },
+  ],
+
+  auditorias: [
+    { id_auditoria: 1, id_transaccion: 1, tipo_operacion: 'INSERT', usuario_sistema: 'carlos_gomez', fecha_hora_evento: '2026-10-01T07:15:00-05:00', motivo: 'Paso de vehículo registrado en caja manual' },
+    { id_auditoria: 2, id_transaccion: 2, tipo_operacion: 'INSERT', usuario_sistema: 'carlos_gomez', fecha_hora_evento: '2026-10-01T08:30:00-05:00', motivo: 'Paso de vehículo registrado en caja manual' },
+    { id_auditoria: 3, id_transaccion: 3, tipo_operacion: 'INSERT', usuario_sistema: 'maria_lopez', fecha_hora_evento: '2026-10-01T09:10:00-05:00', motivo: 'Paso de vehículo registrado en caja manual' },
+    { id_auditoria: 4, id_transaccion: 4, tipo_operacion: 'INSERT', usuario_sistema: 'sistema_telepeaje', fecha_hora_evento: '2026-10-01T10:05:00-05:00', motivo: 'Cobro automático por antena RFID' },
+    { id_auditoria: 5, id_transaccion: 5, tipo_operacion: 'INSERT', usuario_sistema: 'sistema_telepeaje', fecha_hora_evento: '2026-10-01T11:20:00-05:00', motivo: 'Cobro automático por antena RFID - Saldo agotado' },
+    { id_auditoria: 6, id_transaccion: 5, tipo_operacion: 'UPDATE', usuario_sistema: 'juan_rodriguez', fecha_hora_evento: '2026-10-01T11:25:00-05:00', motivo: 'Ajuste supervisor por revisión de categoría' },
+    { id_auditoria: 7, id_transaccion: 6, tipo_operacion: 'INSERT', usuario_sistema: 'luis_mendoza', fecha_hora_evento: '2026-10-01T22:45:00-05:00', motivo: 'Paso nocturno en efectivo' },
+    { id_auditoria: 8, id_transaccion: 7, tipo_operacion: 'INSERT', usuario_sistema: 'laura_diaz', fecha_hora_evento: '2026-10-02T06:50:00-05:00', motivo: 'Paso de vehículo pesado' },
+    { id_auditoria: 9, id_transaccion: 8, tipo_operacion: 'INSERT', usuario_sistema: 'diana_suarez', fecha_hora_evento: '2026-10-02T08:00:00-05:00', motivo: 'Paso de vehículo institucional exento de pago' },
+    { id_auditoria: 10, id_transaccion: 9, tipo_operacion: 'INSERT', usuario_sistema: 'sistema_telepeaje', fecha_hora_evento: '2026-10-02T14:15:00-05:00', motivo: 'Cobro automático por antena RFID' },
+    { id_auditoria: 11, id_transaccion: 13, tipo_operacion: 'INSERT', usuario_sistema: 'sistema_telepeaje', fecha_hora_evento: '2026-10-01T12:10:00-05:00', motivo: 'Débito exitoso tag RFID carril exclusivo' },
+    { id_auditoria: 12, id_transaccion: 14, tipo_operacion: 'INSERT', usuario_sistema: 'sistema_telepeaje', fecha_hora_evento: '2026-10-01T13:40:00-05:00', motivo: 'Débito exitoso carril mixto' },
+  ],
+};
