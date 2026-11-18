@@ -16,12 +16,17 @@ interface OpcionesCaptura {
   salida: string;
   nombre?: string;
   puerto: number;
+  llenar: string[];
+  clic: string[];
+  esperaDespues?: string;
 }
 
 function parsearArgumentos(): OpcionesCaptura {
   const args = process.argv.slice(2);
   const opciones: Partial<OpcionesCaptura> = {
     puerto: 5180,
+    llenar: [],
+    clic: [],
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -46,12 +51,21 @@ function parsearArgumentos(): OpcionesCaptura {
     } else if (arg === '--puerto' && siguiente) {
       opciones.puerto = parseInt(siguiente, 10);
       i++;
+    } else if (arg === '--llenar' && siguiente) {
+      opciones.llenar = [...(opciones.llenar ?? []), siguiente];
+      i++;
+    } else if (arg === '--clic' && siguiente) {
+      opciones.clic = [...(opciones.clic ?? []), siguiente];
+      i++;
+    } else if (arg === '--espera-despues' && siguiente) {
+      opciones.esperaDespues = siguiente;
+      i++;
     }
   }
 
   if (!opciones.ruta || !opciones.rol || !opciones.espera || !opciones.salida) {
     console.error(
-      'Uso: pnpm capturar -- --ruta <ruta> --rol <RECAUDADOR|SUPERVISOR|ADMIN|ninguno> --espera <selector> --salida <carpeta> [--nombre <prefijo>] [--puerto <puerto>]',
+      'Uso: pnpm capturar -- --ruta <ruta> --rol <RECAUDADOR|SUPERVISOR|ADMIN|ninguno> --espera <selector> --salida <carpeta> [--nombre <prefijo>] [--puerto <puerto>] [--llenar <selector>=<valor>]... [--clic <selector>]... [--espera-despues <selector>]',
     );
     process.exit(1);
   }
@@ -212,11 +226,23 @@ async function ejecutar() {
 
         const page = await context.newPage();
         const erroresConsola: string[] = [];
+        const redEsperada: string[] = [];
 
         page.on('console', (msg) => {
-          if (msg.type() === 'error') {
-            erroresConsola.push(msg.text());
+          if (msg.type() !== 'error') return;
+          // Chromium registra como "error" toda respuesta HTTP 4xx/5xx. Cuando la
+          // captura interactúa para producir un estado simulado (403, 409, 500 de
+          // MSW), esa entrada automática no es un defecto de la página: se lista
+          // aparte y no invalida la captura. Cualquier otro error sí invalida.
+          if (
+            /Failed to load resource: the server responded with a status of \d{3}/.test(
+              msg.text(),
+            )
+          ) {
+            redEsperada.push(msg.text());
+            return;
           }
+          erroresConsola.push(msg.text());
         });
         page.on('pageerror', (err) => {
           erroresConsola.push(err.message);
@@ -225,6 +251,27 @@ async function ejecutar() {
         const url = `http://localhost:${opts.puerto}${opts.ruta}`;
         await page.goto(url, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector(opts.espera, { timeout: 15000 });
+
+        // Interacción opcional: primero todos los --llenar, luego los --clic en
+        // el orden dado, y al final se espera --espera-despues si se indicó.
+        for (const instruccion of opts.llenar) {
+          const separador = instruccion.indexOf('=');
+          if (separador <= 0) {
+            throw new Error(
+              `--llenar espera "<selector>=<valor>" y recibió "${instruccion}".`,
+            );
+          }
+          const selector = instruccion.slice(0, separador);
+          const valor = instruccion.slice(separador + 1);
+          await page.fill(selector, valor);
+        }
+        for (const selector of opts.clic) {
+          await page.click(selector);
+        }
+        if (opts.esperaDespues) {
+          await page.waitForSelector(opts.esperaDespues, { timeout: 15000 });
+        }
+
         await page.evaluate(() => document.fonts.ready);
 
         // Verificación estricta de ruta (C1): evitar que redirecciones pasen inadvertidas
@@ -275,6 +322,12 @@ async function ejecutar() {
           md5,
           valido: esValido,
         });
+
+        if (redEsperada.length > 0) {
+          console.log(
+            `[red simulada esperada] ${nombreArchivo}: ${redEsperada.join(' | ')}`,
+          );
+        }
       }
     }
 
@@ -300,7 +353,9 @@ async function ejecutar() {
 
   // Imprimir tabla de resultados
   console.log('\n### Resultados de capturas');
-  console.log('| Archivo | Bytes | Tamaño | MD5 | Errores de consola | Estado |');
+  console.log(
+    '| Archivo | Bytes | Tamaño | MD5 | Errores de consola | Estado |',
+  );
   console.log('| --- | --- | --- | --- | --- | --- |');
   for (const r of resultados) {
     const estado = r.valido ? 'PASS (≥ 30 KB)' : 'FAIL';
