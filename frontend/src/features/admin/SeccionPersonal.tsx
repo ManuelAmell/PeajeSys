@@ -132,7 +132,7 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
                 <tr className="text-left text-[15px] text-texto-2">
                   <th
                     scope="col"
-                    className="border-b-2 border-texto p-2.5 font-semibold"
+                    className="border-b-2 border-texto p-2.5 font-semibold whitespace-nowrap"
                   >
                     Código
                   </th>
@@ -174,7 +174,7 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
                   const nombreCompleto = `${operador.nombres} ${operador.apellidos}`;
                   return (
                     <tr key={operador.id_operador}>
-                      <td className="border-b border-superficie-2 p-2.5 font-bold">
+                      <td className="border-b border-superficie-2 p-2.5 font-mono font-bold whitespace-nowrap">
                         {operador.codigo_empleado}
                       </td>
                       <td className="border-b border-superficie-2 p-2.5">
