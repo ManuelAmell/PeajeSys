@@ -152,7 +152,7 @@ export function DialogoTarifa({
           {tarifa.roman}
         </DialogTitle>
         <DialogDescription className="text-[16px]">
-          Estación {tarifa.estacionNombre}. El cambio queda en el historial.
+          {tarifa.estacionNombre}. El cambio queda en el historial.
         </DialogDescription>
 
         <form

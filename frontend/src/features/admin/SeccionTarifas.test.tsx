@@ -84,6 +84,12 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     expect(
       screen.getByRole('heading', { name: 'Editar tarifa · categoría I' }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText('Estación Gambote. El cambio queda en el historial.'),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Estación Estación Gambote/),
+    ).not.toBeInTheDocument();
 
     await usuario.clear(screen.getByLabelText('Monto en pesos'));
     await usuario.type(screen.getByLabelText('Monto en pesos'), '0');
