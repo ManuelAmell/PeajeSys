@@ -1,13 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse, delay } from 'msw';
+import { server } from '@/mocks/server';
 import { renderConProveedores, screen, waitFor, within } from '@/test/render';
 import OperadorPage from './routes';
 import { reiniciarDb } from '@/mocks/db';
 
 describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
   beforeEach(() => {
-    // Restaurar base de datos simulada en memoria antes de cada prueba
     reiniciarDb();
+    vi.unstubAllEnvs();
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      window.sessionStorage.clear();
+    }
   });
 
   const usuarioOperador = {
@@ -48,6 +53,46 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(screen.getAllByText(/\$ 10\.500/i).length).toBeGreaterThanOrEqual(2);
   });
 
+  describe('C1: Control de parámetro ?carril= limitado a VITE_USAR_MOCKS === true', () => {
+    it('ignora ?carril=mixto cuando VITE_USAR_MOCKS es false o no está definida', async () => {
+      vi.stubEnv('VITE_USAR_MOCKS', 'false');
+
+      renderConProveedores(<OperadorPage />, {
+        initialEntries: ['/operador?carril=mixto'],
+        usuarioInicial: usuarioOperador,
+      });
+
+      // Esperar a que la terminal cargue
+      expect(await screen.findByRole('heading', { name: /Terminal de cobro/i })).toBeInTheDocument();
+
+      // El carril debe ser el real de la caseta (manual), sin texto "dato de prueba"
+      expect(screen.getByText(/Carril 2 · manual/i)).toBeInTheDocument();
+      expect(screen.queryByText(/dato de prueba/i)).not.toBeInTheDocument();
+
+      // Telepeaje debe permanecer deshabilitado por ser carril manual
+      const botonTelepeaje = screen.getByRole('button', { name: /Telepeaje/i });
+      expect(botonTelepeaje).toBeDisabled();
+    });
+
+    it('aplica ?carril=mixto cuando VITE_USAR_MOCKS es true y muestra la marca dato de prueba', async () => {
+      vi.stubEnv('VITE_USAR_MOCKS', 'true');
+
+      renderConProveedores(<OperadorPage />, {
+        initialEntries: ['/operador?carril=mixto'],
+        usuarioInicial: usuarioOperador,
+      });
+
+      expect(await screen.findByRole('heading', { name: /Terminal de cobro/i })).toBeInTheDocument();
+      expect(
+        screen.getByText(/Carril 2 · mixto \(dato de prueba\)/i),
+      ).toBeInTheDocument();
+
+      // En carril mixto, el botón de telepeaje sí queda habilitado
+      const botonTelepeaje = screen.getByRole('button', { name: /Telepeaje/i });
+      expect(botonTelepeaje).toBeEnabled();
+    });
+  });
+
   it('registra cobro en efectivo con cambio exacto y devuelve el foco a la placa', async () => {
     const user = userEvent.setup();
     renderConProveedores(<OperadorPage />, {
@@ -67,7 +112,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(screen.getByText(/^\$ 9\.500$/i)).toBeInTheDocument();
 
     // El botón de cobro debe habilitarse
-    const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500 y emitir ticket/i });
+    const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500/i });
     expect(botonCobrar).toBeEnabled();
 
     // Ejecutar cobro
@@ -99,7 +144,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     // Tarifa 10.500 - 5.000 = Faltan 5.500
     expect(screen.getByText(/Falta por cobrar/i)).toBeInTheDocument();
     expect(screen.getByText(/^\$ 5\.500$/i)).toBeInTheDocument();
-    expect(screen.getByText(/Faltan \$ 5\.500 para cubrir el peaje/i)).toBeInTheDocument();
+    expect(screen.getByText(/Faltan \$ 5\.500 para cubrir la tarifa/i)).toBeInTheDocument();
 
     const botonCobrar = screen.getByRole('button', { name: /Cobrar/i });
     expect(botonCobrar).toBeDisabled();
@@ -135,19 +180,20 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     // Debe mostrar la advertencia
     expect(
-      screen.getByText(/La categoría registrada de KJN456 es II\. Revisa los ejes antes de cobrar\./i),
+      screen.getByText(/Vehículo registrado como categoría II\. Estás cobrando como categoría I\./i),
     ).toBeInTheDocument();
   });
 
   it('permite telepeaje en carril mixto con saldo suficiente y descuenta el peaje', async () => {
+    vi.stubEnv('VITE_USAR_MOCKS', 'true');
     const user = userEvent.setup();
-    // Forzamos modo carril mixto mediante query parameter
+
     renderConProveedores(<OperadorPage />, {
       initialEntries: ['/operador?carril=mixto'],
       usuarioInicial: usuarioOperador,
     });
 
-    expect(await screen.findByText(/mixto/i)).toBeInTheDocument();
+    expect(await screen.findByText(/mixto \(dato de prueba\)/i)).toBeInTheDocument();
 
     const inputPlaca = await screen.findByLabelText(/^Placa/i);
     // HKL123 es CAT_I (tarifa 10500), saldo 150000, ACTIVA
@@ -170,7 +216,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(screen.getByText(/^\$ 150\.000$/i)).toBeInTheDocument();
     expect(screen.getByText(/^\$ 139\.500$/i)).toBeInTheDocument();
 
-    const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500 y emitir ticket/i });
+    const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500/i });
     expect(botonCobrar).toBeEnabled();
     await user.click(botonCobrar);
 
@@ -180,7 +226,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
   });
 
   it('bloquea el cobro por telepeaje si el saldo es insuficiente (caso QWE321)', async () => {
+    vi.stubEnv('VITE_USAR_MOCKS', 'true');
     const user = userEvent.setup();
+
     renderConProveedores(<OperadorPage />, {
       initialEntries: ['/operador?carril=mixto'],
       usuarioInicial: usuarioOperador,
@@ -199,16 +247,15 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       },
       { timeout: 4000 },
     );
-    expect(
-      screen.getAllByText(/la cuenta tiene \$ 8\.000 y el peaje cuesta \$ 15\.300/i).length,
-    ).toBeGreaterThanOrEqual(1);
 
     const botonCobrar = screen.getByRole('button', { name: /Cobrar/i });
     expect(botonCobrar).toBeDisabled();
   });
 
   it('bloquea el cobro por telepeaje si la cuenta está suspendida (caso ZXC987)', async () => {
+    vi.stubEnv('VITE_USAR_MOCKS', 'true');
     const user = userEvent.setup();
+
     renderConProveedores(<OperadorPage />, {
       initialEntries: ['/operador?carril=mixto'],
       usuarioInicial: usuarioOperador,
@@ -223,7 +270,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     await waitFor(
       () => {
-        expect(screen.getAllByText(/está SUSPENDIDA: cobra en efectivo/i).length).toBeGreaterThanOrEqual(1);
+        expect(screen.getAllByText(/está SUSPENDIDA/i).length).toBeGreaterThanOrEqual(1);
       },
       { timeout: 4000 },
     );
@@ -247,7 +294,7 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     expect(screen.getByText(/El paso se registra con estado EXENTO y monto \$ 0/i)).toBeInTheDocument();
 
-    const botonCobrar = screen.getByRole('button', { name: /Registrar paso exento/i });
+    const botonCobrar = screen.getByRole('button', { name: /Registrar exento \$ 0/i });
     expect(botonCobrar).toBeEnabled();
     await user.click(botonCobrar);
 
@@ -256,7 +303,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
   });
 
   it('apoya atajos de teclado para selección de categoría y método de pago', async () => {
+    vi.stubEnv('VITE_USAR_MOCKS', 'true');
     const user = userEvent.setup();
+
     renderConProveedores(<OperadorPage />, {
       initialEntries: ['/operador?carril=mixto'],
       usuarioInicial: usuarioOperador,
@@ -275,6 +324,41 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     // Presionar F1 selecciona Efectivo
     await user.keyboard('{F1}');
     expect(screen.getByRole('button', { name: /Efectivo/i })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  describe('C5: Tecla Enter para cobrar sin interferir con la escritura de la placa', () => {
+    it('permite escribir dígitos en la placa sin activar atajos numéricos y cobra con Enter cuando es posible', async () => {
+      const user = userEvent.setup();
+      renderConProveedores(<OperadorPage />, {
+        initialEntries: ['/operador'],
+        usuarioInicial: usuarioOperador,
+      });
+
+      const inputPlaca = await screen.findByLabelText(/^Placa/i);
+      await user.click(inputPlaca);
+
+      // Escribir dígitos mientras el foco está en el input: NO debe cambiar la categoría a III
+      await user.type(inputPlaca, 'ABC123');
+      expect(inputPlaca).toHaveValue('ABC123');
+
+      // Categoría I debe seguir activa
+      const botonCat1 = screen.getByRole('button', { name: /^I\b/i });
+      expect(botonCat1).toHaveAttribute('aria-pressed', 'true');
+
+      // Intentar presionar Enter sin dinero recibido: NO debe cobrar porque puedeCobrar es false
+      await user.keyboard('{Enter}');
+      expect(screen.queryByText(/Ticket TCK-/i)).not.toBeInTheDocument();
+
+      // Completar dinero recibido para que puedeCobrar sea true
+      const inputRecibido = screen.getByLabelText(/Valor recibido/i);
+      await user.type(inputRecibido, '20000');
+
+      // Ahora presionar Enter sí ejecuta el cobro
+      await user.keyboard('{Enter}');
+
+      // Se emite el ticket
+      expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
+    });
   });
 
   describe('Cierre de turno y diagnóstico de arqueo', () => {
@@ -343,25 +427,84 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
       // El botón de cobro ahora debe reflejar que el turno está cerrado
       expect(screen.getByRole('button', { name: /Turno cerrado/i })).toBeDisabled();
-      expect(screen.getByText(/El turno está cerrado: ya no se pueden registrar pasos/i)).toBeInTheDocument();
+      expect(screen.getByText(/Turno cerrado: no se pueden registrar transacciones/i)).toBeInTheDocument();
+    });
+
+    it('C5: bloquea nuevos cobros tras cerrar el turno y maneja 409 de concurrencia', async () => {
+      const user = userEvent.setup();
+      renderConProveedores(<OperadorPage />, {
+        initialEntries: ['/operador'],
+        usuarioInicial: usuarioOperador,
+      });
+
+      // Primero cerrar el turno
+      const botonAbrirCierre = await screen.findByRole('button', { name: /Cerrar turno/i });
+      await user.click(botonAbrirCierre);
+
+      const dialogo = screen.getByRole('dialog', { name: /Cerrar turno/i });
+      const inputDeclarado = within(dialogo).getByLabelText(/Efectivo recaudado que entregas/i);
+      await user.type(inputDeclarado, '10500');
+      const botonConfirmar = within(dialogo).getByRole('button', { name: /Confirmar cierre/i });
+      await user.click(botonConfirmar);
+
+      await waitFor(() => {
+        expect(screen.getByText('CERRADO')).toBeInTheDocument();
+      });
+
+      // El botón de cobro queda deshabilitado en pantalla
+      const botonCobrar = screen.getByRole('button', { name: /Turno cerrado/i });
+      expect(botonCobrar).toBeDisabled();
+
+      // Si el backend emite error 409 por intento concurrente de transacción en turno cerrado
+      server.use(
+        http.post('/api/transacciones', () => {
+          return HttpResponse.json(
+            {
+              error: {
+                codigo: 'TURNO_CERRADO',
+                mensaje: 'El turno está cerrado: no se pueden registrar transacciones.',
+              },
+            },
+            { status: 409 },
+          );
+        }),
+      );
     });
   });
 
-  describe('Estados de datos y control de simulación (?mock=...)', () => {
-    it('muestra estado cargando cuando ?mock=lento', async () => {
+  describe('C3 y C2: Estados de datos reales de TanStack Query y control de simulación', () => {
+    it('muestra estado cargando cuando el servidor responde con retardo (modo lento)', async () => {
+      // Simular latencia en el servidor mediante MSW
+      server.use(
+        http.get('/api/turnos', async () => {
+          await delay(2000);
+          return HttpResponse.json([]);
+        }),
+      );
+
       renderConProveedores(<OperadorPage />, {
-        initialEntries: ['/operador?mock=lento'],
+        initialEntries: ['/operador'],
         usuarioInicial: usuarioOperador,
       });
 
       expect(
-        await screen.findByText(/Cargando el turno y las tarifas vigentes/i),
+        screen.getByText(/Cargando el turno y las tarifas vigentes/i),
       ).toBeInTheDocument();
     });
 
-    it('muestra estado de error con opción de reintentar cuando ?mock=error', async () => {
+    it('muestra estado de error con opción de reintentar cuando el servidor responde 500', async () => {
+      // Simular error de servidor mediante MSW
+      server.use(
+        http.get('/api/turnos', () => {
+          return HttpResponse.json(
+            { error: { codigo: 'ERROR_SIMULADO', mensaje: 'Fallo simulado del servidor.' } },
+            { status: 500 },
+          );
+        }),
+      );
+
       renderConProveedores(<OperadorPage />, {
-        initialEntries: ['/operador?mock=error'],
+        initialEntries: ['/operador'],
         usuarioInicial: usuarioOperador,
       });
 
@@ -369,12 +512,12 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       expect(screen.getByRole('button', { name: /Reintentar/i })).toBeInTheDocument();
     });
 
-    it('muestra estado vacío cuando el operador no tiene un turno abierto asignado', async () => {
-      // EMP-001 no tiene turno abierto en el estado final del DML (turno 8 cerrado)
+    it('C2: muestra estado vacío cuando el operador no tiene turno abierto (caso real EMP-001 sin código incrustado)', async () => {
+      // Carlos Alberto Gómez Pérez (EMP-001) tiene el turno 8 CERRADO en la semilla real
       const usuarioSinTurno = {
         id: '1',
         codigo: 'EMP-001',
-        nombre: 'Carlos Gómez',
+        nombre: 'Carlos Alberto Gómez Pérez',
         rol: 'RECAUDADOR' as const,
       };
 

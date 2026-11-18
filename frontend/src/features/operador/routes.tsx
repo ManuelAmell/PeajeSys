@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Franja } from '@/components/layout/Franja';
 import { EstadoCargando, EstadoError, EstadoVacio } from '@/components/feedback/EstadoDatos';
@@ -16,6 +17,11 @@ import { useAtajosTeclado } from './hooks/useAtajosTeclado';
 export default function OperadorPage() {
   const navigate = useNavigate();
   const terminal = useTerminalCobro();
+
+  // Asegurar que la cabecera permanezca visible y la página no se desplace
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  });
 
   // Gestión de atajos de teclado
   useAtajosTeclado({
@@ -116,6 +122,16 @@ export default function OperadorPage() {
                   Registro de paso vehicular y emisión de ticket en caseta.
                 </p>
               </div>
+
+              {/* Banner de error al cobrar (ej. 409 turno cerrado) */}
+              {terminal.errorCobro && (
+                <div
+                  role="alert"
+                  className="p-3.5 md:p-4 rounded-[8px] bg-error-fondo border-2 border-error text-error-texto font-semibold text-[15px]"
+                >
+                  {terminal.errorCobro}
+                </div>
+              )}
 
               {/* Banner de éxito de ticket emitido */}
               {terminal.avisoExito && (
