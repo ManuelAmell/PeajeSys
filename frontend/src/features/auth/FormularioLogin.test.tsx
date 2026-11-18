@@ -48,6 +48,7 @@ function renderConRutas(
 }
 
 async function escribirCredenciales(codigo: string, clave: string) {
+  renderConRutas(<FormularioLogin />);
   const usuario = userEvent.setup();
   await usuario.type(screen.getByLabelText('Código de empleado'), codigo);
   await usuario.type(screen.getByLabelText('Contraseña'), clave);
@@ -64,7 +65,9 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
     expect(tarjeta).toHaveTextContent('Recaudador · EMP-002');
 
     await usuario.click(
-      screen.getByRole('button', { name: 'Ir a la terminal de cobro (turno 9)' }),
+      screen.getByRole('button', {
+        name: 'Ir a la terminal de cobro (turno 9)',
+      }),
     );
     expect(
       screen.getByRole('heading', { level: 1, name: 'Terminal de cobro' }),
@@ -146,7 +149,10 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
   });
 
   it('el código vacío muestra el mensaje del prototipo y enfoca el campo', async () => {
-    await escribirCredenciales('', 'prueba');
+    renderConRutas(<FormularioLogin />);
+    const usuario = userEvent.setup();
+    await usuario.type(screen.getByLabelText('Contraseña'), 'prueba');
+    await usuario.click(screen.getByRole('button', { name: 'Ingresar' }));
 
     const alerta = await screen.findByRole('alert');
     expect(alerta).toHaveTextContent('Escribe tu código de empleado.');
@@ -154,6 +160,7 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
   });
 
   it('la contraseña vacía muestra el mensaje del prototipo y enfoca el campo', async () => {
+    renderConRutas(<FormularioLogin />);
     const usuario = userEvent.setup();
     await usuario.type(screen.getByLabelText('Código de empleado'), 'EMP-002');
     await usuario.click(screen.getByRole('button', { name: 'Ingresar' }));
@@ -165,19 +172,17 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
 
   it('un error del servidor muestra el mensaje simulado y no entra', async () => {
     server.use(
-      http.post(
-        '*/api/auth/login',
-        () =>
-          HttpResponse.json(
-            {
-              error: {
-                codigo: 'ERROR_SIMULADO',
-                mensaje:
-                  'Error de servidor simulado mediante parámetro ?mock=error.',
-              },
+      http.post('*/api/auth/login', () =>
+        HttpResponse.json(
+          {
+            error: {
+              codigo: 'ERROR_SIMULADO',
+              mensaje:
+                'Error de servidor simulado mediante parámetro ?mock=error.',
             },
-            { status: 500 },
-          ),
+          },
+          { status: 500 },
+        ),
       ),
     );
 
@@ -200,6 +205,7 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
   });
 
   it('el código acepta máximo 8 caracteres', async () => {
+    renderConRutas(<FormularioLogin />);
     const usuario = userEvent.setup();
     const codigo = screen.getByLabelText('Código de empleado');
     expect(codigo).toHaveAttribute('maxLength', '8');
@@ -235,7 +241,9 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
       JSON.parse(window.sessionStorage.getItem('peajesys_sesion') ?? 'null'),
     ).toMatchObject({ codigo: 'EMP-003' });
 
-    await usuario.click(screen.getByRole('button', { name: 'No soy yo, volver' }));
+    await usuario.click(
+      screen.getByRole('button', { name: 'No soy yo, volver' }),
+    );
 
     expect(
       screen.getByRole('button', { name: 'Ingresar' }),
@@ -246,6 +254,7 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
   });
 
   it('la tecla Enter envía el formulario', async () => {
+    renderConRutas(<FormularioLogin />);
     const usuario = userEvent.setup();
     await usuario.type(screen.getByLabelText('Código de empleado'), 'EMP-003');
     const clave = screen.getByLabelText('Contraseña');
