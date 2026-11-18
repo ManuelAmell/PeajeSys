@@ -33,7 +33,7 @@ export function SupervisorPage() {
 
   return (
     <LayoutApp titulo="Supervisión" subtitulo="Estación Gambote">
-      <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
+      <div className="p-4 md:px-6 md:py-8 max-w-[1400px] w-full mx-auto flex flex-col gap-6">
         <h1 className="sr-only">Supervisión</h1>
         {/* Barra de navegación por pestañas accesibles */}
         <PestanasSupervision

@@ -86,22 +86,22 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
       </div>
 
       {/* Tabla con scroll horizontal propio */}
-      <div className="bg-superficie border border-borde rounded-[10px] p-2 md:p-5 overflow-x-auto shadow-sm">
-        <table className="w-full min-w-[1180px] border-collapse text-[15px] md:text-[16px]">
-          <caption className="text-left py-2.5 text-[14px] md:text-[15px] text-texto-2">
+      <div className="bg-superficie border border-borde rounded-[10px] p-2 md:px-3 md:py-4 overflow-x-auto shadow-sm">
+        <table className="w-full min-w-[1100px] border-collapse text-[14px] md:text-[15px]">
+          <caption className="text-left py-2 text-[13px] md:text-[14px] text-texto-2">
             Datos del DML del Avance 2. "Pasos en efectivo" es la suma de TRANSACCION_PEAJE de cada turno.
           </caption>
           <thead>
-            <tr className="text-left text-texto-2 text-[14px] md:text-[15px]">
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[60px] min-w-[50px]">Turno</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[110px] min-w-[105px]">Fecha</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[110px] min-w-[105px]">Carril</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[230px] min-w-[210px]">Recaudador</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right w-[120px] min-w-[110px]">Según turno</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right w-[140px] min-w-[130px]">Pasos en efectivo</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold text-right w-[120px] min-w-[110px]">Declarado</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold w-[180px] min-w-[170px]">Arqueo</th>
-              <th scope="col" className="p-2.5 border-b-2 border-texto font-semibold min-w-[230px]">Conciliación</th>
+            <tr className="text-left text-texto-2 text-[13px] md:text-[14px]">
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[55px] min-w-[50px]">Turno</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[95px] min-w-[90px]">Fecha</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[95px] min-w-[90px]">Carril</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[190px] min-w-[170px]">Recaudador</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold text-right w-[105px] min-w-[100px]">Según turno</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold text-right w-[115px] min-w-[105px]">Pasos en efectivo</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold text-right w-[110px] min-w-[100px]">Declarado</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[165px] min-w-[155px]">Arqueo</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[270px] min-w-[260px]">Conciliación</th>
             </tr>
           </thead>
           <tbody>
@@ -111,20 +111,20 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
                 data-testid={`fila-turno-${t.id_turno}`}
                 className="hover:bg-hover transition-colors"
               >
-                <td className="p-3 border-b border-superficie-2 font-bold">{t.id_turno}</td>
-                <td className="p-3 border-b border-superficie-2 whitespace-nowrap">{t.fecha}</td>
-                <td className="p-3 border-b border-superficie-2 whitespace-nowrap">{t.carrilTexto}</td>
-                <td className="p-3 border-b border-superficie-2 font-medium leading-snug">{t.operadorNombre}</td>
-                <td className="p-3 border-b border-superficie-2 text-right whitespace-nowrap font-medium">
+                <td className="px-2 py-2.5 border-b border-superficie-2 font-bold">{t.id_turno}</td>
+                <td className="px-2 py-2.5 border-b border-superficie-2 whitespace-nowrap">{t.fecha}</td>
+                <td className="px-2 py-2.5 border-b border-superficie-2 whitespace-nowrap">{t.carrilTexto}</td>
+                <td className="px-2 py-2.5 border-b border-superficie-2 font-medium leading-snug">{t.operadorNombre}</td>
+                <td className="px-2 py-2.5 border-b border-superficie-2 text-right whitespace-nowrap font-medium">
                   {t.recaudadoTexto}
                 </td>
-                <td className="p-3 border-b border-superficie-2 text-right whitespace-nowrap font-medium">
+                <td className="px-2 py-2.5 border-b border-superficie-2 text-right whitespace-nowrap font-medium">
                   {t.pasosTexto}
                 </td>
-                <td className="p-3 border-b border-superficie-2 text-right whitespace-nowrap font-medium">
+                <td className="px-2 py-2.5 border-b border-superficie-2 text-right whitespace-nowrap font-medium">
                   {t.declaradoTexto}
                 </td>
-                <td className="p-3 border-b border-superficie-2 whitespace-nowrap">
+                <td className="px-2 py-2.5 border-b border-superficie-2 whitespace-nowrap">
                   <span
                     style={{ background: t.diagFondo, color: t.diagColor }}
                     className="px-2 py-1 rounded-[4px] text-[13px] md:text-[14px] font-bold inline-block"
@@ -132,10 +132,10 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
                     {t.diagnosticoTexto}
                   </span>
                 </td>
-                <td className="p-3 border-b border-superficie-2 whitespace-nowrap">
+                <td className="px-2 py-2.5 border-b border-superficie-2 whitespace-nowrap">
                   <span
                     style={{ color: t.conciliaColor }}
-                    className="text-[14px] md:text-[15px] font-bold inline-block"
+                    className="text-[13px] md:text-[14px] font-bold inline-block"
                   >
                     {t.conciliacionTexto}
                   </span>
