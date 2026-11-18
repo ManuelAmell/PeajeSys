@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { renderConProveedores, screen } from '@/test/render';
 import { Cabecera } from '@/components/layout/Cabecera';
+import { RequireRol } from '@/lib/sesion';
 import { Rol } from '@/lib/roles';
 import AuthPage from './routes';
 
@@ -15,28 +16,34 @@ function renderConRutas(
       <Route
         path="/operador"
         element={
-          <section>
-            <h1>Terminal de cobro</h1>
-            <Cabecera />
-          </section>
+          <RequireRol rolPermitido="RECAUDADOR">
+            <section>
+              <h1>Terminal de cobro</h1>
+              <Cabecera />
+            </section>
+          </RequireRol>
         }
       />
       <Route
         path="/supervisor"
         element={
-          <section>
-            <h1>Supervisión</h1>
-            <Cabecera />
-          </section>
+          <RequireRol rolPermitido="SUPERVISOR">
+            <section>
+              <h1>Supervisión</h1>
+              <Cabecera />
+            </section>
+          </RequireRol>
         }
       />
       <Route
         path="/admin"
         element={
-          <section>
-            <h1>Administración</h1>
-            <Cabecera />
-          </section>
+          <RequireRol rolPermitido="ADMIN">
+            <section>
+              <h1>Administración</h1>
+              <Cabecera />
+            </section>
+          </RequireRol>
         }
       />
     </Routes>,
@@ -114,12 +121,7 @@ describe('Página de inicio de sesión (routes.tsx)', () => {
       'RECAUDADOR',
       'Terminal de cobro',
     ],
-    [
-      'EMP-003',
-      'Juan David Rodríguez Silva',
-      'SUPERVISOR',
-      'Supervisión',
-    ],
+    ['EMP-003', 'Juan David Rodríguez Silva', 'SUPERVISOR', 'Supervisión'],
     ['ADMIN-01', 'Administración', 'ADMIN', 'Administración'],
   ] as const)(
     'si ya hay sesión, /login redirige a la página del rol (%s)',
@@ -140,7 +142,7 @@ describe('Página de inicio de sesión (routes.tsx)', () => {
   it('cerrar sesión desde la cabecera de B0 vuelve a /login y limpia la sesión', async () => {
     const usuario = userEvent.setup();
     renderConRutas({
-      initialEntries: ['/operador'],
+      initialEntries: ['/supervisor'],
       usuarioInicial: {
         id: '3',
         nombre: 'Juan David Rodríguez Silva',
