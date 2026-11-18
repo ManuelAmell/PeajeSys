@@ -38,7 +38,7 @@ export class ErrorApi extends Error {
 }
 
 export interface OpcionesClienteHttp<T = unknown> extends RequestInit {
-  schema?: z.ZodType<T>;
+  schema?: { safeParse(data: unknown): z.SafeParseReturnType<unknown, T> };
   params?: Record<string, string | number | boolean | undefined | null>;
 }
 

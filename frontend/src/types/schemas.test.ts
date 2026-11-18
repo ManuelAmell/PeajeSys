@@ -251,6 +251,20 @@ describe('Esquemas Zod y restricciones DDL (CHECKs y límites)', () => {
       expect(esquemaCategoriaVehiculo.safeParse({ ...baseCategoria, peso_maximo_ton: -1 }).success).toBe(false);
     });
 
+    it('esquemaCategoriaVehiculoNueva asigna activo true y peso nulo por defecto', () => {
+      const res = esquemaCategoriaVehiculoNueva.safeParse({
+        codigo: 'CAT_TEST',
+        descripcion: 'Prueba',
+        numero_ejes_min: 2,
+        numero_ejes_max: 3,
+      });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.activo).toBe(true);
+        expect(res.data.peso_maximo_ton).toBeNull();
+      }
+    });
+
     it('valida límites de longitud VARCHAR', () => {
       expect(esquemaCategoriaVehiculo.safeParse({ ...baseCategoria, codigo: 'C'.repeat(10) }).success).toBe(true);
       expect(esquemaCategoriaVehiculo.safeParse({ ...baseCategoria, codigo: 'C'.repeat(11) }).success).toBe(false);
@@ -325,6 +339,19 @@ describe('Esquemas Zod y restricciones DDL (CHECKs y límites)', () => {
       expect(esquemaVehiculo.safeParse({ ...baseVehiculo, placa: 'P'.repeat(11) }).success).toBe(false);
       expect(esquemaVehiculo.safeParse({ ...baseVehiculo, marca: 'M'.repeat(50) }).success).toBe(true);
       expect(esquemaVehiculo.safeParse({ ...baseVehiculo, marca: 'M'.repeat(51) }).success).toBe(false);
+    });
+
+    it('esquemaVehiculoNuevo asigna campos opcionales como null por defecto', () => {
+      const res = esquemaVehiculoNuevo.safeParse({
+        placa: 'HKL123',
+        id_categoria: 1,
+      });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.marca).toBeNull();
+        expect(res.data.modelo).toBeNull();
+        expect(res.data.color).toBeNull();
+      }
     });
   });
 
@@ -440,6 +467,19 @@ describe('Esquemas Zod y restricciones DDL (CHECKs y límites)', () => {
     it('valida límites de longitud VARCHAR', () => {
       expect(esquemaDetallePagoTelepeaje.safeParse({ ...baseDetalle, antena_lectora_id: 'A'.repeat(30) }).success).toBe(true);
       expect(esquemaDetallePagoTelepeaje.safeParse({ ...baseDetalle, antena_lectora_id: 'A'.repeat(31) }).success).toBe(false);
+    });
+
+    it('esquemaDetallePagoTelepeajeNuevo asigna antena_lectora_id como null por defecto', () => {
+      const res = esquemaDetallePagoTelepeajeNuevo.safeParse({
+        id_transaccion: 4,
+        id_cuenta: 1,
+        saldo_anterior: 50000,
+        saldo_posterior: 40000,
+      });
+      expect(res.success).toBe(true);
+      if (res.success) {
+        expect(res.data.antena_lectora_id).toBeNull();
+      }
     });
   });
 

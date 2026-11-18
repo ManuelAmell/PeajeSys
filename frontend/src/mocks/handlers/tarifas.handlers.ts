@@ -96,6 +96,7 @@ export const tarifasHandlers = [
       );
     }
 
+    if (body.monto !== undefined) tarifa.monto = Number(body.monto);
     if (body.activa !== undefined) tarifa.activa = Boolean(body.activa);
     if (body.fecha_fin_vigencia !== undefined) {
       tarifa.fecha_fin_vigencia = body.fecha_fin_vigencia ? String(body.fecha_fin_vigencia) : null;

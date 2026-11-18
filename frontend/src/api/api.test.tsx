@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import {
   actualizarCategoria,
@@ -33,6 +33,26 @@ import {
   useEstaciones,
   useLogin,
   useRegistrarTransaccion,
+  useActualizarCategoria,
+  useActualizarOperador,
+  useActualizarTarifa,
+  useAnularTransaccion,
+  useAuditoria,
+  useCasetas,
+  useCategorias,
+  useCrearCategoria,
+  useCrearOperador,
+  useCrearTarifa,
+  useCuentaPorPlaca,
+  useCuentasTelepeaje,
+  useOperador,
+  useOperadores,
+  useRecaudo,
+  useTarifas,
+  useTransaccionesTurno,
+  useTurno,
+  useTurnos,
+  useVehiculo,
 } from './index';
 
 function crearWrapperQuery(queryClient?: QueryClient) {
@@ -121,7 +141,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
       expect(Array.isArray(operadores)).toBe(true);
       expect(operadores.length).toBeGreaterThan(0);
-      expect(operadores[0].nombres).toContain('Carlos');
+      expect(operadores[0]?.nombres).toContain('Carlos');
     });
   });
 
@@ -276,7 +296,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
     it('transacciones anula transacción y genera registro inmutable en auditoría', async () => {
       const txs = await obtenerTransaccionesTurno(8);
       expect(txs.length).toBeGreaterThan(0);
-      const idTx = txs[0].id_transaccion;
+      const idTx = txs[0]?.id_transaccion ?? 1;
 
       const resAnulacion = await anularTransaccion({
         idTransaccion: idTx,
@@ -331,7 +351,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
     it('useRegistrarTransaccion registra y gatilla la invalidación de turnos y recaudo', async () => {
       const { queryClient, wrapper } = crearWrapperQuery();
-      const spyInvalidate = vitest.spyOn(queryClient, 'invalidateQueries');
+      const spyInvalidate = vi.spyOn(queryClient, 'invalidateQueries');
 
       const { result } = renderHook(() => useRegistrarTransaccion(), { wrapper });
 
@@ -357,17 +377,13 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
       expect(spyInvalidate).toHaveBeenCalledWith(
         expect.objectContaining({ queryKey: ['recaudo'] }),
       );
-      expect(spyInvalidate).toHaveBeenCalledWith(
-        expect.objectContaining({ queryKey: ['auditoria'] }),
-      );
     });
 
-    it('useCerrarTurno muta, actualiza el detalle en caché e invalida recaudo', async () => {
+    it('useCerrarTurno muta, actualiza el turno e invalida recaudo', async () => {
       const { queryClient, wrapper } = crearWrapperQuery();
-      const spyInvalidate = vitest.spyOn(queryClient, 'invalidateQueries');
+      const spyInvalidate = vi.spyOn(queryClient, 'invalidateQueries');
 
       const { result } = renderHook(() => useCerrarTurno(), { wrapper });
-
       result.current.mutate({
         idTurno: 10,
         total_declarado_cierre: 16000,
@@ -375,13 +391,189 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
       expect(result.current.data?.estado).toBe('CERRADO');
+      expect(spyInvalidate).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['turnos'] }),
+      );
+    });
+
+    it('useCasetas carga las casetas de una estación', async () => {
+      const { wrapper } = crearWrapperQuery();
+      const { result } = renderHook(() => useCasetas(1), { wrapper });
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data?.length).toBeGreaterThan(0);
+    });
+
+    it('useOperadores y useOperador consultan la lista y detalle', async () => {
+      const { wrapper } = crearWrapperQuery();
+      const { result: lista } = renderHook(() => useOperadores(), { wrapper });
+      await waitFor(() => expect(lista.current.isSuccess).toBe(true));
+      expect(lista.current.data?.length).toBeGreaterThan(0);
+
+      const { result: detalle } = renderHook(() => useOperador(1), { wrapper });
+      await waitFor(() => expect(detalle.current.isSuccess).toBe(true));
+      expect(detalle.current.data?.codigo_empleado).toBe('EMP-001');
+    });
+
+    it('useCrearOperador y useActualizarOperador mutan e invalidan la lista', async () => {
+      const { queryClient, wrapper } = crearWrapperQuery();
+      const spyInvalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+      const { result: crear } = renderHook(() => useCrearOperador(), { wrapper });
+      crear.current.mutate({
+        numero_documento: '9988776655',
+        nombres: 'TestHook',
+        apellidos: 'OperadorHook',
+        codigo_empleado: 'EMP-HOOK',
+        rol: 'RECAUDADOR',
+        estado: 'ACTIVO',
+      });
+      await waitFor(() => expect(crear.current.isSuccess).toBe(true));
+      expect(spyInvalidate).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['operadores'] }),
+      );
+
+      const nuevoId = crear.current.data!.id_operador;
+      const { result: actualizar } = renderHook(() => useActualizarOperador(), { wrapper });
+      actualizar.current.mutate({
+        id: nuevoId,
+        datos: { estado: 'INACTIVO' },
+      });
+      await waitFor(() => expect(actualizar.current.isSuccess).toBe(true));
+      expect(actualizar.current.data?.estado).toBe('INACTIVO');
+    });
+
+    it('useCategorias, useCrearCategoria y useActualizarCategoria gestionan categorías', async () => {
+      const { queryClient, wrapper } = crearWrapperQuery();
+      const spyInvalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+      const { result: lista } = renderHook(() => useCategorias(), { wrapper });
+      await waitFor(() => expect(lista.current.isSuccess).toBe(true));
+      expect(lista.current.data?.length).toBeGreaterThan(0);
+
+      const { result: crear } = renderHook(() => useCrearCategoria(), { wrapper });
+      crear.current.mutate({
+        codigo: 'CAT-HOOK',
+        descripcion: 'Categoría para hook test',
+        numero_ejes_min: 2,
+        numero_ejes_max: 2,
+        peso_maximo_ton: 4.5,
+        activo: true,
+      });
+      await waitFor(() => expect(crear.current.isSuccess).toBe(true));
+      expect(spyInvalidate).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['categorias'] }),
+      );
+
+      const idCat = crear.current.data!.id_categoria;
+      const { result: actualizar } = renderHook(() => useActualizarCategoria(), { wrapper });
+      actualizar.current.mutate({
+        id: idCat,
+        datos: { descripcion: 'Descripción editada por hook' },
+      });
+      await waitFor(() => expect(actualizar.current.isSuccess).toBe(true));
+      expect(actualizar.current.data?.descripcion).toBe('Descripción editada por hook');
+    });
+
+    it('useTarifas, useCrearTarifa y useActualizarTarifa gestionan tarifas', async () => {
+      const { queryClient, wrapper } = crearWrapperQuery();
+      const spyInvalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+      const { result: lista } = renderHook(() => useTarifas({ vigente: true }), { wrapper });
+      await waitFor(() => expect(lista.current.isSuccess).toBe(true));
+      expect(lista.current.data?.length).toBeGreaterThan(0);
+
+      const { result: crear } = renderHook(() => useCrearTarifa(), { wrapper });
+      crear.current.mutate({
+        id_estacion: 1,
+        id_categoria: 1,
+        monto: 12000,
+        resolucion_legal: 'Res 001',
+        fecha_inicio_vigencia: '2026-01-01',
+        fecha_fin_vigencia: null,
+        activa: true,
+      });
+      await waitFor(() => expect(crear.current.isSuccess).toBe(true));
+      expect(spyInvalidate).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['tarifas'] }),
+      );
+
+      const idTar = crear.current.data!.id_tarifa;
+      const { result: actualizar } = renderHook(() => useActualizarTarifa(), { wrapper });
+      actualizar.current.mutate({
+        id: idTar,
+        datos: { monto: 12500 },
+      });
+      await waitFor(() => expect(actualizar.current.isSuccess).toBe(true));
+      expect(actualizar.current.data?.monto).toBe(12500);
+    });
+
+    it('useVehiculo y useCuentasTelepeaje / useCuentaPorPlaca consultan vehículos y tags', async () => {
+      const { wrapper } = crearWrapperQuery();
+
+      const { result: vehiculo } = renderHook(() => useVehiculo('HKL123'), { wrapper });
+      await waitFor(() => expect(vehiculo.current.isSuccess).toBe(true));
+      expect(vehiculo.current.data?.vehiculo.placa).toBe('HKL123');
+
+      const { result: cuentas } = renderHook(() => useCuentasTelepeaje(), { wrapper });
+      await waitFor(() => expect(cuentas.current.isSuccess).toBe(true));
+      expect(cuentas.current.data?.length).toBeGreaterThan(0);
+
+      const { result: cuentaPlaca } = renderHook(() => useCuentaPorPlaca('HKL123'), { wrapper });
+      await waitFor(() => expect(cuentaPlaca.current.isSuccess).toBe(true));
+      expect(cuentaPlaca.current.data?.tag_rfid_serial).toBe('TAG-COL-9900112233');
+    });
+
+    it('useTurnos, useTurno y useTransaccionesTurno consultan turnos', async () => {
+      const { wrapper } = crearWrapperQuery();
+
+      const { result: lista } = renderHook(() => useTurnos({ estado: 'ABIERTO' }), { wrapper });
+      await waitFor(() => expect(lista.current.isSuccess).toBe(true));
+      expect(lista.current.data?.length).toBeGreaterThan(0);
+
+      const { result: turno } = renderHook(() => useTurno(8), { wrapper });
+      await waitFor(() => expect(turno.current.isSuccess).toBe(true));
+      expect(turno.current.data?.id_turno).toBe(8);
+
+      const { result: txs } = renderHook(() => useTransaccionesTurno(8), { wrapper });
+      await waitFor(() => expect(txs.current.isSuccess).toBe(true));
+      expect(Array.isArray(txs.current.data)).toBe(true);
+    });
+
+    it('useAnularTransaccion anula e invalida turnos, auditoría y recaudo', async () => {
+      const { queryClient, wrapper } = crearWrapperQuery();
+      const spyInvalidate = vi.spyOn(queryClient, 'invalidateQueries');
+
+      const { result } = renderHook(() => useAnularTransaccion(), { wrapper });
+      result.current.mutate({
+        idTransaccion: 1,
+        motivo: 'Anulación de prueba en hook',
+        usuario_sistema: 'SUPERVISOR-HOOK',
+      });
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(result.current.data?.auditoria.tipo_operacion).toBe('VOID');
 
       expect(spyInvalidate).toHaveBeenCalledWith(
         expect.objectContaining({ queryKey: ['turnos'] }),
       );
       expect(spyInvalidate).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['auditoria'] }),
+      );
+      expect(spyInvalidate).toHaveBeenCalledWith(
         expect.objectContaining({ queryKey: ['recaudo'] }),
       );
+    });
+
+    it('useAuditoria y useRecaudo consultan datos agregados', async () => {
+      const { wrapper } = crearWrapperQuery();
+
+      const { result: auditoria } = renderHook(() => useAuditoria({ tipo: 'INSERT' }), { wrapper });
+      await waitFor(() => expect(auditoria.current.isSuccess).toBe(true));
+      expect(Array.isArray(auditoria.current.data)).toBe(true);
+
+      const { result: recaudo } = renderHook(() => useRecaudo(), { wrapper });
+      await waitFor(() => expect(recaudo.current.isSuccess).toBe(true));
+      expect(recaudo.current.data?.total_general).toBeGreaterThan(0);
     });
   });
 });

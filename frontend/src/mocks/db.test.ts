@@ -41,7 +41,7 @@ describe('Base de datos en memoria (MSW db.ts) y control de estados (control.ts)
       };
       const customDb = crearDb(semillaCustom);
       expect(customDb.estaciones.length).toBe(1);
-      expect(customDb.estaciones[0].codigo_estacion).toBe('PEA-CUS-99');
+      expect(customDb.estaciones[0]!.codigo_estacion).toBe('PEA-CUS-99');
     });
 
     it('reiniciarDb restablece el estado inicial tras modificaciones', () => {
@@ -72,7 +72,7 @@ describe('Base de datos en memoria (MSW db.ts) y control de estados (control.ts)
       expect(res.transaccion.numero_ticket).toContain('TCK-');
       expect(turnoInicial.total_recaudado_efectivo).toBe(recaudadoAntes + 10500);
       expect(db.auditorias.length).toBe(auditoriasAntes + 1);
-      expect(db.auditorias[0].tipo_operacion).toBe('INSERT');
+      expect(db.auditorias[0]!.tipo_operacion).toBe('INSERT');
     });
 
     it('registrarTransaccion en telepeaje: descuenta saldo, crea detalle y genera auditoría', () => {

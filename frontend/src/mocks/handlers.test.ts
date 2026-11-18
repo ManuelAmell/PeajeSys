@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
-  const getUrl = (path: string) => `${window.location.origin}${path}`;
-
   describe('1. Autenticación (POST /api/auth/login)', () => {
     it('valida código requerido con mensaje del prototipo', async () => {
       const res = await fetch(`http://localhost:3000/api/auth/login`, {
@@ -400,6 +398,218 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       expect(data.total_general).toBeGreaterThan(0);
       expect(Array.isArray(data.dias)).toBe(true);
       expect(Array.isArray(data.carriles)).toBe(true);
+    });
+
+    it('GET /api/recaudo filtra por fecha y por estación', async () => {
+      const res = await fetch(`http://localhost:3000/api/recaudo?fecha=2026-10-01&estacion=1`);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.dias.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('GET /api/auditoria busca por texto libre con q', async () => {
+      const res = await fetch(`http://localhost:3000/api/auditoria?q=INSERT`);
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(Array.isArray(data)).toBe(true);
+    });
+  });
+
+  describe('11. Cobertura de ramas de error y control de estados', () => {
+    it('control de simulación ?mock=vacio y ?mock=error', async () => {
+      const resVacio = await fetch(`http://localhost:3000/api/estaciones?mock=vacio`);
+      expect(resVacio.status).toBe(200);
+      expect(await resVacio.json()).toEqual([]);
+
+      const resError = await fetch(`http://localhost:3000/api/estaciones?mock=error`);
+      expect(resError.status).toBe(500);
+      const dataError = await resError.json();
+      expect(dataError.error.codigo).toBe('ERROR_SIMULADO');
+
+      const resRecaudoVacio = await fetch(`http://localhost:3000/api/recaudo?mock=vacio`);
+      expect(resRecaudoVacio.status).toBe(200);
+    });
+
+    it('operadores valida duplicados y rechaza modificaciones inválidas', async () => {
+      // Documento duplicado
+      const resDupDoc = await fetch(`http://localhost:3000/api/operadores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          numero_documento: '1047123456', // Doc de EMP-001
+          nombres: 'Duplicado',
+          apellidos: 'Doc',
+          codigo_empleado: 'EMP-NEW',
+          rol: 'RECAUDADOR',
+          estado: 'ACTIVO',
+        }),
+      });
+      expect(resDupDoc.status).toBe(409);
+
+      // Código duplicado
+      const resDupCod = await fetch(`http://localhost:3000/api/operadores`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          numero_documento: '9988112233',
+          nombres: 'Duplicado',
+          apellidos: 'Cod',
+          codigo_empleado: 'EMP-001',
+          rol: 'RECAUDADOR',
+          estado: 'ACTIVO',
+        }),
+      });
+      expect(resDupCod.status).toBe(409);
+
+      // PATCH 404
+      const resPatch404 = await fetch(`http://localhost:3000/api/operadores/99999`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'INACTIVO' }),
+      });
+      expect(resPatch404.status).toBe(404);
+
+      // PATCH estado inválido
+      const resEstadoInv = await fetch(`http://localhost:3000/api/operadores/1`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estado: 'INVALIDO' }),
+      });
+      expect(resEstadoInv.status).toBe(422);
+
+      // PATCH rol inválido
+      const resRolInv = await fetch(`http://localhost:3000/api/operadores/1`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rol: 'INVALIDO' }),
+      });
+      expect(resRolInv.status).toBe(422);
+
+      // Filtros GET rol y q
+      const resFiltros = await fetch(`http://localhost:3000/api/operadores?rol=SUPERVISOR&estado=ACTIVO&q=Juan`);
+      expect(resFiltros.status).toBe(200);
+    });
+
+    it('turnos cubre ramas de búsqueda y validación de cierre', async () => {
+      const resFiltro = await fetch(`http://localhost:3000/api/turnos?fecha=2026-03-01&estacion=1&operador=EMP-001`);
+      expect(resFiltro.status).toBe(200);
+
+      const resOpInexistente = await fetch(`http://localhost:3000/api/turnos?operador=NO_EXISTE`);
+      expect(resOpInexistente.status).toBe(200);
+      expect(await resOpInexistente.json()).toEqual([]);
+
+      // Cierre con total negativo
+      const resCierreNegativo = await fetch(`http://localhost:3000/api/turnos/8/cierre`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total_declarado_cierre: -500 }),
+      });
+      expect(resCierreNegativo.status).toBe(422);
+
+      // Cierre turno 404
+      const resCierre404 = await fetch(`http://localhost:3000/api/turnos/99999/cierre`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total_declarado_cierre: 1000 }),
+      });
+      expect(resCierre404.status).toBe(404);
+    });
+
+    it('transacciones valida errores de telepeaje y efectivo', async () => {
+      // Efectivo insuficiente
+      const resEfInsuf = await fetch(`http://localhost:3000/api/transacciones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_turno: 8,
+          id_tarifa: 1,
+          id_categoria: 1,
+          placa_detectada: 'XYZ123',
+          monto_tarifa: 10500,
+          metodo_pago: 'EFECTIVO',
+          numero_ticket: 'TK-FAIL-01',
+          recibido: 5000,
+        }),
+      });
+      expect(resEfInsuf.status).toBe(422);
+
+      // Telepeaje placa sin cuenta
+      const resSinCuenta = await fetch(`http://localhost:3000/api/transacciones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_turno: 8,
+          id_tarifa: 1,
+          id_categoria: 1,
+          placa_detectada: 'NOEXISTE',
+          monto_tarifa: 10500,
+          metodo_pago: 'TELEPEAJE',
+          numero_ticket: 'TK-FAIL-02',
+        }),
+      });
+      expect(resSinCuenta.status).toBe(404);
+
+      // Telepeaje saldo insuficiente (QWE321 tiene 8000, peaje cuesta 15300)
+      const resSaldoInsuf = await fetch(`http://localhost:3000/api/transacciones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_turno: 8,
+          id_tarifa: 3,
+          id_categoria: 3,
+          placa_detectada: 'QWE321',
+          monto_tarifa: 15300,
+          metodo_pago: 'TELEPEAJE',
+          numero_ticket: 'TK-FAIL-03',
+        }),
+      });
+      expect(resSaldoInsuf.status).toBe(422);
+
+      // Turno cerrado (turno 1)
+      const resTurnoCerrado = await fetch(`http://localhost:3000/api/transacciones`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_turno: 1,
+          id_tarifa: 1,
+          id_categoria: 1,
+          placa_detectada: 'HKL123',
+          monto_tarifa: 10500,
+          metodo_pago: 'EFECTIVO',
+          numero_ticket: 'TK-FAIL-04',
+          recibido: 20000,
+        }),
+      });
+      expect(resTurnoCerrado.status).toBe(409);
+
+      // Anulación de transacción inexistente
+      const resAnular404 = await fetch(`http://localhost:3000/api/transacciones/99999/anulacion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ motivo: 'Motivo prueba' }),
+      });
+      expect(resAnular404.status).toBe(404);
+    });
+
+    it('telepeaje y vehículos cubren filtros y 404', async () => {
+      const resVeh404 = await fetch(`http://localhost:3000/api/vehiculos/PLACA_INEXISTENTE`);
+      expect(resVeh404.status).toBe(404);
+
+      const resCuentaPlaca404 = await fetch(`http://localhost:3000/api/cuentas-telepeaje/por-placa/PLACA_INEXISTENTE`);
+      expect(resCuentaPlaca404.status).toBe(404);
+
+      const resCuentasFiltro = await fetch(`http://localhost:3000/api/cuentas-telepeaje?estado=ACTIVA&q=TAG-COL`);
+      expect(resCuentasFiltro.status).toBe(200);
+
+      const resTarifasFiltro = await fetch(`http://localhost:3000/api/tarifas?vigente=false`);
+      expect(resTarifasFiltro.status).toBe(200);
+
+      const resTarifa404 = await fetch(`http://localhost:3000/api/tarifas/99999`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ activa: false }),
+      });
+      expect(resTarifa404.status).toBe(404);
     });
   });
 });

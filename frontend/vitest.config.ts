@@ -27,8 +27,22 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'text-summary', 'json', 'html'],
-      include: ['src/lib/**', 'src/components/**'],
-      exclude: ['src/components/ui/sonner.tsx'],
+      include: [
+        'src/lib/**',
+        'src/components/**',
+        'src/api/**',
+        'src/mocks/**',
+        'src/types/**',
+      ],
+      exclude: [
+        'src/components/ui/sonner.tsx',
+        'src/mocks/browser.ts',
+        'src/mocks/server.ts',
+        'src/mocks/semilla.tipos.ts',
+        'src/types/ddl.ts',
+        '**/*.test.{ts,tsx}',
+        'src/test/**',
+      ],
       thresholds: {
         lines: 80,
         functions: 80,
