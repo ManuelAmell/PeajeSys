@@ -1,5 +1,3 @@
-import type { CategoriaVehiculo, Tarifa } from '@/types';
-
 export type MetodoPagoOperador = 'EFECTIVO' | 'TELEPEAJE' | 'EXENTO';
 
 export interface CategoriaVista {
