@@ -59,6 +59,11 @@ En esta máquina (memoria RAM limitada de ~7 GB con ~1,5 GB libres):
    Aplica obligatoriamente a: `pnpm install`, `pnpm test:cov`, `pnpm build`, `pnpm e2e` y `pnpm capturar`.
    **Nunca** lanzar instalaciones o builds en segundo plano ni en paralelo.
 
+3. **Límites de paralelismo para control de RAM**:
+   Dado que este entorno cuenta con ~6,9 GB de RAM compartidos entre múltiples agentes de trabajo, el paralelismo está estrictamente limitado en las herramientas de prueba:
+   - **Vitest (`vitest.config.ts`)**: Se utiliza el pool `'forks'` limitado a un máximo de 2 procesos (`maxWorkers: 2`, `minWorkers: 1`, `poolOptions.forks: { maxForks: 2, minForks: 1 }`). Esto previene el sobrecosto de memoria (evitando abrir ~10 forks simultáneos de ~700 MB). Aplica a `pnpm test` y `pnpm test:cov`.
+   - **Playwright (`playwright.config.ts`)**: Configurado con `workers: 1` y `fullyParallel: false` para ejecutar las pruebas E2E secuencialmente en un único proceso Chromium controlado. Aplica a `pnpm e2e`.
+
 ## 3. Puertos asignados por bloque
 
 Cada bloque tiene un puerto único asignado para evitar colisiones:
