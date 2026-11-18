@@ -31,6 +31,7 @@ export function SelectorCategorias({
           return (
             <button
               key={c.codigo}
+              id={`op-cat-${c.codigo}`}
               type="button"
               aria-pressed={seleccionada}
               disabled={estaDeshabilitada}
