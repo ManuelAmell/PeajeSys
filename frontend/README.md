@@ -170,10 +170,11 @@ flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
   --salida /home/amell/orca/reportes/capturas/B3/
 ```
 
-Opciones de interacción (para capturar estados que requieren acciones, por ejemplo errores de formulario):
+Opciones de interacción (para capturar estados que requieren acciones, por ejemplo errores de formulario o interacción con diálogos y modales):
 
 - `--llenar '<selector>=<valor>'`: rellena un campo (repetible). El valor puede contener `=`.
-- `--clic '<selector>'`: hace clic en un elemento (repetible). Los clics se ejecutan en orden, después de todos los `--llenar`.
+- `--clic '<selector>'`: hace clic en un elemento (repetible).
+- Las acciones `--llenar` y `--clic` se ejecutan secuencialmente en el **orden de aparición** en la línea de comandos, permitiendo abrir un diálogo (`--clic`) y luego diligenciar sus campos (`--llenar`). Se mantiene total retrocompatibilidad con invocaciones previas (llenar primero y clic después).
 - `--espera-despues '<selector>'`: elemento a esperar tras las acciones, antes de capturar.
 
 Ejemplo: rellenar el formulario del login con un usuario INACTIVO de la semilla, enviar y esperar el mensaje de error:

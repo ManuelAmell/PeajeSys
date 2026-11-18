@@ -9,6 +9,12 @@ import { chromium } from '@playwright/test';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+interface OpcionAccion {
+  tipo: 'llenar' | 'clic';
+  selector: string;
+  valor?: string;
+}
+
 interface OpcionesCaptura {
   ruta: string;
   rol: 'RECAUDADOR' | 'SUPERVISOR' | 'ADMIN' | 'ninguno';
@@ -18,15 +24,17 @@ interface OpcionesCaptura {
   puerto: number;
   llenar: string[];
   clic: string[];
+  acciones: OpcionAccion[];
   esperaDespues?: string;
 }
 
 function parsearArgumentos(): OpcionesCaptura {
   const args = process.argv.slice(2);
-  const opciones: Partial<OpcionesCaptura> = {
+  const opciones: Partial<OpcionesCaptura> & { acciones: OpcionAccion[] } = {
     puerto: 5180,
     llenar: [],
     clic: [],
+    acciones: [],
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -53,9 +61,21 @@ function parsearArgumentos(): OpcionesCaptura {
       i++;
     } else if (arg === '--llenar' && siguiente) {
       opciones.llenar = [...(opciones.llenar ?? []), siguiente];
+      const sep = siguiente.indexOf('=');
+      if (sep > 0) {
+        opciones.acciones.push({
+          tipo: 'llenar',
+          selector: siguiente.slice(0, sep),
+          valor: siguiente.slice(sep + 1),
+        });
+      }
       i++;
     } else if (arg === '--clic' && siguiente) {
       opciones.clic = [...(opciones.clic ?? []), siguiente];
+      opciones.acciones.push({
+        tipo: 'clic',
+        selector: siguiente,
+      });
       i++;
     } else if (arg === '--espera-despues' && siguiente) {
       opciones.esperaDespues = siguiente;
@@ -252,21 +272,31 @@ async function ejecutar() {
         await page.goto(url, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector(opts.espera, { timeout: 15000 });
 
-        // Interacción opcional: primero todos los --llenar, luego los --clic en
-        // el orden dado, y al final se espera --espera-despues si se indicó.
-        for (const instruccion of opts.llenar) {
-          const separador = instruccion.indexOf('=');
-          if (separador <= 0) {
-            throw new Error(
-              `--llenar espera "<selector>=<valor>" y recibió "${instruccion}".`,
-            );
+        // Interacción opcional: si se registraron acciones secuenciales (--llenar / --clic),
+        // se ejecutan en el orden exacto en que se pasaron en la línea de comandos.
+        if (opts.acciones && opts.acciones.length > 0) {
+          for (const accion of opts.acciones) {
+            if (accion.tipo === 'llenar') {
+              await page.fill(accion.selector, accion.valor ?? '');
+            } else {
+              await page.click(accion.selector);
+            }
           }
-          const selector = instruccion.slice(0, separador);
-          const valor = instruccion.slice(separador + 1);
-          await page.fill(selector, valor);
-        }
-        for (const selector of opts.clic) {
-          await page.click(selector);
+        } else {
+          for (const instruccion of opts.llenar) {
+            const separador = instruccion.indexOf('=');
+            if (separador <= 0) {
+              throw new Error(
+                `--llenar espera "<selector>=<valor>" y recibió "${instruccion}".`,
+              );
+            }
+            const selector = instruccion.slice(0, separador);
+            const valor = instruccion.slice(separador + 1);
+            await page.fill(selector, valor);
+          }
+          for (const selector of opts.clic) {
+            await page.click(selector);
+          }
         }
         if (opts.esperaDespues) {
           await page.waitForSelector(opts.esperaDespues, { timeout: 15000 });
