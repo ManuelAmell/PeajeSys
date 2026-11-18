@@ -23,7 +23,7 @@ test.describe('Prueba de humo - Esqueleto Frontend PeajeSys', () => {
     // 2. Verificar que el título H1 existe y es visible
     const h1 = page.locator('h1');
     await expect(h1).toBeVisible();
-    await expect(h1).toContainText('Inicio de sesión');
+    await expect(h1).toContainText('Inicia sesión');
 
     // 3. Verificar que el alternador de tema funciona
     const botonTema = page.locator('button', { hasText: /modo/i });
