@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root,
+  [data-tema='claro'] {
+    --fondo: #f6f4ef;
+    --superficie: #ffffff;
+    --superficie-2: #ece8e0;
+    --borde: #d9d4ca;
+    --borde-fuerte: #b5afa3;
+    --texto: #1f1d19;
+    --texto-2: #5c574d;
+    --texto-3: #3d3a33;
+    --sobre-acento: #1f1d19;
+    --asfalto: #1f1d19;
+    --acento-texto: #a84f00;
+    --hover: #f1eee7;
+    --correcto: #1e7a46;
+    --correcto-texto: #145232;
+    --correcto-fondo: #e3f1e8;
+    --error: #b42318;
+    --error-fondo: #fbe7e5;
+    --aviso-texto: #7a4a00;
+    --aviso-fondo: #fdf0d2;
+    --peligro: #b42318;
+    color-scheme: light;
+  }
+
+  [data-tema='oscuro'] {
+    --fondo: #121110;
+    --superficie: #1e1c19;
+    --superficie-2: #2a2723;
+    --borde: #3a3631;
+    --borde-fuerte: #5e584f;
+    --texto: #f3f0ea;
+    --texto-2: #b8b1a5;
+    --texto-3: #d4cec3;
+    --asfalto: #0a0908;
+    --acento-texto: #ffb15c;
+    --hover: #2a2723;
+    --correcto: #5cc08a;
+    --correcto-texto: #8fddb0;
+    --correcto-fondo: #15301f;
+    --error: #ff8a7a;
+    --error-fondo: #3a1714;
+    --aviso-texto: #ffc870;
+    --aviso-fondo: #3a2b0a;
+    --peligro: #ff8a7a;
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    font-family:
+      'Barlow',
+      system-ui,
+      -apple-system,
+      sans-serif;
+    font-variant-numeric: tabular-nums;
+    background-color: var(--fondo);
+    color: var(--texto);
+    min-height: 100vh;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+
+  label[for] {
+    cursor: pointer;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  a:focus-visible {
+    outline: 3px solid var(--texto);
+    outline-offset: 2px;
+  }
+}
+
+/* Siluetas vehiculares en modo oscuro sobre placa clara */
+[data-tema='oscuro'] .ps-silueta {
+  background: #ebe6dc;
+  border-radius: 6px;
+  box-sizing: border-box;
+  padding: 3px;
+}
+
+/* Franja vial diagonal amarilla y negra */
+.ps-franja-diagonal {
+  height: 10px;
+  background: repeating-linear-gradient(
+    135deg,
+    #fcbd17 0 18px,
+    #1f1d19 18px 36px
+  );
+}
+
+.ps-franja-diagonal-sm {
+  height: 8px;
+  background: repeating-linear-gradient(
+    135deg,
+    #fcbd17 0 16px,
+    #1f1d19 16px 32px
+  );
+}
+
+.ps-franja-loading {
+  height: 8px;
+  border-radius: 2px;
+  background: repeating-linear-gradient(
+    135deg,
+    #fcbd17 0 10px,
+    #1f1d19 10px 20px
+  );
+}
+
+/* Estilos de botones del sistema de diseño */
+.ps-primario:hover:not(:disabled) {
+  background-color: #e5a800 !important;
+}
+
+.ps-primario:active:not(:disabled) {
+  background-color: #cc9600 !important;
+}
+
+.ps-secundario:hover:not(:disabled) {
+  background-color: var(--hover) !important;
+}
+
+.ps-secundario:active:not(:disabled) {
+  background-color: #e4e0d6 !important;
+}
+
+.ps-peligro:hover:not(:disabled) {
+  background-color: #8f1b12 !important;
+}
+
+.ps-texto:hover:not(:disabled) {
+  background-color: var(--fondo) !important;
+  text-decoration: underline;
+}
+
+.ps-oscuro:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.14) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
