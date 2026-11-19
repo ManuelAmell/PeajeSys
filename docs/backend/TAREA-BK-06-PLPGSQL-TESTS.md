@@ -59,3 +59,10 @@ Integrar los procedimientos almacenados, funciones y triggers de PostgreSQL (req
 - [ ] Cobertura de pruebas superior al 80%.
 - [ ] La integración con el frontend se ejecuta sin fricción ni fallos de contrato.
 - [ ] Cero rayas largas en código o comentarios.
+
+---
+
+## 4. Documentos Relacionados
+- [architecture.md](../architecture.md): Arquitectura en capas y componentes del sistema.
+- [contrato-api-frontend.md](../contrato-api-frontend.md): Contrato técnico oficial de endpoints y payloads.
+- [TAREA-BACKEND-GENERAL.md](./TAREA-BACKEND-GENERAL.md): Hoja de ruta general del equipo backend.

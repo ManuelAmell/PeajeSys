@@ -6,60 +6,65 @@ Documento de diseño detallado de componentes, modelos de datos, flujos de negoc
 
 ## 1. Modelo de Dominio y Entidades
 
-El modelo de dominio traduce fielmente el esquema relacional de PostgreSQL (`database/01_DDL_PeajeSys.sql`) a clases de entidad en `PeajeSys.Core.Entities`.
+El modelo de dominio traduce fielmente el esquema relacional de PostgreSQL (`database/02_SQL/01_DDL_PeajeSys.sql`) a clases de entidad en `PeajeSys.Core.Entities`.
 
 ```mermaid
 classDiagram
     class EstacionPeaje {
         +int IdEstacion
         +string Nombre
-        +string UbicacionRuta
-        +int CantidadCasetas
-        +string Estado
+        +string CodigoEstacion
+        +string UbicacionGeografica
+        +string SentidoVia
+        +EstadoEstacion Estado
+        +DateTime CreatedAt
     }
     class Caseta {
         +int IdCaseta
         +int IdEstacion
-        +int NumeroCaseta
-        +string Sentido
-        +TipoCaseta Tipo
+        +int NumeroCarril
+        +TipoCarril TipoCarril
         +EstadoCaseta Estado
     }
     class Operador {
         +int IdOperador
+        +string NumeroDocumento
+        +string Nombres
+        +string Apellidos
         +string CodigoEmpleado
-        +string DocumentoIdentidad
-        +string Nombre
-        +string Apellido
         +RolOperador Rol
-        +string Estado
-        +string PasswordHash
+        +EstadoOperador Estado
     }
     class Turno {
-        +int IdTurno
+        +long IdTurno
         +int IdCaseta
         +int IdOperador
-        +DateTime FechaInicio
-        +DateTime? FechaFin
-        +EstadoTurno Estado
+        +DateTime Fecha
+        +bool Diurno
+        +decimal FondoInicialCaja
         +decimal TotalRecaudadoEfectivo
-        +decimal TotalRecaudadoTelepeaje
-        +int TotalVehiculos
+        +decimal? TotalDeclaradoCierre
+        +decimal? DiferenciaDescuadre
+        +EstadoTurno Estado
     }
     class CategoriaVehiculo {
         +int IdCategoria
         +string Codigo
-        +string Nombre
         +string Descripcion
-        +int NumeroEjes
+        +int NroEjesMin
+        +int NroEjesMax
+        +float? PesoMaxTon
+        +bool Activo
     }
     class Tarifa {
         +int IdTarifa
-        +int IdCategoria
         +int IdEstacion
+        +int IdCategoria
         +decimal Monto
+        +string ResolucionLegal
         +DateTime FechaInicioVigencia
         +DateTime? FechaFinVigencia
+        +bool Activa
     }
     class Vehiculo {
         +string Placa
@@ -69,30 +74,41 @@ classDiagram
         +string Color
     }
     class CuentaTelepeaje {
-        +int IdCuenta
+        +long IdCuenta
         +string PlacaVehiculo
         +string TagRfidSerial
         +decimal SaldoDisponible
-        +string EstadoCuenta
-        +DateTime FechaActivacion
+        +EstadoCuentaTelepeaje EstadoCuenta
+    }
+    class DetallePagoTelepeaje {
+        +long IdDetalleTelepeaje
+        +long IdTransaccion
+        +long IdCuenta
+        +decimal SaldoAnterior
+        +decimal SaldoPosterior
+        +string AntenaLectoraId
     }
     class TransaccionPeaje {
-        +int IdTransaccion
-        +int IdTurno
-        +string PlacaVehiculo
+        +long IdTransaccion
+        +long IdTurno
+        +int IdTarifa
         +int IdCategoria
+        +string PlacaDetectada
         +decimal MontoTarifa
         +MetodoPago MetodoPago
-        +DateTime FechaHora
         +string NumeroTicket
+        +DateTime FechaHora
+        +EstadoPaso EstadoPaso
     }
     class AuditoriaTransaccion {
-        +int IdAuditoria
-        +int? IdTransaccion
-        +string Accion
+        +long IdAuditoria
+        +long? IdTransaccion
+        +TipoOperacionAuditoria TipoOperacion
         +string UsuarioResponsable
         +DateTime FechaHora
-        +string Detalle
+        +string DatosAnteriores
+        +string DatosNuevos
+        +string MotivoAnulacion
     }
 
     EstacionPeaje "1" --> "*" Caseta : contiene
@@ -103,8 +119,9 @@ classDiagram
     EstacionPeaje "1" --> "*" Tarifa : aplica
     CategoriaVehiculo "1" --> "*" Vehiculo : clasifica
     Vehiculo "1" --> "0..1" CuentaTelepeaje : asocia
-    Vehiculo "1" --> "*" TransaccionPeaje : realiza
-    TransaccionPeaje "1" --> "0..1" AuditoriaTransaccion : audita
+    CuentaTelepeaje "1" --> "*" DetallePagoTelepeaje : debita
+    TransaccionPeaje "1" --> "0..1" DetallePagoTelepeaje : telepeaje
+    TransaccionPeaje "1" --> "*" AuditoriaTransaccion : audita
 ```
 
 ---
@@ -116,27 +133,14 @@ Para garantizar consistencia y tipado estricto, se definen los siguientes enums 
 ```csharp
 namespace PeajeSys.Core.Enums
 {
-    public enum RolOperador
+    public enum EstadoEstacion
     {
-        RECAUDADOR,
-        SUPERVISOR,
-        ADMINISTRADOR
+        ACTIVA,
+        INACTIVA,
+        MANTENIMIENTO
     }
 
-    public enum EstadoTurno
-    {
-        ABIERTO,
-        CERRADO
-    }
-
-    public enum MetodoPago
-    {
-        EFECTIVO,
-        TELEPEAJE,
-        EXENTO
-    }
-
-    public enum TipoCaseta
+    public enum TipoCarril
     {
         MANUAL,
         TELEPEAJE_EXCLUSIVO,
@@ -148,6 +152,51 @@ namespace PeajeSys.Core.Enums
         OPERATIVA,
         CERRADA,
         MANTENIMIENTO
+    }
+
+    public enum RolOperador
+    {
+        RECAUDADOR,
+        SUPERVISOR
+    }
+
+    public enum EstadoOperador
+    {
+        ACTIVO,
+        INACTIVO
+    }
+
+    public enum EstadoTurno
+    {
+        ABIERTO,
+        CERRADO
+    }
+
+    public enum EstadoCuentaTelepeaje
+    {
+        ACTIVA,
+        SUSPENDIDA
+    }
+
+    public enum MetodoPago
+    {
+        EFECTIVO,
+        TELEPEAJE,
+        EXENTO
+    }
+
+    public enum EstadoPaso
+    {
+        APROBADO,
+        EVASION,
+        EXENTO
+    }
+
+    public enum TipoOperacionAuditoria
+    {
+        INSERT,
+        UPDATE,
+        VOID
     }
 
     public enum TipoDiscrepancia
@@ -163,7 +212,7 @@ namespace PeajeSys.Core.Enums
 
 ## 3. Mapeo Integral de Endpoints REST (Contrato de API)
 
-La API implementa con exactitud los 24 endpoints definidos en el [contrato-api-frontend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/contrato-api-frontend.md):
+La API implementa con exactitud los 24 endpoints definidos en el [contrato-api-frontend.md](./contrato-api-frontend.md):
 
 ### 3.1 Módulo de Autenticación (`/api/auth`)
 | Método | Ruta | Controlador / Acción | Rol Requerido | Descripción |
@@ -312,6 +361,6 @@ Las validaciones se ejecutan en dos niveles:
 ---
 
 ## 6. Documentos Relacionados
-- [architecture.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/architecture.md): Arquitectura en capas y componentes del sistema.
-- [contrato-api-frontend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/contrato-api-frontend.md): Contrato técnico oficial de endpoints y payloads.
-- [TAREA-BACKEND-GENERAL.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/backend/TAREA-BACKEND-GENERAL.md): Tareas de desarrollo para Alex y Samuel.
+- [architecture.md](./architecture.md): Arquitectura en capas y componentes del sistema.
+- [contrato-api-frontend.md](./contrato-api-frontend.md): Contrato técnico oficial de endpoints y payloads.
+- [TAREA-BACKEND-GENERAL.md](./backend/TAREA-BACKEND-GENERAL.md): Tareas de desarrollo para Alex y Samuel.

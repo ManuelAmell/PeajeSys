@@ -11,7 +11,7 @@ PeajeSys es una plataforma distribuida de misión crítica orientada al control,
 1. **Alta disponibilidad y baja latencia**: Procesamiento de transacciones de paso vehicular en caseta en menos de 150 ms por evento.
 2. **Consistencia e integridad transaccional (ACID)**: Conciliación estricta de dinero en efectivo recaudado, cobro electrónico RFID (telepeaje) y cierre cuadrado de turnos sin inconsistencias monetarias.
 3. **Auditoría continua e inmutabilidad**: Trazabilidad completa de operaciones críticas (aperturas de turno, ajustes tarifarios, discrepancias de arqueo y pasos vehiculares).
-4. **Desacoplamiento e interoperabilidad**: Exposición de una API RESTful estandarizada que satisface el [contrato-api-frontend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/contrato-api-frontend.md) implementado por la interfaz web React/Vite.
+4. **Desacoplamiento e interoperabilidad**: Exposición de una API RESTful estandarizada que satisface el [contrato-api-frontend.md](./contrato-api-frontend.md) implementado por la interfaz web React/Vite.
 
 ---
 
@@ -230,7 +230,7 @@ sequenceDiagram
 ---
 
 ## 8. Documentos Relacionados
-- [design.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/design.md): Diseño detallado de componentes y flujos de datos.
-- [stack-backend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/stack-backend.md): Matriz de versiones y dependencias tecnológicas.
-- [contrato-api-frontend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/contrato-api-frontend.md): Especificación de los 24 endpoints REST.
-- [TAREA-BACKEND-GENERAL.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/backend/TAREA-BACKEND-GENERAL.md): Hoja de ruta y plan de tareas para Alex y Samuel.
+- [design.md](./design.md): Diseño detallado de componentes y flujos de datos.
+- [stack-backend.md](./stack-backend.md): Matriz de versiones y dependencias tecnológicas.
+- [contrato-api-frontend.md](./contrato-api-frontend.md): Especificación de los 24 endpoints REST.
+- [TAREA-BACKEND-GENERAL.md](./backend/TAREA-BACKEND-GENERAL.md): Hoja de ruta y plan de tareas para Alex y Samuel.

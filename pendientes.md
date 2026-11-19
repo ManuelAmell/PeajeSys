@@ -13,7 +13,7 @@ Flujo acordado: primero **todos los diseños** en Claude Design; cuando el equip
 - [x] Panel del supervisor: arqueo y conciliación de turnos, recaudo diario, auditoría y cuentas de telepeaje (borrador interactivo).
 - [x] Panel del administrador: tarifas con historial, personal, estaciones y casetas, categorías (borrador interactivo).
 - [x] Aprobación de todos los diseños (2026-11-18), con tema claro y oscuro. Fuentes en `docs/diseno/claude-design/`.
-- [x] Especificación para el orquestador en `/home/amell/orca/reportes/TAREA-PEAJESYS-FRONTEND.md` (bloques B0 a B6) ejecutada e integrada al 100%.
+- [x] Especificación de tareas para el frontend (bloques B0 a B6) ejecutada e integrada al 100%.
 - [x] Código en Orca: esqueleto en `frontend/` (React + Vite + TS, Tailwind + shadcn/ui, pnpm, MSW). Stack en [docs/stack-frontend.md](docs/stack-frontend.md).
 - [x] Código en Orca: login simulado por rol y pantallas de operador, supervisor y administrador según los diseños aprobados (100% PASS, 362 tests unitarios, 62 E2E).
 - [x] Especificaciones y arquitectura del backend en C#/.NET ([docs/architecture.md](docs/architecture.md), [docs/design.md](docs/design.md), [docs/backend/](docs/backend/)).
