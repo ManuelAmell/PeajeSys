@@ -1,6 +1,6 @@
 import { Page, expect } from '@playwright/test';
 
-export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5187';
+export const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5180';
 
 export const usuarioRecaudador = {
   id: '2',
