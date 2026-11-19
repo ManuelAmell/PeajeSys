@@ -12,7 +12,7 @@ import {
   esquemaTurno,
   esquemaVehiculo,
 } from '@/types';
-import contenidoDml from '../../../database/02_DML_Datos_PeajeSys.sql?raw';
+import contenidoDml from '../../../database/02_SQL/02_DML_Datos_PeajeSys.sql?raw';
 import contenidoGenerado from './semilla.ts?raw';
 // El generador es un script Node en .mjs sin declaraciones de tipos; TypeScript
 // no resuelve .mjs cuando allowJs esta desactivado. Su salida se verifica aqui.
