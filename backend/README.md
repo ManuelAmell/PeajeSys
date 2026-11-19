@@ -34,9 +34,7 @@ backend/
 ├── PeajeSys.Api/                  # Web API REST (Controladores, Middlewares, DI, Program.cs)
 ├── PeajeSys.Core/                 # Dominio (Entidades, Enums, DTOs, Interfaces, Servicios)
 ├── PeajeSys.Data/                 # Infraestructura (DbContext, Fluent Mappings, Repositorios)
-├── PeajeSys.Tests/                # Pruebas Unitarias y de Integracion (xUnit, FluentAssertions)
-├── architecture.md -> docs/architecture.md
-└── design.md       -> docs/design.md
+└── PeajeSys.Tests/                # Pruebas Unitarias y de Integracion (xUnit, FluentAssertions)
 ```
 
 ---
