@@ -754,13 +754,15 @@ export function generarContenido(textoDml) {
 }
 
 async function main() {
-  const { readFileSync, writeFileSync } = await import('node:fs');
+  const { existsSync, readFileSync, writeFileSync } = await import('node:fs');
   const { dirname, resolve } = await import('node:path');
   const { fileURLToPath } = await import('node:url');
 
   const directorioScript = dirname(fileURLToPath(import.meta.url));
   const raizFrontend = resolve(directorioScript, '..');
-  const rutaDml = resolve(raizFrontend, '..', 'database', '02_DML_Datos_PeajeSys.sql');
+  const rutaDmlDirecta = resolve(raizFrontend, '..', 'database', '02_SQL', '02_DML_Datos_PeajeSys.sql');
+  const rutaDmlLegacy = resolve(raizFrontend, '..', 'database', '02_DML_Datos_PeajeSys.sql');
+  const rutaDml = existsSync(rutaDmlDirecta) ? rutaDmlDirecta : rutaDmlLegacy;
   const rutaSalida = process.argv[2]
     ? resolve(process.argv[2])
     : resolve(raizFrontend, 'src', 'mocks', 'semilla.ts');
