@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5187' });
+
 const usuarioRecaudador = {
   id: 'EMP-002',
   nombre: 'María Fernanda López Martínez',
