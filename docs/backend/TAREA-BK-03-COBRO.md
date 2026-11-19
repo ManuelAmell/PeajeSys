@@ -61,7 +61,7 @@ Implementar el núcleo transaccional del sistema: el procesamiento de cobros de 
        - Formatea el número de tiquete: `TCK-YYYYMMDD-XXXXX`.
      - **Regla 6 (Persistencia y Acumuladores)**:
        - Inserta el registro en `TRANSACCION_PEAJE`.
-       - Actualiza los acumuladores en `TURNO` (`total_recaudado_efectivo`, `total_recaudado_telepeaje`, `total_vehiculos`).
+       - Actualiza el acumulador en `TURNO` (`total_recaudado_efectivo` para pagos en efectivo). Los totales de telepeaje y vehículos se obtienen mediante agregación o vistas (`vw_resumen_diario_estacion`).
      - Retorna HTTP 201 con el DTO de transacción exitosa.
 
 ---
@@ -73,3 +73,10 @@ Implementar el núcleo transaccional del sistema: el procesamiento de cobros de 
 - [ ] Validación de generación de consecutivo fiscal continuo mediante la secuencia de base de datos.
 - [ ] Validación de rechazo cuando se intenta cobrar con un turno cerrado (HTTP 409).
 - [ ] Cero rayas largas en código o comentarios.
+
+---
+
+## 4. Documentos Relacionados
+- [architecture.md](../architecture.md): Arquitectura en capas y componentes del sistema.
+- [contrato-api-frontend.md](../contrato-api-frontend.md): Contrato técnico oficial de endpoints y payloads.
+- [TAREA-BACKEND-GENERAL.md](./TAREA-BACKEND-GENERAL.md): Hoja de ruta general del equipo backend.
