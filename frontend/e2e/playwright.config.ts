@@ -11,7 +11,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5187',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5180',
     trace: 'off',
     screenshot: 'only-on-failure',
     launchOptions: {
