@@ -20,9 +20,9 @@ Solución backend para el Sistema de Control y Recaudo de Peajes PeajeSys, const
 - **PostgreSQL**: Versión 16+ o 18.7 (`psql --version`).
 - **IDE**: Visual Studio 2022 (Community o Professional), Visual Studio Code (con C# Dev Kit) o JetBrains Rider.
 - **Base de Datos Inicializada**: Ejecutar previamente los scripts de `database/`:
-  1. `database/01_DDL_PeajeSys.sql`
-  2. `database/02_DML_Datos_PeajeSys.sql`
-  3. `database/04_Objetos_PeajeSys.sql`
+  1. `database/02_SQL/01_DDL_PeajeSys.sql`
+  2. `database/02_SQL/02_DML_Datos_PeajeSys.sql`
+  3. `database/02_SQL/04_Objetos_PeajeSys.sql`
 
 ---
 
@@ -91,8 +91,8 @@ Una vez iniciada la API:
 ## 5. Documentación de Referencia Obligatoria
 
 Antes de implementar código, leer obligatoriamente:
-- [architecture.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/architecture.md): Arquitectura en capas limpia.
-- [design.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/design.md): Diseño detallado de componentes y flujos.
-- [contrato-api-frontend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/contrato-api-frontend.md): Contrato estricto de endpoints REST y formato JSON.
-- [stack-backend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/stack-backend.md): Paquetes y convenciones técnicas.
-- [TAREA-BACKEND-GENERAL.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/backend/TAREA-BACKEND-GENERAL.md): Plan de trabajo y especificaciones por bloque.
+- [architecture.md](../docs/architecture.md): Arquitectura en capas limpia.
+- [design.md](../docs/design.md): Diseño detallado de componentes y flujos.
+- [contrato-api-frontend.md](../docs/contrato-api-frontend.md): Contrato estricto de endpoints REST y formato JSON.
+- [stack-backend.md](../docs/stack-backend.md): Paquetes y convenciones técnicas.
+- [TAREA-BACKEND-GENERAL.md](../docs/backend/TAREA-BACKEND-GENERAL.md): Plan de trabajo y especificaciones por bloque.

@@ -73,12 +73,12 @@ Especificación del stack tecnológico oficial para la Web API en C# y .NET de P
 
 - **C#**: Nombres de clases, métodos, propiedades y contratos de interfaz en `PascalCase` (ej. `RegistrarCobroAsync`, `PlacaVehiculo`, `ICobroService`).
 - **Campos privados**: Notación camelCase con guion bajo inicial (ej. `_context`, `_logger`, `_cobroService`).
-- **JSON HTTP en la API**: La serialización en endpoints usa estrictamente `snake_case` mediante `System.Text.Json.JsonNamingPolicy.SnakeCaseLower`, garantizando 100% de compatibilidad con [contrato-api-frontend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/contrato-api-frontend.md) y con las columnas del DDL.
+- **JSON HTTP en la API**: La serialización en endpoints usa estrictamente `snake_case` mediante `System.Text.Json.JsonNamingPolicy.SnakeCaseLower`, garantizando 100% de compatibilidad con [contrato-api-frontend.md](./contrato-api-frontend.md) y con las columnas del DDL.
 - **Base de Datos**: Nombres de tablas en singular/plural según DDL en MAYÚSCULAS o snake_case (`TRANSACCION_PEAJE`, `TURNO`, `OPERADOR`).
 
 ---
 
 ## 4. Documentos Relacionados
-- [architecture.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/architecture.md): Arquitectura detallada del sistema.
-- [design.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/design.md): Diseño de endpoints, modelos y flujos.
-- [contrato-api-frontend.md](file:///home/amell/orca/workspaces/PeajeSys/peajesys-develop/docs/contrato-api-frontend.md): Contrato técnico de integración.
+- [architecture.md](./architecture.md): Arquitectura detallada del sistema.
+- [design.md](./design.md): Diseño de endpoints, modelos y flujos.
+- [contrato-api-frontend.md](./contrato-api-frontend.md): Contrato técnico de integración.

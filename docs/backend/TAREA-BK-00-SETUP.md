@@ -18,10 +18,11 @@ Crear y configurar la estructura de la solución .NET, la inyección de dependen
 1. **Estructura de Proyectos**:
    - `PeajeSys.sln` configurado en `backend/`.
    - Proyectos creados:
-     - `PeajeSys.Api` (Microsoft.NET.Sdk.Web, .NET 8.0/9.0)
-     - `PeajeSys.Core` (Microsoft.NET.Sdk, .NET 8.0/9.0)
-     - `PeajeSys.Data` (Microsoft.NET.Sdk, .NET 8.0/9.0)
-     - `PeajeSys.Tests` (Microsoft.NET.Sdk, xUnit)
+     - `PeajeSys.Api` (Microsoft.NET.Sdk.Web, `net8.0` LTS o `net9.0`)
+     - `PeajeSys.Core` (Microsoft.NET.Sdk, `net8.0` LTS o `net9.0`)
+     - `PeajeSys.Data` (Microsoft.NET.Sdk, `net8.0` LTS o `net9.0`)
+     - `PeajeSys.Tests` (Microsoft.NET.Sdk, xUnit, `net8.0` LTS o `net9.0`)
+   - *Nota de compatibilidad*: Usar estrictamente `<TargetFramework>net8.0</TargetFramework>` (versión LTS oficial recomendada) o `net9.0`. No configurar targets no estándar o inexistentes como `net11.0`.
    - Referencias de proyectos enlazadas según la arquitectura limpia:
      - `Api` referencia a `Core` y `Data`.
      - `Data` referencia a `Core`.
@@ -60,3 +61,9 @@ Crear y configurar la estructura de la solución .NET, la inyección de dependen
 - [ ] Al invocar `/health` se obtiene HTTP 200 `{ "status": "Healthy" }`.
 - [ ] Una excepción forzada de prueba retorna HTTP con el esquema JSON esperado `{ "error": { ... } }`.
 - [ ] Cero rayas largas en el código o comentarios.
+
+---
+
+## 4. Documentos Relacionados
+- [architecture.md](../architecture.md): Arquitectura en capas y componentes del sistema.
+- [TAREA-BACKEND-GENERAL.md](./TAREA-BACKEND-GENERAL.md): Hoja de ruta general del equipo backend.
