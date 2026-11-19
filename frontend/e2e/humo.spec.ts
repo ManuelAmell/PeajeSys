@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 
+test.use({ baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5187' });
+
 test.describe('Prueba de humo - Esqueleto Frontend PeajeSys', () => {
   test('carga /login, muestra h1, alterna tema, sin errores de consola ni desborde horizontal', async ({
     page,
