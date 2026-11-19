@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeajeSys</title>
+
+    <!-- Favicons e isotipo -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/img/favicon-64.png" />
+    <link rel="apple-touch-icon" href="/img/logo-isotipo.png" />
+
+    <!-- Tipografía Barlow de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Script mínimo en línea para evitar parpadeo de tema (FOUC) -->
+    <script>
+      (function () {
+        try {
+          var temaGuardado = localStorage.getItem('peajesys_tema');
+          var tema = temaGuardado;
+          if (!tema || (tema !== 'claro' && tema !== 'oscuro')) {
+            tema =
+              window.matchMedia &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'oscuro'
+                : 'claro';
+          }
+          document.documentElement.setAttribute('data-tema', tema);
+        } catch (e) {
+          document.documentElement.setAttribute('data-tema', 'claro');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
