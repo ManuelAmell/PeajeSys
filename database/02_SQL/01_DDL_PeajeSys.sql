@@ -194,18 +194,3 @@ CREATE TABLE AUDITORIA_TRANSACCION (
     CONSTRAINT fk_auditoria_transaccion FOREIGN KEY (id_transaccion) 
         REFERENCES TRANSACCION_PEAJE (id_transaccion) ON DELETE RESTRICT
 );
-
--- =============================================================================
--- CONTROL DE INMUTABILIDAD PARA AUDITORIA_TRANSACCION (Append-Only)
--- =============================================================================
-CREATE OR REPLACE FUNCTION fn_prevent_audit_modification()
-RETURNS TRIGGER AS $$
-BEGIN
-    RAISE EXCEPTION 'Operación denegada: La tabla AUDITORIA_TRANSACCION es estrictamente de solo lectura/inserción (append-only) para garantizar trazabilidad legal.';
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_auditoria_inmutable
-BEFORE UPDATE OR DELETE ON AUDITORIA_TRANSACCION
-FOR EACH ROW
-EXECUTE FUNCTION fn_prevent_audit_modification();
