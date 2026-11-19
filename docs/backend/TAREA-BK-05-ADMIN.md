@@ -57,3 +57,10 @@ Implementar los endpoints administrativos para la gestión del catálogo de tari
 - [ ] Pruebas de rechazo en creación de operador con código o documento duplicado (HTTP 409).
 - [ ] Validación de que solo usuarios con rol `ADMINISTRADOR` pueden modificar tarifas o crear personal.
 - [ ] Cero rayas largas en código o comentarios.
+
+---
+
+## 4. Documentos Relacionados
+- [architecture.md](../architecture.md): Arquitectura en capas y componentes del sistema.
+- [contrato-api-frontend.md](../contrato-api-frontend.md): Contrato técnico oficial de endpoints y payloads.
+- [TAREA-BACKEND-GENERAL.md](./TAREA-BACKEND-GENERAL.md): Hoja de ruta general del equipo backend.

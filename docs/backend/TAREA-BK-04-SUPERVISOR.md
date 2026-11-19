@@ -66,3 +66,10 @@ Implementar los servicios y controladores para el rol de Supervisor de Estación
 - [ ] Verificación de lectura correcta sobre `vw_resumen_diario_estacion` mapeada en EF Core.
 - [ ] Verificación de que solo usuarios con roles `SUPERVISOR` o `ADMINISTRADOR` pueden acceder a estos endpoints.
 - [ ] Cero rayas largas en código o comentarios.
+
+---
+
+## 4. Documentos Relacionados
+- [architecture.md](../architecture.md): Arquitectura en capas y componentes del sistema.
+- [contrato-api-frontend.md](../contrato-api-frontend.md): Contrato técnico oficial de endpoints y payloads.
+- [TAREA-BACKEND-GENERAL.md](./TAREA-BACKEND-GENERAL.md): Hoja de ruta general del equipo backend.

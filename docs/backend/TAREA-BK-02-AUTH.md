@@ -18,6 +18,7 @@ Implementar el sistema de autenticación y autorización basado en JSON Web Toke
 1. **Servicio de Seguridad y Hashing (`IPasswordHasher`)**:
    - Implementación con `BCrypt.Net-Next` para hash y verificación de contraseñas con factor de costo 12.
    - Soporte para verificación de usuarios semilla del DML (`EMP-001`, `EMP-002`, `EMP-004`, `EMP-005`, `ADM-001`).
+   - *Nota de diseño*: Dado que la tabla física `OPERADOR` del DDL no posee columna `password_hash`, en esta fase de desarrollo se utiliza una clave estándar de desarrollo (ej. `Turno123*` como en el frontend) o un diccionario en memoria / configuración `appsettings.json` para validar las credenciales de los operadores semilla, permitiendo compatibilidad total sin requerir alteraciones al DDL existente.
 
 2. **Servicio de Generación de Tokens JWT (`IJwtTokenService`)**:
    - Generación de token firmado con HMAC-SHA256 (`SecurityAlgorithms.HmacSha256`).
@@ -54,3 +55,10 @@ Implementar el sistema de autenticación y autorización basado en JSON Web Toke
 - [ ] Validación de rechazo para usuarios con estado `INACTIVO` (HTTP 403).
 - [ ] Validación de protección de rutas privadas mediante encabezado `Authorization: Bearer <token>`.
 - [ ] Cero rayas largas en código o comentarios.
+
+---
+
+## 4. Documentos Relacionados
+- [architecture.md](../architecture.md): Arquitectura en capas y componentes del sistema.
+- [contrato-api-frontend.md](../contrato-api-frontend.md): Contrato técnico oficial de endpoints y payloads.
+- [TAREA-BACKEND-GENERAL.md](./TAREA-BACKEND-GENERAL.md): Hoja de ruta general del equipo backend.
