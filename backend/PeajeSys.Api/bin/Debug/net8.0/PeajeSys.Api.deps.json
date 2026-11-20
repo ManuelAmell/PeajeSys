@@ -8,11 +8,12 @@
     ".NETCoreApp,Version=v8.0": {
       "PeajeSys.Api/1.0.0": {
         "dependencies": {
-          "PeajeSys.Core": "1.0.0",
-          "PeajeSys.Data": "1.0.0",
+          "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.11",
           "Serilog.AspNetCore": "8.0.3",
           "Serilog.Sinks.File": "6.0.0",
-          "Swashbuckle.AspNetCore": "6.6.2"
+          "Swashbuckle.AspNetCore": "6.6.2",
+          "PeajeSys.Core": "1.0.0.0",
+          "PeajeSys.Data": "1.0.0.0"
         },
         "runtime": {
           "PeajeSys.Api.dll": {}
@@ -303,7 +304,7 @@
           }
         }
       },
-      "PeajeSys.Core/1.0.0": {
+      "PeajeSys.Core/1.0.0.0": {
         "runtime": {
           "PeajeSys.Core.dll": {
             "assemblyVersion": "1.0.0.0",
@@ -311,12 +312,7 @@
           }
         }
       },
-      "PeajeSys.Data/1.0.0": {
-        "dependencies": {
-          "Microsoft.EntityFrameworkCore": "8.0.11",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.11",
-          "PeajeSys.Core": "1.0.0"
-        },
+      "PeajeSys.Data/1.0.0.0": {
         "runtime": {
           "PeajeSys.Data.dll": {
             "assemblyVersion": "1.0.0.0",
@@ -514,13 +510,13 @@
       "path": "swashbuckle.aspnetcore.swaggerui/6.6.2",
       "hashPath": "swashbuckle.aspnetcore.swaggerui.6.6.2.nupkg.sha512"
     },
-    "PeajeSys.Core/1.0.0": {
-      "type": "project",
+    "PeajeSys.Core/1.0.0.0": {
+      "type": "reference",
       "serviceable": false,
       "sha512": ""
     },
-    "PeajeSys.Data/1.0.0": {
-      "type": "project",
+    "PeajeSys.Data/1.0.0.0": {
+      "type": "reference",
       "serviceable": false,
       "sha512": ""
     }

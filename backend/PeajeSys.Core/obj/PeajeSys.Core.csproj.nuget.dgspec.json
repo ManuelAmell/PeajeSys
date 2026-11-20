@@ -1,26 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {}
+    "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {
+    "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
+        "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
         "projectName": "PeajeSys.Core",
-        "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
+        "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
         "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\obj\\",
+        "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\nuget.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "https://api.nuget.org/v3/index.json": {}
+          "C:\\Users\\Acer\\.nuget\\packages": {}
         },
         "frameworks": {
           "net8.0": {

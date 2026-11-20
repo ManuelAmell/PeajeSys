@@ -71,3 +71,6 @@ $RECYCLE.BIN/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+temp_appdata/
+temp_appdata /

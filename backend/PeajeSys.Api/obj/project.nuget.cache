@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "YuB1+b6yWTw=",
+  "dgSpecHash": "ZDS6+2bifFg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Api\\PeajeSys.Api.csproj",
+  "projectFilePath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Api\\PeajeSys.Api.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Acer\\.nuget\\packages\\microsoft.entityframeworkcore\\8.0.11\\microsoft.entityframeworkcore.8.0.11.nupkg.sha512",
     "C:\\Users\\Acer\\.nuget\\packages\\microsoft.entityframeworkcore.abstractions\\8.0.11\\microsoft.entityframeworkcore.abstractions.8.0.11.nupkg.sha512",
