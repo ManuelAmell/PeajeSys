@@ -628,31 +628,6 @@
         "build": {
           "buildTransitive/net6.0/_._": {}
         }
-      },
-      "PeajeSys.Core/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v8.0",
-        "compile": {
-          "bin/placeholder/PeajeSys.Core.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/PeajeSys.Core.dll": {}
-        }
-      },
-      "PeajeSys.Data/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v8.0",
-        "dependencies": {
-          "Microsoft.EntityFrameworkCore": "8.0.11",
-          "Npgsql.EntityFrameworkCore.PostgreSQL": "8.0.11",
-          "PeajeSys.Core": "1.0.0"
-        },
-        "compile": {
-          "bin/placeholder/PeajeSys.Data.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/PeajeSys.Data.dll": {}
-        }
       }
     }
   },
@@ -1842,22 +1817,11 @@
         "system.diagnostics.diagnosticsource.nuspec",
         "useSharedDesignerContext.txt"
       ]
-    },
-    "PeajeSys.Core/1.0.0": {
-      "type": "project",
-      "path": "../PeajeSys.Core/PeajeSys.Core.csproj",
-      "msbuildProject": "../PeajeSys.Core/PeajeSys.Core.csproj"
-    },
-    "PeajeSys.Data/1.0.0": {
-      "type": "project",
-      "path": "../PeajeSys.Data/PeajeSys.Data.csproj",
-      "msbuildProject": "../PeajeSys.Data/PeajeSys.Data.csproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
-      "PeajeSys.Core >= 1.0.0",
-      "PeajeSys.Data >= 1.0.0",
+      "Npgsql.EntityFrameworkCore.PostgreSQL >= 8.0.11",
       "Serilog.AspNetCore >= 8.0.3",
       "Serilog.Sinks.File >= 6.0.0",
       "Swashbuckle.AspNetCore >= 6.6.2"
@@ -1869,33 +1833,26 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Api\\PeajeSys.Api.csproj",
+      "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Api\\PeajeSys.Api.csproj",
       "projectName": "PeajeSys.Api",
-      "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Api\\PeajeSys.Api.csproj",
+      "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Api\\PeajeSys.Api.csproj",
       "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Api\\obj\\",
+      "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Api\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\nuget.config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
       ],
       "sources": {
-        "https://api.nuget.org/v3/index.json": {}
+        "C:\\Users\\Acer\\.nuget\\packages": {}
       },
       "frameworks": {
         "net8.0": {
           "framework": "net8.0",
           "targetAlias": "net8.0",
-          "projectReferences": {
-            "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {
-              "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj"
-            },
-            "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj": {
-              "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj"
-            }
-          }
+          "projectReferences": {}
         }
       },
       "warningProperties": {
@@ -1915,6 +1872,10 @@
         "framework": "net8.0",
         "targetAlias": "net8.0",
         "dependencies": {
+          "Npgsql.EntityFrameworkCore.PostgreSQL": {
+            "target": "Package",
+            "version": "[8.0.11, )"
+          },
           "Serilog.AspNetCore": {
             "target": "Package",
             "version": "[8.0.3, )"

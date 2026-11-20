@@ -1,26 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj": {}
+    "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {
+    "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
+        "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
         "projectName": "PeajeSys.Core",
-        "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
+        "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj",
         "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\obj\\",
+        "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\nuget.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "https://api.nuget.org/v3/index.json": {}
+          "C:\\Users\\Acer\\.nuget\\packages": {}
         },
         "frameworks": {
           "net8.0": {
@@ -65,31 +65,31 @@
         }
       }
     },
-    "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj": {
+    "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj",
+        "projectUniqueName": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj",
         "projectName": "PeajeSys.Data",
-        "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj",
+        "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Data\\PeajeSys.Data.csproj",
         "packagesPath": "C:\\Users\\Acer\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Data\\obj\\",
+        "outputPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Data\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Acer\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\nuget.config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "https://api.nuget.org/v3/index.json": {}
+          "C:\\Users\\Acer\\.nuget\\packages": {}
         },
         "frameworks": {
           "net8.0": {
             "framework": "net8.0",
             "targetAlias": "net8.0",
             "projectReferences": {
-              "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {
-                "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSys-main\\PeajeSys-main\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj"
+              "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj": {
+                "projectPath": "C:\\Users\\Acer\\Downloads\\PeajeSysx\\PeajeSys\\backend\\PeajeSys.Core\\PeajeSys.Core.csproj"
               }
             }
           }
@@ -111,10 +111,6 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
-            "Microsoft.EntityFrameworkCore": {
-              "target": "Package",
-              "version": "[8.0.11, )"
-            },
             "Npgsql.EntityFrameworkCore.PostgreSQL": {
               "target": "Package",
               "version": "[8.0.11, )"

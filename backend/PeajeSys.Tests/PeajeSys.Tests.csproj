@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="PeajeSys.Core">
+      <HintPath>..\PeajeSys.Core\bin\Debug\net8.0\PeajeSys.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="PeajeSys.Data">
+      <HintPath>..\PeajeSys.Data\bin\Debug\net8.0\PeajeSys.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="PeajeSys.Api">
+      <HintPath>..\PeajeSys.Api\bin\Debug\net8.0\PeajeSys.Api.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
