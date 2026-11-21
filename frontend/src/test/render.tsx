@@ -2,9 +2,10 @@ import { ReactElement, ReactNode } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
-import { SesionProvider } from '@/lib/sesion';
+import { SesionProvider, ManejadorSesionExpirada } from '@/lib/sesion';
 import { TemaProvider, ModoTema } from '@/lib/tema';
 import { Usuario } from '@/lib/roles';
+import { crearQueryClient } from '@/app/clienteQuery';
 
 export interface OpcionesRenderExtendido extends Omit<
   RenderOptions,
@@ -31,7 +32,7 @@ export function renderConProveedores(
     initialEntries = ['/'],
     usuarioInicial = null,
     temaInicial = 'claro',
-    queryClient = new QueryClient({
+    queryClient = crearQueryClient({
       defaultOptions: {
         queries: {
           retry: false,
@@ -47,6 +48,7 @@ export function renderConProveedores(
         <TemaProvider temaPorDefecto={temaInicial}>
           <SesionProvider usuarioInicial={usuarioInicial}>
             <MemoryRouter initialEntries={initialEntries}>
+              <ManejadorSesionExpirada />
               {children}
             </MemoryRouter>
           </SesionProvider>
