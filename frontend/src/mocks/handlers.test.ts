@@ -35,8 +35,10 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.usuario.codigo).toBe('ADMIN-01');
-      expect(data.usuario.rol).toBe('ADMIN');
-      expect(data.usuario.rolTxt).toBe('Administrador');
+      expect(data.usuario.rol).toBe('ADMINISTRADOR');
+      expect(data.usuario.rol_txt).toBe('Administrador');
+      expect(data.usuario.destino_txt).toEqual(expect.any(String));
+      expect(data.token).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/);
     });
 
     it('rechaza empleado inexistente con HTTP 404', async () => {
@@ -99,7 +101,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       expect(res.status).toBe(200);
       const data = await res.json();
       expect(data.usuario.rol).toBe('SUPERVISOR');
-      expect(data.usuario.rolTxt).toBe('Supervisor');
+      expect(data.usuario.rol_txt).toBe('Supervisor');
     });
 
     it('con ?mock=error devuelve el 500 del contrato aunque las credenciales sean válidas', async () => {

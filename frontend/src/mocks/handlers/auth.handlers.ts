@@ -6,6 +6,13 @@ import { getDb } from '../db';
  * Handlers de autenticación.
  * Mensajes de error y reglas idénticos a docs/diseno/claude-design/Login.dc.html:120-135.
  */
+/** Token falso con formato JWT (tres segmentos base64url), como el de la API real. */
+function tokenFalso(sub: string): string {
+  const b64 = (o: object) =>
+    btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+  return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub })}.firma-simulada`;
+}
+
 export const authHandlers = [
   http.post('/api/auth/login', async ({ request }) => {
     // Control de simulación ?mock=error, igual que los handlers de lectura.
@@ -64,14 +71,15 @@ export const authHandlers = [
     if (codigo === 'ADMIN-01') {
       return HttpResponse.json(
         {
+          token: tokenFalso('ADMIN-01'),
           usuario: {
             id: 'ADMIN-01',
             codigo: 'ADMIN-01',
             nombre: 'Administración',
-            rol: 'ADMIN',
-            rolTxt: 'Administrador',
+            rol: 'ADMINISTRADOR',
+            rol_txt: 'Administrador',
             destino: '/admin',
-            destinoTxt: 'Ir a la administración',
+            destino_txt: 'Ir a la administración',
           },
         },
         { status: 200 },
@@ -139,15 +147,16 @@ export const authHandlers = [
 
       return HttpResponse.json(
         {
+          token: tokenFalso(String(emp.id_operador)),
           usuario: {
             id: String(emp.id_operador),
             codigo: emp.codigo_empleado,
             nombre: nombreCorto,
             nombre_completo: nombreCompleto,
             rol: 'RECAUDADOR',
-            rolTxt: 'Recaudador',
+            rol_txt: 'Recaudador',
             destino: '/operador',
-            destinoTxt: `Ir a la terminal de cobro (turno ${turnoAbierto.id_turno})`,
+            destino_txt: `Ir a la terminal de cobro (turno ${turnoAbierto.id_turno})`,
           },
           turno_abierto: {
             id_turno: turnoAbierto.id_turno,
@@ -169,15 +178,16 @@ export const authHandlers = [
     // Rol: SUPERVISOR
     return HttpResponse.json(
       {
+        token: tokenFalso(String(emp.id_operador)),
         usuario: {
           id: String(emp.id_operador),
           codigo: emp.codigo_empleado,
           nombre: nombreCorto,
           nombre_completo: nombreCompleto,
           rol: 'SUPERVISOR',
-          rolTxt: 'Supervisor',
+          rol_txt: 'Supervisor',
           destino: '/supervisor',
-          destinoTxt: 'Ir al panel del supervisor',
+          destino_txt: 'Ir al panel del supervisor',
         },
       },
       { status: 200 },
