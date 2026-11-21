@@ -88,7 +88,7 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 - [ ] **Revisión de Seguridad y JWT**:
   - [x] Clave JWT fuera del repositorio (user-secrets / `JwtSettings__SecretKey`) y validación de configuración al arrancar.
   - [x] Validación estricta del token (`exp` obligatorio, `nbf`, `iss`, `aud`, `alg`).
-  - [ ] Retirar la sobrecarga sin uso de `GenerateToken`.
+  - [x] Retirar la sobrecarga sin uso de `GenerateToken`.
   - [ ] Una sola validación del token por petición (handler de autenticación).
   - [ ] Usuarios semilla solo en entorno Development.
 - [ ] **Prueba de integración End-to-End**:
