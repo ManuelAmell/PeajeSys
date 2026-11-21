@@ -30,4 +30,5 @@ public interface ITelepeajeMonitoreoService
 {
     Task<IEnumerable<MonitoreoCuentaTelepeajeDto>> ListarCuentasMonitoreoAsync(string? condicionSaldo, string? estado, string? q);
     Task<RecargaTagResponseDto> RecargarCuentaAsync(RecargaTagRequestDto request, string usuarioResponsable);
+    Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa);
 }
