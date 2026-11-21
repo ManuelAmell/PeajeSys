@@ -24,7 +24,9 @@ async function verificar() {
 
   console.log('--- Verificando comportamiento de RequireRol en navegador ---');
   const browser = await chromium.launch({
-    executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH || '/usr/bin/chromium',
+    executablePath:
+      process.env.PLAYWRIGHT_CHROMIUM_PATH ||
+      (process.platform === 'linux' ? '/usr/bin/chromium' : undefined),
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 

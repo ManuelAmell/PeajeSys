@@ -8,6 +8,7 @@ public class AppException : Exception
     public string Codigo { get; }
     public int StatusCode { get; }
     public IDictionary<string, string> Campos { get; }
+    public string Mensaje => Message;
 
     public AppException(string codigo, string mensaje, int statusCode = 400, IDictionary<string, string>? campos = null)
         : base(mensaje)
