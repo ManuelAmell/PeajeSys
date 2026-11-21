@@ -101,15 +101,23 @@ public class CobroService : ICobroService
             detalleTelepeajeDto = resultadoDebito.DetalleDto;
             detalleTelepeajeEntidad = resultadoDebito.DetalleEntidad;
         }
+        else if (metodoPagoNorm == "EXENTO")
+        {
+            monto = 0m;
+            cambio = null;
+            saldoPosterior = null;
+        }
         else
         {
             throw new AppException("METODO_PAGO_INVALIDO",
-                $"El metodo de pago '{request.MetodoPago}' no es valido. Use EFECTIVO o TELEPEAJE.", 422);
+                $"El metodo de pago '{request.MetodoPago}' no es valido. Use EFECTIVO, TELEPEAJE o EXENTO.", 422);
         }
 
         // 4. Regla 5: Consecutivo de tiquete fiscal
         long seqVal = await ObtenerSiguienteConsecutivoTicketAsync();
         string numeroTicket = FormatearNumeroTicket(DateTime.UtcNow, seqVal);
+
+        string estadoPaso = metodoPagoNorm == "EXENTO" ? "EXENTO" : "APROBADO";
 
         // 5. Regla 6: Persistencia y acumuladores
         var transaccion = new TransaccionPeaje
@@ -122,7 +130,7 @@ public class CobroService : ICobroService
             MetodoPago = metodoPagoNorm,
             NumeroTicket = numeroTicket,
             FechaHora = DateTime.UtcNow,
-            EstadoPaso = "APROBADO"
+            EstadoPaso = estadoPaso
         };
 
         _context.TransaccionesPeaje.Add(transaccion);
