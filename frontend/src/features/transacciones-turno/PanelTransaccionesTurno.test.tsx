@@ -44,13 +44,17 @@ describe('PanelTransaccionesTurno', () => {
   it('lista las transacciones del turno con placa, categoría, método, monto y ticket, y botón Anular', async () => {
     renderizar();
 
-    expect(await screen.findByRole('heading', { name: 'Transacciones del turno' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Transacciones del turno' }),
+    ).toBeInTheDocument();
     const fila = await screen.findByTestId('fila-transaccion-11');
     expect(within(fila).getByText('GHJ357')).toBeInTheDocument();
     expect(within(fila).getByText(/TCK-20261006-00011/)).toBeInTheDocument();
     expect(within(fila).getByText(/EFECTIVO/)).toBeInTheDocument();
     expect(within(fila).getByText('$ 10.500')).toBeInTheDocument();
-    expect(within(fila).getByRole('button', { name: /Anular/ })).toBeInTheDocument();
+    expect(
+      within(fila).getByRole('button', { name: /Anular/ }),
+    ).toBeInTheDocument();
   });
 
   it('marca las anuladas y les quita el botón', async () => {
@@ -58,12 +62,16 @@ describe('PanelTransaccionesTurno', () => {
     getDb().anularTransaccion(otra.id_transaccion, 'EMP-002', 'Duplicado');
     renderizar();
 
-    const anulada = await screen.findByTestId(`fila-transaccion-${otra.id_transaccion}`);
+    const anulada = await screen.findByTestId(
+      `fila-transaccion-${otra.id_transaccion}`,
+    );
     expect(within(anulada).getByText('Anulada')).toBeInTheDocument();
     expect(within(anulada).queryByRole('button')).toBeNull();
     const viva = screen.getByTestId('fila-transaccion-11');
     expect(within(viva).queryByText('Anulada')).toBeNull();
-    expect(within(viva).getByRole('button', { name: /Anular/ })).toBeInTheDocument();
+    expect(
+      within(viva).getByRole('button', { name: /Anular/ }),
+    ).toBeInTheDocument();
   });
 
   it('sin puedeAnular (turno cerrado) no muestra ningún botón Anular', async () => {
@@ -76,18 +84,26 @@ describe('PanelTransaccionesTurno', () => {
   it('el diálogo muestra el resumen, exige el motivo y cuenta hasta 255', async () => {
     const user = userEvent.setup();
     renderizar();
-    const boton = within(await screen.findByTestId('fila-transaccion-11')).getByRole('button', { name: /Anular/ });
+    const boton = within(
+      await screen.findByTestId('fila-transaccion-11'),
+    ).getByRole('button', { name: /Anular/ });
 
     await user.click(boton);
 
-    const dialogo = await screen.findByRole('dialog', { name: /Anular transacción/i });
+    const dialogo = await screen.findByRole('dialog', {
+      name: /Anular transacción/i,
+    });
     expect(within(dialogo).getByText(/GHJ357/)).toBeInTheDocument();
     expect(within(dialogo).getByText('0/255')).toBeInTheDocument();
     const campo = within(dialogo).getByLabelText('Motivo');
     expect(campo).toHaveFocus();
 
-    await user.click(within(dialogo).getByRole('button', { name: 'Anular transacción' }));
-    expect(await within(dialogo).findByRole('alert')).toHaveTextContent(/motivo/i);
+    await user.click(
+      within(dialogo).getByRole('button', { name: 'Anular transacción' }),
+    );
+    expect(await within(dialogo).findByRole('alert')).toHaveTextContent(
+      /motivo/i,
+    );
 
     await user.type(campo, 'Cobro duplicado');
     expect(within(dialogo).getByText('15/255')).toBeInTheDocument();
@@ -97,7 +113,9 @@ describe('PanelTransaccionesTurno', () => {
   it('Esc cierra el diálogo y el foco vuelve al botón Anular', async () => {
     const user = userEvent.setup();
     renderizar();
-    const boton = within(await screen.findByTestId('fila-transaccion-11')).getByRole('button', { name: /Anular/ });
+    const boton = within(
+      await screen.findByTestId('fila-transaccion-11'),
+    ).getByRole('button', { name: /Anular/ });
     await user.click(boton);
     await screen.findByRole('dialog');
 
@@ -114,35 +132,60 @@ describe('PanelTransaccionesTurno', () => {
     await user.click(within(fila).getByRole('button', { name: /Anular/ }));
     const dialogo = await screen.findByRole('dialog');
 
-    await user.type(within(dialogo).getByLabelText('Motivo'), 'Cobro duplicado');
-    await user.click(within(dialogo).getByRole('button', { name: 'Anular transacción' }));
+    await user.type(
+      within(dialogo).getByLabelText('Motivo'),
+      'Cobro duplicado',
+    );
+    await user.click(
+      within(dialogo).getByRole('button', { name: 'Anular transacción' }),
+    );
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(toast.success).toHaveBeenCalledWith(expect.stringMatching(/anulada/i));
-    await waitFor(() =>
-      expect(within(screen.getByTestId('fila-transaccion-11')).getByText('Anulada')).toBeInTheDocument(),
+    expect(toast.success).toHaveBeenCalledWith(
+      expect.stringMatching(/anulada/i),
     );
-    expect(within(screen.getByTestId('fila-transaccion-11')).queryByRole('button')).toBeNull();
+    await waitFor(() =>
+      expect(
+        within(screen.getByTestId('fila-transaccion-11')).getByText('Anulada'),
+      ).toBeInTheDocument(),
+    );
+    expect(
+      within(screen.getByTestId('fila-transaccion-11')).queryByRole('button'),
+    ).toBeNull();
   });
 
   it('un 409 de la API se muestra en el diálogo, que sigue abierto', async () => {
     server.use(
       http.post('/api/transacciones/:id/anulacion', () =>
         HttpResponse.json(
-          { error: { codigo: 'TRANSACCION_YA_ANULADA', mensaje: 'La transacción 11 ya fue anulada.' } },
+          {
+            error: {
+              codigo: 'TRANSACCION_YA_ANULADA',
+              mensaje: 'La transacción 11 ya fue anulada.',
+            },
+          },
           { status: 409 },
         ),
       ),
     );
     const user = userEvent.setup();
     renderizar();
-    await user.click(within(await screen.findByTestId('fila-transaccion-11')).getByRole('button', { name: /Anular/ }));
+    await user.click(
+      within(await screen.findByTestId('fila-transaccion-11')).getByRole(
+        'button',
+        { name: /Anular/ },
+      ),
+    );
     const dialogo = await screen.findByRole('dialog');
 
     await user.type(within(dialogo).getByLabelText('Motivo'), 'Otra vez');
-    await user.click(within(dialogo).getByRole('button', { name: 'Anular transacción' }));
+    await user.click(
+      within(dialogo).getByRole('button', { name: 'Anular transacción' }),
+    );
 
-    expect(await within(dialogo).findByRole('alert')).toHaveTextContent('La transacción 11 ya fue anulada.');
+    expect(await within(dialogo).findByRole('alert')).toHaveTextContent(
+      'La transacción 11 ya fue anulada.',
+    );
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(toast.success).not.toHaveBeenCalled();
   });

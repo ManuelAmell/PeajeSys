@@ -258,6 +258,8 @@ export const esquemaTransaccionPeaje = z.object({
   numero_ticket: z.string().min(1).max(40),
   fecha_hora: z.string(),
   estado_paso: esquemaEstadoPaso,
+  /** Solo lo trae el listado de un turno: true si hay un VOID en la auditoría. */
+  anulada: z.boolean().optional(),
 });
 
 export const esquemaTransaccionPeajeNueva = z.object({

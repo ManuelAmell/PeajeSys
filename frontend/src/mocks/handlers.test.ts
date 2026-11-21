@@ -472,7 +472,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
 
     it('POST /api/transacciones/:id/anulacion genera evento VOID en auditoría', async () => {
       const res = await fetch(
-        `http://localhost:3000/api/transacciones/1/anulacion`,
+        `http://localhost:3000/api/transacciones/11/anulacion`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
