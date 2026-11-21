@@ -99,7 +99,7 @@ public class TurnoServiceTests
             });
         }
 
-        public Task<CerrarTurnoResponseDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
         {
             if (!_turnos.TryGetValue(idTurno, out var turno))
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe el turno {idTurno}.");
@@ -114,20 +114,7 @@ public class TurnoServiceTests
             turno.TotalDeclaradoCierre = request.TotalDeclaradoCierre;
             turno.DiferenciaDescuadre = request.TotalDeclaradoCierre - turno.TotalRecaudadoEfectivo;
 
-            return Task.FromResult(new CerrarTurnoResponseDto
-            {
-                IdTurno = turno.IdTurno,
-                IdCaseta = turno.IdCaseta,
-                IdOperador = turno.IdOperador,
-                Fecha = turno.Fecha,
-                FechaInicio = turno.Fecha,
-                FechaFin = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-                FondoInicialCaja = turno.FondoInicialCaja,
-                TotalRecaudadoEfectivo = turno.TotalRecaudadoEfectivo,
-                TotalDeclaradoCierre = request.TotalDeclaradoCierre,
-                DiferenciaDescuadre = turno.DiferenciaDescuadre ?? 0,
-                Estado = "CERRADO"
-            });
+            return Task.FromResult(turno);
         }
 
         public Task<TurnoDto> ObtenerTurnoAsync(long idTurno)

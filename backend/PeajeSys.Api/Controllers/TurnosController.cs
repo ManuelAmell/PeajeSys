@@ -35,11 +35,11 @@ public class TurnosController : ControllerBase
 
     [HttpPost("{id:long}/cerrar")]
     [HttpPost("{id:long}/cierre")]
-    [ProducesResponseType(typeof(CerrarTurnoResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TurnoDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
-    public async Task<ActionResult<CerrarTurnoResponseDto>> CerrarTurno([FromRoute] long id, [FromBody] CerrarTurnoRequestDto request)
+    public async Task<ActionResult<TurnoDto>> CerrarTurno([FromRoute] long id, [FromBody] CerrarTurnoRequestDto request)
     {
         var response = await _turnoService.CerrarTurnoAsync(id, request);
         return Ok(response);
