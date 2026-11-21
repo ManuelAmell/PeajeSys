@@ -249,17 +249,15 @@ public class AuditoriaTransaccionConfiguration : IEntityTypeConfiguration<Audito
         builder.ToTable("auditoria_transaccion");
         builder.HasKey(e => e.IdAuditoria);
         builder.Property(e => e.IdAuditoria).HasColumnName("id_auditoria").ValueGeneratedOnAdd();
-        builder.Property(e => e.IdTransaccion).HasColumnName("id_transaccion");
-        builder.Property(e => e.TipoOperacion).HasColumnName("tipo_operacion").HasMaxLength(10).IsRequired();
-        builder.Property(e => e.UsuarioResponsable).HasColumnName("usuario_responsable").HasMaxLength(100).IsRequired();
-        builder.Property(e => e.FechaHora).HasColumnName("fecha_hora").HasDefaultValueSql("NOW()").IsRequired();
-        builder.Property(e => e.DatosAnteriores).HasColumnName("datos_anteriores").HasColumnType("jsonb");
-        builder.Property(e => e.DatosNuevos).HasColumnName("datos_nuevos").HasColumnType("jsonb");
-        builder.Property(e => e.MotivoAnulacion).HasColumnName("motivo_anulacion").HasMaxLength(255);
+        builder.Property(e => e.IdTransaccion).HasColumnName("id_transaccion").IsRequired();
+        builder.Property(e => e.TipoOperacion).HasColumnName("tipo_operacion").HasMaxLength(20).IsRequired();
+        builder.Property(e => e.UsuarioSistema).HasColumnName("usuario_sistema").HasMaxLength(50).IsRequired();
+        builder.Property(e => e.FechaHoraEvento).HasColumnName("fecha_hora_evento").HasDefaultValueSql("NOW()").IsRequired();
+        builder.Property(e => e.Motivo).HasColumnName("motivo").HasMaxLength(255);
 
         builder.HasOne(a => a.Transaccion)
             .WithMany()
             .HasForeignKey(a => a.IdTransaccion)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

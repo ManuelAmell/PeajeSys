@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Exceptions;
@@ -19,10 +19,12 @@ namespace PeajeSys.Api.Services;
 public class TarifaService : ITarifaService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly ILogger<TarifaService> _logger;
 
-    public TarifaService(PeajeSysDbContext context)
+    public TarifaService(PeajeSysDbContext context, ILogger<TarifaService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<TarifaDto>> ListarTarifasAsync(int? idEstacion, int? idCategoria, bool? vigente)
@@ -120,22 +122,14 @@ public class TarifaService : ITarifaService
 
         _context.Tarifas.Add(nuevaTarifa);
 
-        // Registro de auditoria inmutable
-        var auditoria = new AuditoriaTransaccion
-        {
-            IdTransaccion = null,
-            TipoOperacion = "MODIFICACION_TARIFA",
-            UsuarioResponsable = string.IsNullOrWhiteSpace(usuarioResponsable) ? "ADMINISTRADOR" : usuarioResponsable,
-            FechaHora = DateTime.UtcNow,
-            DatosAnteriores = tarifaPrevia != null
-                ? JsonSerializer.Serialize(new { id_tarifa = tarifaPrevia.IdTarifa, monto = tarifaPrevia.Monto, fecha_fin = tarifaPrevia.FechaFinVigencia })
-                : null,
-            DatosNuevos = JsonSerializer.Serialize(new { id_estacion = nuevaTarifa.IdEstacion, id_categoria = nuevaTarifa.IdCategoria, monto = nuevaTarifa.Monto, fecha_inicio = nuevaTarifa.FechaInicioVigencia }),
-            MotivoAnulacion = null
-        };
-
-        _context.AuditoriasTransaccion.Add(auditoria);
+        // AUDITORIA_TRANSACCION exige una transaccion de peaje (id_transaccion NOT NULL): la tarifa se registra en el log.
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "MODIFICACION_TARIFA usuario={Usuario} entidad=TARIFA id={IdTarifa} estacion={IdEstacion} categoria={IdCategoria} monto_anterior={MontoAnterior} monto_nuevo={MontoNuevo} inicio_vigencia={Inicio}",
+            string.IsNullOrWhiteSpace(usuarioResponsable) ? "ADMINISTRADOR" : usuarioResponsable,
+            nuevaTarifa.IdTarifa, nuevaTarifa.IdEstacion, nuevaTarifa.IdCategoria,
+            tarifaPrevia?.Monto, nuevaTarifa.Monto, nuevaTarifa.FechaInicioVigencia);
 
         return MapearTarifa(nuevaTarifa);
     }
