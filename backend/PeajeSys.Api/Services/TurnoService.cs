@@ -133,6 +133,18 @@ public class TurnoService : ITurnoService
 
     public async Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha = null, int? idEstacion = null)
     {
+        return await ListarTurnosInternoAsync(idCaseta, operador, estado, fecha, idEstacion, null);
+    }
+
+    // El recaudador solo ve sus turnos: el filtro operador= se ignora y se fuerza el id del token.
+    public async Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, ActorOperacion actor)
+    {
+        int? soloOperador = actor.Rol == Roles.Recaudador ? actor.IdOperador : null;
+        return await ListarTurnosInternoAsync(idCaseta, soloOperador.HasValue ? null : operador, estado, fecha, idEstacion, soloOperador);
+    }
+
+    private async Task<IEnumerable<TurnoDto>> ListarTurnosInternoAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, int? soloIdOperador)
+    {
         if (idCaseta.HasValue && idCaseta.Value <= 0)
         {
             throw new AppException("FILTRO_INVALIDO", "El identificador de caseta no es valido.", 400);
@@ -166,6 +178,11 @@ public class TurnoService : ITurnoService
         if (idEstacion.HasValue)
         {
             query = query.Where(t => t.Caseta != null && t.Caseta.IdEstacion == idEstacion.Value);
+        }
+
+        if (soloIdOperador.HasValue)
+        {
+            query = query.Where(t => t.IdOperador == soloIdOperador.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(operador))

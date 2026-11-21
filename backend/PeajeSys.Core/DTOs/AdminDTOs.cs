@@ -207,6 +207,10 @@ public class CasetaDto
 
     [JsonPropertyName("estado")]
     public string Estado { get; set; } = string.Empty;
+
+    /// <summary>True si la caseta tiene un turno ABIERTO (no expone quien ni cuanto).</summary>
+    [JsonPropertyName("ocupada")]
+    public bool Ocupada { get; set; }
 }
 
 // ============================================================

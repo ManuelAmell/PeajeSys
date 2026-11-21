@@ -66,6 +66,8 @@ export interface Caseta {
   numero_carril: number;
   tipo_carril: TipoCarril;
   estado: EstadoCaseta;
+  /** Calculado por la API: true si la caseta tiene un turno ABIERTO. */
+  ocupada?: boolean;
 }
 
 export interface CasetaNueva {
