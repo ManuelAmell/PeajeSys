@@ -12,14 +12,9 @@ namespace PeajeSys.Api.Controllers;
 public class RecaudoController : ControllerBase
 {
     private readonly ICobroService _cobroService;
-    private readonly IReporteRecaudoService? _reporteRecaudoService;
+    private readonly IReporteRecaudoService _reporteRecaudoService;
 
-    public RecaudoController(ICobroService cobroService)
-        : this(cobroService, null)
-    {
-    }
-
-    public RecaudoController(ICobroService cobroService, IReporteRecaudoService? reporteRecaudoService)
+    public RecaudoController(ICobroService cobroService, IReporteRecaudoService reporteRecaudoService)
     {
         _cobroService = cobroService;
         _reporteRecaudoService = reporteRecaudoService;
@@ -47,9 +42,6 @@ public class RecaudoController : ControllerBase
         [FromQuery] int? estacion,
         [FromQuery] string? fecha)
     {
-        if (_reporteRecaudoService == null)
-            throw new InvalidOperationException("IReporteRecaudoService no configurado.");
-
         int? estacionFiltro = id_estacion ?? estacion;
         var resultado = await _reporteRecaudoService.ObtenerRecaudoDiarioAsync(estacionFiltro, fecha);
         return Ok(resultado);
