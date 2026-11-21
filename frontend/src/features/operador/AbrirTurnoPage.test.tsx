@@ -31,7 +31,9 @@ describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
       initialEntries: ['/operador/abrir-turno'],
     });
 
-    const select = (await screen.findByLabelText(/Caseta/i)) as HTMLSelectElement;
+    const select = (await screen.findByLabelText(
+      /Caseta/i,
+    )) as HTMLSelectElement;
     const primeraLibre = Array.from(select.options).find(
       (o) => o.value !== '0' && !o.disabled,
     );
@@ -73,7 +75,10 @@ describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
       initialEntries: ['/operador/abrir-turno'],
     });
 
-    const boton = await screen.findByRole('button', { name: /Abrir turno/i });
+    // La primera caseta libre viene preseleccionada: se vuelve a "Selecciona una caseta".
+    const selectCaseta = await screen.findByLabelText(/Caseta/i);
+    await user.selectOptions(selectCaseta, '0');
+    const boton = screen.getByRole('button', { name: /Abrir turno/i });
     await user.click(boton);
 
     // Debe mostrar error de validación en #at-caseta-error
