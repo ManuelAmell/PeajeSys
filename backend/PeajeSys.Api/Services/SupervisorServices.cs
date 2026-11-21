@@ -220,6 +220,18 @@ public class AuditoriaService : IAuditoriaService
         _context = context;
     }
 
+    public Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
+        string? fecha,
+        DateTime? fechaInicio,
+        DateTime? fechaFin,
+        string? tipoOperacion,
+        string? usuario,
+        int page = 1,
+        int limit = 50)
+    {
+        return ListarAuditoriaAsync(fechaInicio, fechaFin, tipoOperacion, usuario, page, limit);
+    }
+
     public async Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
         DateTime? fechaInicio,
         DateTime? fechaFin,

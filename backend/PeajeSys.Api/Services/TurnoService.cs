@@ -113,6 +113,12 @@ public class TurnoService : ITurnoService
         return MapearTurno(turno);
     }
 
+    public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha = null, int? idEstacion = null)
+    {
+        int? operadorId = int.TryParse(operador, out var id) ? id : null;
+        return ListarTurnosAsync(idCaseta, operadorId, estado);
+    }
+
     public async Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
     {
         var query = _context.Turnos.AsQueryable();
