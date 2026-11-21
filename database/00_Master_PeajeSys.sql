@@ -290,10 +290,10 @@ INSERT INTO OPERADOR (numero_documento, nombres, apellidos, codigo_empleado, rol
 -- las contrasenas de prueba estan documentadas en el README raiz (seccion "Usuarios de prueba").
 -- EMP-001 a EMP-010 son datos historicos sin contrasena (password_hash NULL): no pueden iniciar sesion.
 INSERT INTO OPERADOR (numero_documento, nombres, apellidos, codigo_empleado, rol, estado, password_hash) VALUES
-('1000000001', 'Manuel', 'Amell', 'ADM-001', 'ADMINISTRADOR', 'ACTIVO', '$2a$12$Ug03KPrBt7MD/itYys6steHU6kbnOmz7OwLcdctQEAkF9lxTqGiPq'),
-('1000000002', 'Samuel', 'Otero', 'SUP-001', 'SUPERVISOR', 'ACTIVO', '$2a$12$9Ek90c2jFe6kNQ38i0K7X.8PQsmuIdgLEzgF2eHQgzKimKc7WJFBq'),
-('1000000003', 'Alex', 'Florez', 'REC-001', 'RECAUDADOR', 'ACTIVO', '$2a$12$SZzz4Q5LJjaVW9df.5VD9OYiRNw5LNE.5snQfRI.ww4rgGD9Q9XEC'),
-('1000000004', 'Camilo', 'Guzmán', 'REC-002', 'RECAUDADOR', 'ACTIVO', '$2a$12$Yb5WE6d34xreSyTDQ4IXc.s/V1b9Lj1iPJWtiqKPVk7m4wUjwfamK');
+('1000000001', 'Manuel', 'Amell', 'ADM-001', 'ADMINISTRADOR', 'ACTIVO', '$2a$12$2UMb0Tq2fZdus2W5SMD9NeTIOQMZ.Ajjz8haPu9pSEExPx8AahdPy'),
+('1000000002', 'Samuel', 'Otero', 'SUP-001', 'SUPERVISOR', 'ACTIVO', '$2a$12$lPx4Ahvqf1beuXGikrcp/.cfGgyhaT7SPNwQ1epnhlmlerIULWmca'),
+('1000000003', 'Alex', 'Florez', 'REC-001', 'RECAUDADOR', 'ACTIVO', '$2a$12$RrFlJM6LMAkJMpbUqwUl4uNLRn2YWRcwN3QxtIXsCdYFiFC2XRZh6'),
+('1000000004', 'Camilo', 'Guzmán', 'REC-002', 'RECAUDADOR', 'ACTIVO', '$2a$12$mvbqdoO3JMq427rfQzQ5Cu1SLNdlYh4rFX56k0aRSzB9kdbmtJfg.');
 
 -- 4. TABLA: CATEGORIA_VEHICULO (Clasificación oficial colombiana Mintransporte - 7 registros)
 INSERT INTO CATEGORIA_VEHICULO (codigo, descripcion, numero_ejes_min, numero_ejes_max, peso_maximo_ton, activo) VALUES
