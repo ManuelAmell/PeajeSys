@@ -89,62 +89,65 @@ public class ReporteRecaudoService : IReporteRecaudoService
 
     public async Task<RecaudoDiarioDto> ObtenerRecaudoDiarioAsync(int? idEstacion, string? fecha)
     {
-        DateTime? fechaFiltro = null;
-        if (!string.IsNullOrWhiteSpace(fecha) && DateTime.TryParse(fecha, out var f))
+        // `fecha` es un dia civil de la zona de la aplicacion; las transacciones estan en timestamptz (UTC).
+        DateOnly? fechaFiltro = null;
+        DateTime inicioUtc = default, finUtc = default;
+        if (!string.IsNullOrWhiteSpace(fecha) && DateOnly.TryParse(fecha, out var f))
         {
-            fechaFiltro = f.Date;
+            fechaFiltro = f;
+            (inicioUtc, finUtc) = ZonaHorariaApp.RangoUtcDelDia(f);
         }
+        string fechaTexto = (fechaFiltro ?? ZonaHorariaApp.Hoy()).ToString("yyyy-MM-dd");
 
-        // Intento 1: Consultar la vista de base de datos vw_resumen_diario_estacion
-        try
+        // Intento 1: vista vw_resumen_diario_estacion (agrupa por dia UTC de la sesion). Solo se usa sin filtro de
+        // fecha; con fecha se agrega directamente para respetar el dia civil de la aplicacion.
+        if (!fechaFiltro.HasValue)
         {
-            var queryVista = _context.ResumenDiarioEstaciones.AsQueryable();
-
-            if (idEstacion.HasValue)
+            try
             {
-                queryVista = queryVista.Where(v => v.IdEstacion == idEstacion.Value);
-            }
+                var queryVista = _context.ResumenDiarioEstaciones.AsQueryable();
 
-            if (fechaFiltro.HasValue)
-            {
-                queryVista = queryVista.Where(v => v.Fecha.Date == fechaFiltro.Value);
-            }
-
-            var listaVista = await queryVista.ToListAsync();
-
-            if (listaVista.Count > 0)
-            {
-                long vehTotal = listaVista.Sum(v => v.TotalVehiculos);
-                decimal efTotal = listaVista.Sum(v => v.RecaudoEfectivo);
-                decimal tagTotal = listaVista.Sum(v => v.RecaudoTelepeaje);
-                decimal genTotal = listaVista.Sum(v => v.RecaudoTotal);
-                string nombreEstacion = listaVista.First().Estacion;
-
-                var dias = listaVista.Select(v => new RecaudoDiaItemDto
+                if (idEstacion.HasValue)
                 {
-                    Fecha = v.Fecha.ToString("yyyy-MM-dd"),
-                    Veh = v.TotalVehiculos,
-                    Ef = v.RecaudoEfectivo,
-                    Tag = v.RecaudoTelepeaje,
-                    Total = v.RecaudoTotal
-                }).ToList();
+                    queryVista = queryVista.Where(v => v.IdEstacion == idEstacion.Value);
+                }
 
-                return new RecaudoDiarioDto
+                var listaVista = await queryVista.ToListAsync();
+
+                if (listaVista.Count > 0)
                 {
-                    IdEstacion = idEstacion,
-                    Estacion = nombreEstacion,
-                    Fecha = fechaFiltro?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
-                    TotalVehiculos = vehTotal,
-                    TotalEfectivo = efTotal,
-                    TotalTelepeaje = tagTotal,
-                    TotalGeneral = genTotal,
-                    Dias = dias
-                };
+                    long vehTotal = listaVista.Sum(v => v.TotalVehiculos);
+                    decimal efTotal = listaVista.Sum(v => v.RecaudoEfectivo);
+                    decimal tagTotal = listaVista.Sum(v => v.RecaudoTelepeaje);
+                    decimal genTotal = listaVista.Sum(v => v.RecaudoTotal);
+                    string nombreEstacion = listaVista.First().Estacion;
+
+                    var dias = listaVista.Select(v => new RecaudoDiaItemDto
+                    {
+                        Fecha = v.Fecha.ToString("yyyy-MM-dd"),
+                        Veh = v.TotalVehiculos,
+                        Ef = v.RecaudoEfectivo,
+                        Tag = v.RecaudoTelepeaje,
+                        Total = v.RecaudoTotal
+                    }).ToList();
+
+                    return new RecaudoDiarioDto
+                    {
+                        IdEstacion = idEstacion,
+                        Estacion = nombreEstacion,
+                        Fecha = fechaTexto,
+                        TotalVehiculos = vehTotal,
+                        TotalEfectivo = efTotal,
+                        TotalTelepeaje = tagTotal,
+                        TotalGeneral = genTotal,
+                        Dias = dias
+                    };
+                }
             }
-        }
-        catch
-        {
-            // Fallback a agregacion directa si la vista no esta presente en memoria/sqlite
+            catch
+            {
+                // Fallback a agregacion directa si la vista no esta presente en memoria/sqlite
+            }
         }
 
         // Fallback: agregacion directa sobre TRANSACCION_PEAJE
@@ -161,7 +164,7 @@ public class ReporteRecaudoService : IReporteRecaudoService
 
         if (fechaFiltro.HasValue)
         {
-            transQuery = transQuery.Where(t => t.FechaHora.Date == fechaFiltro.Value);
+            transQuery = transQuery.Where(t => t.FechaHora >= inicioUtc && t.FechaHora < finUtc);
         }
 
         var transacciones = await transQuery.ToListAsync();
@@ -182,7 +185,7 @@ public class ReporteRecaudoService : IReporteRecaudoService
         {
             new()
             {
-                Fecha = fechaFiltro?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
+                Fecha = fechaTexto,
                 Veh = totalVeh,
                 Ef = totalEf,
                 Tag = totalTag,
@@ -194,7 +197,7 @@ public class ReporteRecaudoService : IReporteRecaudoService
         {
             IdEstacion = idEstacion,
             Estacion = estacionNombre,
-            Fecha = fechaFiltro?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            Fecha = fechaTexto,
             TotalVehiculos = totalVeh,
             TotalEfectivo = totalEf,
             TotalTelepeaje = totalTag,
