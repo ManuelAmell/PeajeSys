@@ -141,6 +141,11 @@ public class TarifaService : ITarifaService
         return MapearTarifa(nuevaTarifa);
     }
 
+    public Task<TarifaDto> ActualizarTarifaAsync(int id, ActualizarTarifaRequestDto request, string usuarioResponsable)
+    {
+        throw new NotImplementedException();
+    }
+
     // Metodo puro de logica de dominio de actualizacion de vigencia
     public static void ActualizarVigenciaTarifa(Tarifa? tarifaAnterior, Tarifa tarifaNueva)
     {
@@ -455,10 +460,12 @@ public class EstacionCasetaService : IEstacionCasetaService
 public class CategoriaService : ICategoriaService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly ILogger<CategoriaService>? _logger;
 
-    public CategoriaService(PeajeSysDbContext context)
+    public CategoriaService(PeajeSysDbContext context, ILogger<CategoriaService>? logger = null)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<CategoriaVehiculoDto>> ListarCategoriasAsync(bool? activo)
@@ -538,5 +545,10 @@ public class CategoriaService : ICategoriaService
             PesoMaximoTon = nueva.PesoMaximoTon,
             Activo = nueva.Activo
         };
+    }
+
+    public Task<CategoriaVehiculoDto> ActualizarCategoriaAsync(int id, ActualizarCategoriaRequestDto request, string usuarioResponsable)
+    {
+        throw new NotImplementedException();
     }
 }
