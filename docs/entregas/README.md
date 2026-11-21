@@ -51,9 +51,9 @@ Para levantar todo el sistema desde cero (tablas, datos, vistas, funciones, trig
 
 ```bash
 # En consola psql (PostgreSQL 14+)
-psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS peajesys;"
-psql -U postgres -d postgres -c "CREATE DATABASE peajesys;"
-psql -U postgres -d peajesys -f 00_Master_PeajeSys.sql
+psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS peajesys_db;"
+psql -U postgres -d postgres -c "CREATE DATABASE peajesys_db;"
+psql -U postgres -d peajesys_db -f 00_Master_PeajeSys.sql
 ```
 *O bien, en **pgAdmin 4**, abrir `00_Master_PeajeSys.sql` y presionar **F5**.*
 

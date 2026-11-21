@@ -94,7 +94,7 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
   - [x] Los errores de arranque de la API ya no se silencian (código de salida distinto de 0).
   - [x] Usuarios semilla solo en entorno Development.
 - [ ] **Prueba de integración End-to-End**:
-  - Levantar la base de datos ejecutando `00_Master_PeajeSys.sql` en PostgreSQL local.
+  - Levantar la base de datos con `docker compose up -d` desde la raíz (carga `00_Master_PeajeSys.sql` automáticamente) o con `psql` según `database/README.md`.
   - Configurar la clave JWT (ver `backend/README.md`, sección 4.3) e iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api && dotnet run`, entorno Development y puerto 5080).
   - Cambiar `VITE_USAR_MOCKS=false` en `frontend/.env` para validar la comunicación real Frontend $\leftrightarrow$ Backend $\leftrightarrow$ PostgreSQL.
 - [ ] **Preparación de la sustentación final**:
