@@ -68,6 +68,27 @@ public class CrearTarifaRequestDto
     public DateTime? FechaFinVigencia { get; set; }
 }
 
+public class ActualizarTarifaRequestDto
+{
+    [JsonPropertyName("monto")]
+    public decimal? Monto { get; set; }
+
+    [JsonPropertyName("monto_tarifa")]
+    public decimal? MontoTarifa { get; set; }
+
+    [JsonPropertyName("resolucion_legal")]
+    public string? ResolucionLegal { get; set; }
+
+    [JsonPropertyName("fecha_inicio_vigencia")]
+    public DateTime? FechaInicioVigencia { get; set; }
+
+    [JsonPropertyName("fecha_fin_vigencia")]
+    public DateTime? FechaFinVigencia { get; set; }
+
+    [JsonPropertyName("activa")]
+    public bool? Activa { get; set; }
+}
+
 // ============================================================
 // DTOs OPERADORES / PERSONAL
 // ============================================================
@@ -235,4 +256,25 @@ public class CrearCategoriaRequestDto
 
     [JsonPropertyName("activo")]
     public bool Activo { get; set; } = true;
+}
+
+public class ActualizarCategoriaRequestDto
+{
+    [JsonPropertyName("codigo")]
+    public string? Codigo { get; set; }
+
+    [JsonPropertyName("descripcion")]
+    public string? Descripcion { get; set; }
+
+    [JsonPropertyName("numero_ejes_min")]
+    public int? NumeroEjesMin { get; set; }
+
+    [JsonPropertyName("numero_ejes_max")]
+    public int? NumeroEjesMax { get; set; }
+
+    [JsonPropertyName("peso_maximo_ton")]
+    public decimal? PesoMaximoTon { get; set; }
+
+    [JsonPropertyName("activo")]
+    public bool? Activo { get; set; }
 }

@@ -45,6 +45,16 @@ public class AdminControllersTests
                 Activa = true
             });
         }
+
+        public Task<TarifaDto> ActualizarTarifaAsync(int id, ActualizarTarifaRequestDto request, string usuarioResponsable)
+        {
+            return Task.FromResult(new TarifaDto
+            {
+                IdTarifa = id,
+                Monto = request.Monto ?? 10500m,
+                Activa = request.Activa ?? true
+            });
+        }
     }
 
     private class FakeCategoriaService : ICategoriaService
@@ -71,6 +81,16 @@ public class AdminControllersTests
                 Codigo = request.Codigo,
                 Descripcion = request.Descripcion,
                 Activo = request.Activo
+            });
+        }
+
+        public Task<CategoriaVehiculoDto> ActualizarCategoriaAsync(int id, ActualizarCategoriaRequestDto request, string usuarioResponsable)
+        {
+            return Task.FromResult(new CategoriaVehiculoDto
+            {
+                IdCategoria = id,
+                Descripcion = request.Descripcion ?? "Editada",
+                Activo = request.Activo ?? true
             });
         }
     }

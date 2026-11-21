@@ -66,4 +66,22 @@ public class TarifasController : ControllerBase
         var nueva = await _tarifaService.CrearTarifaConVigenciaAsync(request, usuario);
         return StatusCode(StatusCodes.Status201Created, nueva);
     }
+
+    [HttpPatch("{id:int}")]
+    [Authorize(Policy = PoliticasAuth.PoliticaAdmin)]
+    [ProducesResponseType(typeof(TarifaDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<ActionResult<TarifaDto>> ActualizarTarifa(
+        [FromRoute] int id,
+        [FromBody] ActualizarTarifaRequestDto request)
+    {
+        string usuario = User?.FindFirstValue("codigo") 
+                         ?? User?.FindFirstValue(ClaimTypes.Name) 
+                         ?? "ADMINISTRADOR";
+
+        var actualizada = await _tarifaService.ActualizarTarifaAsync(id, request, usuario);
+        return Ok(actualizada);
+    }
 }
