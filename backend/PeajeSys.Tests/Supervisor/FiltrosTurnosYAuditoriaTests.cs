@@ -11,6 +11,7 @@ using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Enums;
 using PeajeSys.Core.Exceptions;
+using PeajeSys.Core.Interfaces;
 using PeajeSys.Core.Security;
 using PeajeSys.Data;
 using PeajeSys.Tests.Api;
@@ -27,6 +28,8 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
     {
         _clienteHttp = fabrica.CreateClient();
     }
+
+    private static readonly ActorOperacion Supervisor = new(3, "SUP-001", Roles.Supervisor);
 
     private static PeajeSysDbContext NuevoContexto() =>
         new(new DbContextOptionsBuilder<PeajeSysDbContext>()
@@ -80,7 +83,7 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
         using var db = await CrearEscenarioTurnosAsync();
         var servicio = new TurnoService(db);
 
-        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: "REC-001", estado: null, fecha: null, idEstacion: null);
+        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: "REC-001", estado: null, fecha: null, idEstacion: null, actor: Supervisor);
 
         Assert.Equal(2, turnos.Count());
         Assert.All(turnos, t => Assert.Equal(1, t.IdOperador));
@@ -92,7 +95,7 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
         using var db = await CrearEscenarioTurnosAsync();
         var servicio = new TurnoService(db);
 
-        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: "2", estado: null, fecha: null, idEstacion: null);
+        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: "2", estado: null, fecha: null, idEstacion: null, actor: Supervisor);
 
         Assert.Equal(2, turnos.Count());
         Assert.All(turnos, t => Assert.Equal(2, t.IdOperador));
@@ -104,7 +107,7 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
         using var db = await CrearEscenarioTurnosAsync();
         var servicio = new TurnoService(db);
 
-        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: null, estado: null, fecha: "2026-10-01", idEstacion: null);
+        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: null, estado: null, fecha: "2026-10-01", idEstacion: null, actor: Supervisor);
 
         Assert.Equal(2, turnos.Count());
         Assert.All(turnos, t => Assert.Equal("2026-10-01", t.Fecha));
@@ -116,7 +119,7 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
         using var db = await CrearEscenarioTurnosAsync();
         var servicio = new TurnoService(db);
 
-        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: null, estado: null, fecha: null, idEstacion: 1);
+        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: null, estado: null, fecha: null, idEstacion: 1, actor: Supervisor);
 
         Assert.Equal(2, turnos.Count());
         Assert.All(turnos, t => Assert.Equal(1, t.IdCaseta));
@@ -128,7 +131,7 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
         using var db = await CrearEscenarioTurnosAsync();
         var servicio = new TurnoService(db);
 
-        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: "REC-001", estado: "ABIERTO", fecha: "2026-10-02", idEstacion: 2);
+        var turnos = await servicio.ListarTurnosAsync(idCaseta: null, operador: "REC-001", estado: "ABIERTO", fecha: "2026-10-02", idEstacion: 2, actor: Supervisor);
 
         var turno = Assert.Single(turnos);
         Assert.Equal(3, turno.IdTurno);
@@ -143,7 +146,7 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
         var servicio = new TurnoService(db);
 
         var ex = await Assert.ThrowsAsync<AppException>(() =>
-            servicio.ListarTurnosAsync(idCaseta: null, operador: null, estado: null, fecha: "fecha-invalida", idEstacion: null));
+            servicio.ListarTurnosAsync(idCaseta: null, operador: null, estado: null, fecha: "fecha-invalida", idEstacion: null, actor: Supervisor));
 
         Assert.Equal("FILTRO_INVALIDO", ex.Codigo);
         Assert.Equal(400, ex.StatusCode);
