@@ -75,7 +75,7 @@ public class TurnoService : ITurnoService
         };
     }
 
-    public async Task<CerrarTurnoResponseDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+    public async Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
     {
         var turno = await _context.Turnos.FindAsync(idTurno);
         if (turno == null)
@@ -93,27 +93,13 @@ public class TurnoService : ITurnoService
             throw new AppException("ERROR_VALIDACION", "El total declarado en el cierre no puede ser negativo.", 422);
         }
 
-        var ahora = DateTime.UtcNow;
         turno.Estado = "CERRADO";
         turno.TotalDeclaradoCierre = request.TotalDeclaradoCierre;
         turno.DiferenciaDescuadre = request.TotalDeclaradoCierre - turno.TotalRecaudadoEfectivo;
 
         await _context.SaveChangesAsync();
 
-        return new CerrarTurnoResponseDto
-        {
-            IdTurno = turno.IdTurno,
-            IdCaseta = turno.IdCaseta,
-            IdOperador = turno.IdOperador,
-            Fecha = turno.Fecha.ToString("yyyy-MM-dd"),
-            FechaInicio = turno.Fecha.ToString("yyyy-MM-dd"),
-            FechaFin = ahora.ToString("yyyy-MM-ddTHH:mm:ssZ"),
-            FondoInicialCaja = turno.FondoInicialCaja,
-            TotalRecaudadoEfectivo = turno.TotalRecaudadoEfectivo,
-            TotalDeclaradoCierre = request.TotalDeclaradoCierre,
-            DiferenciaDescuadre = turno.DiferenciaDescuadre ?? 0,
-            Estado = turno.Estado
-        };
+        return MapearTurno(turno);
     }
 
     public async Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
