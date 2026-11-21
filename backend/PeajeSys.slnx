@@ -1,6 +1,0 @@
-<Solution>
-  <Project Path="PeajeSys.Core/PeajeSys.Core.csproj" />
-  <Project Path="PeajeSys.Data/PeajeSys.Data.csproj" />
-  <Project Path="PeajeSys.Api/PeajeSys.Api.csproj" />
-  <Project Path="PeajeSys.Tests/PeajeSys.Tests.csproj" />
-</Solution>
