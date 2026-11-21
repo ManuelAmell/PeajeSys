@@ -7,6 +7,7 @@ using PeajeSys.Api.Services;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
+using PeajeSys.Tests.Api;
 using Xunit;
 
 namespace PeajeSys.Tests.PlpgsqlIntegration;
@@ -30,7 +31,7 @@ public class MatrizPruebasTests
 
     private class FakeTurnoService : ITurnoService
     {
-        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
+        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
         {
             // Caseta 99 simula ocupada (otro turno abierto)
             if (request.IdCaseta == 99)
@@ -52,7 +53,7 @@ public class MatrizPruebasTests
             });
         }
 
-        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor)
         {
             if (idTurno == 999)
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", "Turno no existe.");
@@ -73,7 +74,7 @@ public class MatrizPruebasTests
             });
         }
 
-        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
+        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor)
         {
             if (idTurno == 999)
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", "Turno no existe.");
@@ -245,7 +246,7 @@ public class MatrizPruebasTests
     public async Task CP03_AbrirTurno_CasetaLibreOperadorHabilitado_RetornaEstadoAbierto()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService()).ConUsuario(1, "RECAUDADOR");
         var request = new AbrirTurnoRequestDto
         {
             IdCaseta = 1,     // Caseta libre
@@ -277,7 +278,7 @@ public class MatrizPruebasTests
     public async Task CP04_AbrirTurno_CasetaConTurnoActivo_LanzaConflictException409()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService()).ConUsuario(1, "RECAUDADOR");
         var request = new AbrirTurnoRequestDto
         {
             IdCaseta = 99,    // Caseta 99 simula ya ocupada
@@ -429,7 +430,7 @@ public class MatrizPruebasTests
         decimal declarado, string estadoEsperado, decimal diferenciaEsperada)
     {
         // Arrange - Sistema tiene 10.500 de efectivo registrado
-        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService()).ConUsuario(1, "RECAUDADOR");
         var arqueoSvc = new FakeArqueoService();
 
         // Act - Cerrar turno y calcular arqueo

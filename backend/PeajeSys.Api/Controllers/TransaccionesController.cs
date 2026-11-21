@@ -29,7 +29,7 @@ public class TransaccionesController : ControllerBase
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<AnulacionTransaccionResponseDto>> Anular([FromRoute] long id, [FromBody] AnularTransaccionRequestDto request)
     {
-        var respuesta = await _transaccionService.AnularAsync(id, request, ObtenerActor(User));
+        var respuesta = await _transaccionService.AnularAsync(id, request, ActorOperacionClaims.Desde(User));
         return Ok(respuesta);
     }
 
@@ -39,19 +39,7 @@ public class TransaccionesController : ControllerBase
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<System.Collections.Generic.IReadOnlyList<TransaccionDetalleDto>>> ListarPorTurno([FromRoute] long id)
     {
-        var lista = await _transaccionService.ListarPorTurnoAsync(id, ObtenerActor(User));
+        var lista = await _transaccionService.ListarPorTurnoAsync(id, ActorOperacionClaims.Desde(User));
         return Ok(lista);
-    }
-
-    private static ActorOperacion ObtenerActor(ClaimsPrincipal usuario)
-    {
-        string? sub = usuario.FindFirstValue(ClaimTypes.NameIdentifier) ?? usuario.FindFirstValue("sub");
-        if (!int.TryParse(sub, out int idOperador))
-        {
-            throw new UnauthorizedException("TOKEN_INVALIDO", "El token no identifica a un operador.");
-        }
-        string codigo = usuario.FindFirstValue("codigo") ?? usuario.FindFirstValue("codigo_empleado") ?? string.Empty;
-        string rol = usuario.FindFirstValue(ClaimTypes.Role) ?? string.Empty;
-        return new ActorOperacion(idOperador, codigo, rol);
     }
 }

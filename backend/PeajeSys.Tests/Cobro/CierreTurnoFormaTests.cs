@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using PeajeSys.Api.Services;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
+using PeajeSys.Core.Interfaces;
 using PeajeSys.Data;
 using Xunit;
 
@@ -15,6 +16,8 @@ namespace PeajeSys.Tests.Cobro;
 /// </summary>
 public class CierreTurnoFormaTests
 {
+    private static readonly ActorOperacion Actor = new(1, "REC-001", "RECAUDADOR");
+
     // Mismas opciones que Program.cs (AddJsonOptions).
     private static readonly JsonSerializerOptions OpcionesApi = new()
     {
@@ -35,9 +38,9 @@ public class CierreTurnoFormaTests
         using var db = new PeajeSysDbContext(options);
         var servicio = new TurnoService(db);
 
-        var abierto = await servicio.AbrirTurnoAsync(new AbrirTurnoRequestDto { IdCaseta = 1, IdOperador = 1, FondoInicialCaja = 5000, Diurno = true });
-        var cierre = await servicio.CerrarTurnoAsync(abierto.IdTurno, new CerrarTurnoRequestDto { TotalDeclaradoCierre = 60500 });
-        var get = await servicio.ObtenerTurnoAsync(abierto.IdTurno);
+        var abierto = await servicio.AbrirTurnoAsync(new AbrirTurnoRequestDto { IdCaseta = 1, IdOperador = 1, FondoInicialCaja = 5000, Diurno = true }, Actor);
+        var cierre = await servicio.CerrarTurnoAsync(abierto.IdTurno, new CerrarTurnoRequestDto { TotalDeclaradoCierre = 60500 }, Actor);
+        var get = await servicio.ObtenerTurnoAsync(abierto.IdTurno, Actor);
 
         var clavesCierre = Claves(cierre);
         Assert.Contains("diurno", clavesCierre);
