@@ -177,7 +177,10 @@ public class MatrizPruebasTests
             PeajeSys.Tests.Auth.JwtPruebas.Audience, PeajeSys.Tests.Auth.JwtPruebas.ExpirationHours);
 
         // Act - Generar token para usuario operador
-        string token = jwtService.GenerateToken("EMP-001", "1", "Carlos Perez", "RECAUDADOR", "1");
+        string token = jwtService.GenerateToken(new PeajeSys.Core.Entities.Operador
+        {
+            IdOperador = 1, CodigoEmpleado = "EMP-001", Nombres = "Carlos", Apellidos = "Perez", Rol = "RECAUDADOR"
+        });
 
         // Assert
         Assert.False(string.IsNullOrWhiteSpace(token));
