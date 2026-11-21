@@ -1,3 +1,4 @@
+using System;
 using System.Security.Claims;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Enums;
@@ -13,10 +14,32 @@ public class JwtTokenServiceTests
     public JwtTokenServiceTests()
     {
         _jwtService = new JwtTokenService(
-            secretKey: "ClaveSecretaDePruebasUnitariasJwtPeajeSys2026!*Minimo32Bytes",
-            issuer: "PeajeSys.Tests",
-            audience: "PeajeSys.TestClient",
-            expirationHours: 8);
+            secretKey: JwtPruebas.Clave,
+            issuer: JwtPruebas.Issuer,
+            audience: JwtPruebas.Audience,
+            expirationHours: JwtPruebas.ExpirationHours);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("clave-corta-de-31-bytes-xxxxxxx")]
+    public void Constructor_ClaveInvalida_LanzaArgumentException(string? clave)
+    {
+        var ex = Assert.Throws<ArgumentException>(
+            () => new JwtTokenService(clave!, JwtPruebas.Issuer, JwtPruebas.Audience, 8));
+        if (!string.IsNullOrWhiteSpace(clave))
+            Assert.DoesNotContain(clave, ex.Message);
+    }
+
+    [Theory]
+    [InlineData("", "aud")]
+    [InlineData("iss", "")]
+    public void Constructor_IssuerOAudienceVacio_LanzaArgumentException(string issuer, string audience)
+    {
+        Assert.Throws<ArgumentException>(
+            () => new JwtTokenService(JwtPruebas.Clave, issuer, audience, 8));
     }
 
     [Fact]

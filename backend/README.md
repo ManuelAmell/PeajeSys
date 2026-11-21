@@ -83,8 +83,42 @@ dotnet run
 ```
 
 Una vez iniciada la API:
-- **Swagger UI (Documentación interactiva)**: `http://localhost:5000/swagger` o `https://localhost:7001/swagger`.
-- **Health Check**: `http://localhost:5000/health`.
+- **Swagger UI (Documentación interactiva)**: `http://localhost:5080/swagger`.
+- **Health Check**: `http://localhost:5080/health`.
+
+> Ejecuta siempre `dotnet run` desde `backend/PeajeSys.Api` (no con `--project` desde otra carpeta): así se cargan `appsettings.json` y el perfil de `Properties/launchSettings.json`, que fija el entorno `Development` y el puerto `5080`.
+
+### 4.3 Configuración de la clave JWT
+
+La clave secreta del JWT **no está en el repositorio**. Debes definirla en tu máquina antes de iniciar la API (mínimo 32 bytes en UTF-8).
+
+**Opción A: user-secrets (recomendada, solo en entorno Development)**
+
+```bash
+# Linux / macOS
+cd backend/PeajeSys.Api
+dotnet user-secrets set "JwtSettings:SecretKey" "$(openssl rand -base64 48)"
+```
+
+```powershell
+# Windows (PowerShell)
+cd backend\PeajeSys.Api
+dotnet user-secrets set "JwtSettings:SecretKey" ([Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(48)))
+```
+
+**Opción B: variable de entorno** (útil en servidores o CI)
+
+```bash
+# Linux / macOS
+export JwtSettings__SecretKey="$(openssl rand -base64 48)"
+```
+
+```powershell
+# Windows (PowerShell, solo la sesión actual)
+$env:JwtSettings__SecretKey = [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
+```
+
+Si la clave falta, es más corta de 32 bytes, o `Issuer`, `Audience` o `ExpirationHours` son inválidos, la API **no arranca** y muestra un `OptionsValidationException`, por ejemplo: `JwtSettings:SecretKey no esta configurada. Definala con user-secrets o la variable de entorno JwtSettings__SecretKey.` El mensaje nunca incluye el valor de la clave.
 
 ---
 

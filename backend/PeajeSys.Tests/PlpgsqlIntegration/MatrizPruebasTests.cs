@@ -171,9 +171,10 @@ public class MatrizPruebasTests
     [Fact]
     public void CP01_InicioSesion_CredencialesValidas_TokenValido()
     {
-        // Arrange - Usar JwtTokenService real con la clave de desarrollo
-        const string clave = "ClaveSecretaSuperSeguraParaPeajeSys2026!*ClaveLargaMinimo32Bytes";
-        var jwtService = new PeajeSys.Core.Security.JwtTokenService(clave, "PeajeSys.Api", "PeajeSys.Client", 8);
+        // Arrange - Usar JwtTokenService real con la clave de pruebas
+        var jwtService = new PeajeSys.Core.Security.JwtTokenService(
+            PeajeSys.Tests.Auth.JwtPruebas.Clave, PeajeSys.Tests.Auth.JwtPruebas.Issuer,
+            PeajeSys.Tests.Auth.JwtPruebas.Audience, PeajeSys.Tests.Auth.JwtPruebas.ExpirationHours);
 
         // Act - Generar token para usuario operador
         string token = jwtService.GenerateToken("EMP-001", "1", "Carlos Perez", "RECAUDADOR", "1");
@@ -203,8 +204,9 @@ public class MatrizPruebasTests
     public void CP02_Login_ContrasenaIncorrecta_LanzaUnauthorizedException()
     {
         // Arrange
-        const string clave = "ClaveSecretaSuperSeguraParaPeajeSys2026!*ClaveLargaMinimo32Bytes";
-        var jwtService = new PeajeSys.Core.Security.JwtTokenService(clave, "PeajeSys.Api", "PeajeSys.Client", 8);
+        var jwtService = new PeajeSys.Core.Security.JwtTokenService(
+            PeajeSys.Tests.Auth.JwtPruebas.Clave, PeajeSys.Tests.Auth.JwtPruebas.Issuer,
+            PeajeSys.Tests.Auth.JwtPruebas.Audience, PeajeSys.Tests.Auth.JwtPruebas.ExpirationHours);
 
         // Act - Token adulterado no debe ser valido
         string tokenAdulterado = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJFTVAtMDAxIn0.firma_invalida";
