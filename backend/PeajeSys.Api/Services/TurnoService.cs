@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
+using PeajeSys.Core.Enums;
 using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
 using PeajeSys.Data;
@@ -21,14 +22,23 @@ public class TurnoService : ITurnoService
         _context = context;
     }
 
-    public async Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
+    public async Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
     {
         if (request.IdCaseta <= 0)
         {
             throw new AppException("CASETA_REQUERIDA", "El identificador de caseta es invalido.", 400);
         }
 
-        if (request.IdOperador <= 0)
+        if (request.FondoInicialCaja < 0)
+        {
+            throw new DomainException("ERROR_VALIDACION", "El fondo inicial de caja no puede ser negativo.",
+                new Dictionary<string, string> { ["fondo_inicial_caja"] = "Debe ser mayor o igual a 0." });
+        }
+
+        // El turno se abre SIEMPRE a nombre de quien hace la peticion: el id_operador del cuerpo se ignora
+        // para cualquier rol (evita abrir un turno a nombre de otro operador).
+        int idOperador = actor.IdOperador;
+        if (idOperador <= 0)
         {
             throw new AppException("OPERADOR_REQUERIDO", "El identificador de operador es invalido.", 400);
         }
@@ -43,7 +53,7 @@ public class TurnoService : ITurnoService
 
         // Regla: operador sin turno ABIERTO en el sistema
         bool operadorActivo = await _context.Turnos
-            .AnyAsync(t => t.IdOperador == request.IdOperador && t.Estado == "ABIERTO");
+            .AnyAsync(t => t.IdOperador == idOperador && t.Estado == "ABIERTO");
         if (operadorActivo)
         {
             throw new ConflictException("OPERADOR_CON_TURNO_ACTIVO", "El operador ya tiene un turno ABIERTO en el sistema.");
@@ -52,7 +62,7 @@ public class TurnoService : ITurnoService
         var turno = new Turno
         {
             IdCaseta = request.IdCaseta,
-            IdOperador = request.IdOperador,
+            IdOperador = idOperador,
             Fecha = DateTime.UtcNow.Date,
             Diurno = request.Diurno,
             FondoInicialCaja = request.FondoInicialCaja,
@@ -76,13 +86,14 @@ public class TurnoService : ITurnoService
         };
     }
 
-    public async Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+    public async Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor)
     {
         var turno = await _context.Turnos.FindAsync(idTurno);
         if (turno == null)
         {
             throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe un turno con id {idTurno}.");
         }
+        ExigirPropiedad(turno, actor);
 
         if (turno.Estado == "CERRADO")
         {
@@ -103,13 +114,14 @@ public class TurnoService : ITurnoService
         return MapearTurno(turno);
     }
 
-    public async Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
+    public async Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor)
     {
         var turno = await _context.Turnos.FindAsync(idTurno);
         if (turno == null)
         {
             throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe un turno con id {idTurno}.");
         }
+        ExigirPropiedad(turno, actor);
 
         return MapearTurno(turno);
     }
@@ -184,6 +196,15 @@ public class TurnoService : ITurnoService
 
         var lista = await query.ToListAsync();
         return lista.Select(MapearTurno);
+    }
+
+    // El recaudador solo opera sobre su propio turno; supervisor y administrador sobre cualquiera.
+    private static void ExigirPropiedad(Turno turno, ActorOperacion actor)
+    {
+        if (actor.Rol == Roles.Recaudador && turno.IdOperador != actor.IdOperador)
+        {
+            throw new ForbiddenException("TURNO_AJENO", "Solo puedes operar sobre tu propio turno.");
+        }
     }
 
     private static TurnoDto MapearTurno(Turno t) => new TurnoDto

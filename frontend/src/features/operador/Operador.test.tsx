@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse, delay } from 'msw';
+import { Route, Routes } from 'react-router-dom';
 import { server } from '@/mocks/server';
 import { renderConProveedores, screen, waitFor, within } from '@/test/render';
 import OperadorPage from './routes';
@@ -608,10 +609,16 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
         rol: 'RECAUDADOR' as const,
       };
 
-      renderConProveedores(<OperadorPage />, {
-        initialEntries: ['/operador'],
-        usuarioInicial: usuarioSinTurno,
-      });
+      // Se monta como en el router real (/operador/*), donde abrir-turno es una ruta relativa.
+      renderConProveedores(
+        <Routes>
+          <Route path="/operador/*" element={<OperadorPage />} />
+        </Routes>,
+        {
+          initialEntries: ['/operador'],
+          usuarioInicial: usuarioSinTurno,
+        },
+      );
 
       expect(
         await screen.findByRole('heading', { name: /Abrir turno/i }),

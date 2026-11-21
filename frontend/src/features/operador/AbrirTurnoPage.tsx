@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
@@ -91,6 +91,7 @@ export function AbrirTurnoPage() {
     handleSubmit,
     control,
     setValue,
+    getValues,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<FormularioAbrirTurnoValores>({
@@ -101,6 +102,14 @@ export function AbrirTurnoPage() {
       diurno: esHoraDiurnaPorDefecto(),
     },
   });
+
+  // useForm no relee defaultValues: al llegar los datos se preselecciona la primera caseta libre,
+  // salvo que la persona ya haya elegido una.
+  useEffect(() => {
+    if (primeraLibreId > 0 && !getValues('id_caseta')) {
+      setValue('id_caseta', primeraLibreId);
+    }
+  }, [primeraLibreId, getValues, setValue]);
 
   const fondoActual = watch('fondo_inicial_caja');
   const diurnoActual = watch('diurno');
@@ -352,8 +361,7 @@ export function AbrirTurnoPage() {
                 >
                   <label
                     htmlFor="at-horario-diurno"
-                    aria-label="Turno diurno de 06:00 a 18:00"
-                    className={`flex cursor-pointer items-center gap-3 rounded-[8px] border-2 p-3.5 transition-colors ${
+                    className={`grid cursor-pointer grid-cols-[auto_1fr] items-center gap-x-3 rounded-[8px] border-2 p-3.5 transition-colors ${
                       diurnoActual
                         ? 'border-texto bg-superficie-2 text-texto shadow-sm'
                         : 'border-borde bg-superficie text-texto-2 hover:bg-hover'
@@ -365,22 +373,19 @@ export function AbrirTurnoPage() {
                       name="horario"
                       checked={diurnoActual === true}
                       onChange={() => setValue('diurno', true)}
-                      className="h-5 w-5 accent-marca-amarillo"
+                      className="row-span-2 h-5 w-5 accent-marca-amarillo"
                     />
-                    <div className="flex flex-col">
-                      <strong className="text-[16px] font-bold text-texto">
-                        Diurno
-                      </strong>
-                      <span className="text-[13px] text-texto-2">
-                        06:00 a 18:00
-                      </span>
-                    </div>
+                    <strong className="text-[16px] font-bold text-texto">
+                      Diurno
+                    </strong>
+                    <span className="col-start-2 text-[13px] text-texto-2">
+                      06:00 a 18:00
+                    </span>
                   </label>
 
                   <label
                     htmlFor="at-horario-nocturno"
-                    aria-label="Turno nocturno de 18:00 a 06:00"
-                    className={`flex cursor-pointer items-center gap-3 rounded-[8px] border-2 p-3.5 transition-colors ${
+                    className={`grid cursor-pointer grid-cols-[auto_1fr] items-center gap-x-3 rounded-[8px] border-2 p-3.5 transition-colors ${
                       !diurnoActual
                         ? 'border-texto bg-superficie-2 text-texto shadow-sm'
                         : 'border-borde bg-superficie text-texto-2 hover:bg-hover'
@@ -392,16 +397,14 @@ export function AbrirTurnoPage() {
                       name="horario"
                       checked={diurnoActual === false}
                       onChange={() => setValue('diurno', false)}
-                      className="h-5 w-5 accent-marca-amarillo"
+                      className="row-span-2 h-5 w-5 accent-marca-amarillo"
                     />
-                    <div className="flex flex-col">
-                      <strong className="text-[16px] font-bold text-texto">
-                        Nocturno
-                      </strong>
-                      <span className="text-[13px] text-texto-2">
-                        18:00 a 06:00
-                      </span>
-                    </div>
+                    <strong className="text-[16px] font-bold text-texto">
+                      Nocturno
+                    </strong>
+                    <span className="col-start-2 text-[13px] text-texto-2">
+                      18:00 a 06:00
+                    </span>
                   </label>
                 </div>
               </div>

@@ -6,9 +6,9 @@ namespace PeajeSys.Core.Interfaces;
 
 public interface ITurnoService
 {
-    Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request);
-    Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request);
-    Task<TurnoDto> ObtenerTurnoAsync(long idTurno);
+    Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor);
+    Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor);
+    Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor);
     Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado);
     Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha = null, int? idEstacion = null)
         => ListarTurnosAsync(idCaseta, int.TryParse(operador, out var id) ? id : null, estado);

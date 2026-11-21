@@ -6,6 +6,7 @@ using PeajeSys.Api.Controllers;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
+using PeajeSys.Tests.Api;
 using Xunit;
 
 namespace PeajeSys.Tests.Cobro;
@@ -31,7 +32,7 @@ public class ControllersTests
 
     private class FakeTurnoService : ITurnoService
     {
-        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
+        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
         {
             if (request.IdCaseta == 99)
                 throw new ConflictException("CASETA_OCUPADA", "Caseta ocupada.");
@@ -48,7 +49,7 @@ public class ControllersTests
             });
         }
 
-        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor)
         {
             if (idTurno == 99)
                 throw new ConflictException("TURNO_YA_CERRADO", "Turno ya cerrado.");
@@ -66,7 +67,7 @@ public class ControllersTests
             });
         }
 
-        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
+        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor)
         {
             if (idTurno == 999)
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", "Turno no encontrado.");
@@ -156,7 +157,7 @@ public class ControllersTests
     public async Task TurnosController_AbrirTurno_Retorna201ConDatosDeTurno()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
         var request = new AbrirTurnoRequestDto { IdCaseta = 2, IdOperador = 2, FondoInicialCaja = 100000 };
 
         // Act
@@ -174,7 +175,7 @@ public class ControllersTests
     public async Task TurnosController_CerrarTurno_Retorna200ConResumen()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
         var request = new CerrarTurnoRequestDto { TotalDeclaradoCierre = 10000 };
 
         // Act
@@ -192,7 +193,7 @@ public class ControllersTests
     public async Task TurnosController_ListarTurnos_Retorna200ConLista()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
 
         // Act
         var result = await controller.ListarTurnos(null, null, null, null, null);
@@ -207,7 +208,7 @@ public class ControllersTests
     public async Task TurnosController_ObtenerTurnoPorId_Retorna200ConTurno()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
 
         // Act
         var result = await controller.ObtenerTurnoPorId(1);
