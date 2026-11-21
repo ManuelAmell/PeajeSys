@@ -7,10 +7,11 @@ import {
   terminarProceso,
 } from './plataforma';
 
-vi.mock('child_process', () => ({
-  spawn: vi.fn(() => ({ pid: 1234, kill: vi.fn() })),
-  spawnSync: vi.fn(),
-}));
+vi.mock('child_process', () => {
+  const spawn = vi.fn(() => ({ pid: 1234, kill: vi.fn() }));
+  const spawnSync = vi.fn();
+  return { default: { spawn, spawnSync }, spawn, spawnSync };
+});
 
 function conPlataforma(valor: NodeJS.Platform, fn: () => void) {
   const original = Object.getOwnPropertyDescriptor(process, 'platform')!;
