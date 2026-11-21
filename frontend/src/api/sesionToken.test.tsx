@@ -120,7 +120,7 @@ describe('useLogin y el token', () => {
       ),
     );
     const { result } = renderHook(() => useLogin(), { wrapper });
-    result.current.mutate({ codigo: 'EMP-001', clave: 'Turno123*' });
+    result.current.mutate({ codigo: 'EMP-001', clave: 'Samuel2026*' });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(obtenerToken()).toBe(TOKEN_REAL);
   });
