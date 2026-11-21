@@ -89,7 +89,7 @@ export function DialogoTarifa({
         {
           monto: nueva.monto,
           resolucion: nueva.resolucion_legal ?? datos.resolucion,
-          admin: usuario?.codigo ?? 'ADMIN-01',
+          admin: usuario?.codigo ?? 'ADM-001',
         },
         tarifa.estacionNombre,
         tarifa.roman,
