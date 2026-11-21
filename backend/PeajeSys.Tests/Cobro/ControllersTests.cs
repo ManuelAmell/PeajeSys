@@ -48,12 +48,12 @@ public class ControllersTests
             });
         }
 
-        public Task<CerrarTurnoResponseDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
         {
             if (idTurno == 99)
                 throw new ConflictException("TURNO_YA_CERRADO", "Turno ya cerrado.");
 
-            return Task.FromResult(new CerrarTurnoResponseDto
+            return Task.FromResult(new TurnoDto
             {
                 IdTurno = idTurno,
                 IdCaseta = 1,
@@ -191,7 +191,7 @@ public class ControllersTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Equal(200, okResult.StatusCode);
-        var response = Assert.IsType<CerrarTurnoResponseDto>(okResult.Value);
+        var response = Assert.IsType<TurnoDto>(okResult.Value);
         Assert.Equal("CERRADO", response.Estado);
         Assert.Equal(-500, response.DiferenciaDescuadre);
     }
