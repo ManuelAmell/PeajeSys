@@ -63,9 +63,9 @@ public class SupervisorControllersTests
                 new()
                 {
                     IdAuditoria = 1,
-                    TipoOperacion = tipoOperacion ?? "RECARGA_TAG",
-                    UsuarioResponsable = usuario ?? "EMP-003",
-                    FechaHora = DateTime.UtcNow
+                    TipoOperacion = tipoOperacion ?? "VOID",
+                    UsuarioSistema = usuario ?? "SUP-001",
+                    FechaHoraEvento = DateTime.UtcNow
                 }
             };
             return Task.FromResult<IEnumerable<AuditoriaItemDto>>(list);
@@ -145,7 +145,7 @@ public class SupervisorControllersTests
         var controller = new AuditoriaController(new FakeAuditoriaService());
 
         // Act
-        var result = await controller.ListarAuditoria(null, null, "RECARGA_TAG", null, null, null);
+        var result = await controller.ListarAuditoria(null, null, "VOID", null, null, null);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
