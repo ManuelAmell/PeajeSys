@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -45,5 +46,23 @@ public class CategoriasController : ControllerBase
     {
         var creada = await _categoriaService.CrearCategoriaAsync(request);
         return StatusCode(StatusCodes.Status201Created, creada);
+    }
+
+    [HttpPatch("{id:int}")]
+    [Authorize(Policy = PoliticasAuth.PoliticaAdmin)]
+    [ProducesResponseType(typeof(CategoriaVehiculoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
+    public async Task<ActionResult<CategoriaVehiculoDto>> ActualizarCategoria(
+        [FromRoute] int id,
+        [FromBody] ActualizarCategoriaRequestDto request)
+    {
+        string usuario = User?.FindFirstValue("codigo") 
+                         ?? User?.FindFirstValue(ClaimTypes.Name) 
+                         ?? "ADMINISTRADOR";
+
+        var actualizada = await _categoriaService.ActualizarCategoriaAsync(id, request, usuario);
+        return Ok(actualizada);
     }
 }
