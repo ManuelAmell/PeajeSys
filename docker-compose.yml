@@ -1,0 +1,40 @@
+# PostgreSQL de desarrollo para PeajeSys.
+#
+# Uso:  docker compose up -d   (desde la raiz del repo)
+#
+# - El script database/00_Master_PeajeSys.sql solo se ejecuta la PRIMERA vez,
+#   cuando se crea el volumen de datos. Tarda un rato; espera a que
+#   `docker compose ps` muestre "healthy".
+# - Para recargar todo desde cero (borra los datos):
+#       docker compose down -v && docker compose up -d
+#   En PowerShell 5 no existe `&&`: ejecuta los dos comandos por separado
+#   (o separalos con `;`).
+name: peajesys
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      # Credenciales de DESARROLLO, versionadas a proposito. No usar en produccion.
+      POSTGRES_DB: peajesys_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      # Si el 5432 esta ocupado por un PostgreSQL local, define otro puerto
+      # (p. ej. PEAJESYS_DB_PORT=5433) y ajusta la cadena de conexion de la API,
+      # por ejemplo con la variable de entorno
+      #   ConnectionStrings__DefaultConnection="Host=localhost;Port=5433;Database=peajesys_db;Username=postgres;Password=postgres"
+      - "${PEAJESYS_DB_PORT:-5432}:5432"
+    volumes:
+      - peajesys-datos:/var/lib/postgresql/data
+      - ./database/00_Master_PeajeSys.sql:/docker-entrypoint-initdb.d/01_master.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d peajesys_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  peajesys-datos: {}
