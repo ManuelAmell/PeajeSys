@@ -1,21 +1,12 @@
 import { http, HttpResponse } from 'msw';
 import { procesarControlLectura } from '../control';
 import { getDb } from '../db';
+import { tokenFalso } from '../token';
 
 /**
  * Handlers de autenticación.
  * Mensajes de error y reglas idénticos a docs/diseno/claude-design/Login.dc.html:120-135.
  */
-/** Token falso con formato JWT (tres segmentos base64url), como el de la API real. */
-function tokenFalso(sub: string): string {
-  const b64 = (o: object) =>
-    btoa(JSON.stringify(o))
-      .replace(/=+$/, '')
-      .replace(/\+/g, '-')
-      .replace(/\//g, '_');
-  return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub })}.firma-simulada`;
-}
-
 export const authHandlers = [
   http.post('/api/auth/login', async ({ request }) => {
     // Control de simulación ?mock=error, igual que los handlers de lectura.

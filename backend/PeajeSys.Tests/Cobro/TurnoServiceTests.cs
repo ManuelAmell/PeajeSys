@@ -10,6 +10,8 @@ namespace PeajeSys.Tests.Cobro;
 
 public class TurnoServiceTests
 {
+    private static readonly ActorOperacion Actor = new(1, "REC-001", "RECAUDADOR");
+
     // Mock simulado de ITurnoService para pruebas de logica de ciclo de vida
     private class TurnoServiceSimulado : ITurnoService
     {
@@ -49,7 +51,7 @@ public class TurnoServiceTests
             _consecutivo = 3;
         }
 
-        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
+        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
         {
             if (request.IdCaseta <= 0)
                 throw new AppException("CASETA_REQUERIDA", "Caseta invalida.", 400);
@@ -99,7 +101,7 @@ public class TurnoServiceTests
             });
         }
 
-        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor)
         {
             if (!_turnos.TryGetValue(idTurno, out var turno))
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe el turno {idTurno}.");
@@ -117,7 +119,7 @@ public class TurnoServiceTests
             return Task.FromResult(turno);
         }
 
-        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
+        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor)
         {
             if (!_turnos.TryGetValue(idTurno, out var turno))
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe el turno {idTurno}.");
@@ -157,7 +159,7 @@ public class TurnoServiceTests
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => service.AbrirTurnoAsync(request));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => service.AbrirTurnoAsync(request, Actor));
         Assert.Equal(409, ex.StatusCode);
         Assert.Equal("CASETA_OCUPADA", ex.Codigo);
     }
@@ -175,7 +177,7 @@ public class TurnoServiceTests
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => service.AbrirTurnoAsync(request));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => service.AbrirTurnoAsync(request, Actor));
         Assert.Equal(409, ex.StatusCode);
         Assert.Equal("OPERADOR_CON_TURNO_ACTIVO", ex.Codigo);
     }
@@ -194,7 +196,7 @@ public class TurnoServiceTests
         };
 
         // Act
-        var response = await service.AbrirTurnoAsync(request);
+        var response = await service.AbrirTurnoAsync(request, Actor);
 
         // Assert
         Assert.True(response.IdTurno > 0);
@@ -212,7 +214,7 @@ public class TurnoServiceTests
         var request = new CerrarTurnoRequestDto { TotalDeclaradoCierre = 50000 };
 
         // Act & Assert: Turno 2 ya esta cerrado
-        var ex = await Assert.ThrowsAsync<ConflictException>(() => service.CerrarTurnoAsync(2, request));
+        var ex = await Assert.ThrowsAsync<ConflictException>(() => service.CerrarTurnoAsync(2, request, Actor));
         Assert.Equal(409, ex.StatusCode);
         Assert.Equal("TURNO_YA_CERRADO", ex.Codigo);
     }
@@ -225,7 +227,7 @@ public class TurnoServiceTests
         var request = new CerrarTurnoRequestDto { TotalDeclaradoCierre = 10000 };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => service.CerrarTurnoAsync(999, request));
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => service.CerrarTurnoAsync(999, request, Actor));
         Assert.Equal(404, ex.StatusCode);
         Assert.Equal("TURNO_NO_ENCONTRADO", ex.Codigo);
     }
@@ -239,7 +241,7 @@ public class TurnoServiceTests
         var request = new CerrarTurnoRequestDto { TotalDeclaradoCierre = 10000 };
 
         // Act
-        var response = await service.CerrarTurnoAsync(1, request);
+        var response = await service.CerrarTurnoAsync(1, request, Actor);
 
         // Assert
         Assert.Equal("CERRADO", response.Estado);
@@ -257,7 +259,7 @@ public class TurnoServiceTests
         var request = new CerrarTurnoRequestDto { TotalDeclaradoCierre = 12000 };
 
         // Act
-        var response = await service.CerrarTurnoAsync(1, request);
+        var response = await service.CerrarTurnoAsync(1, request, Actor);
 
         // Assert
         Assert.Equal(1500, response.DiferenciaDescuadre);
