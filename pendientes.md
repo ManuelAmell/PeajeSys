@@ -89,7 +89,8 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
   - [x] Clave JWT fuera del repositorio (user-secrets / `JwtSettings__SecretKey`) y validación de configuración al arrancar.
   - [x] Validación estricta del token (`exp` obligatorio, `nbf`, `iss`, `aud`, `alg`).
   - [x] Retirar la sobrecarga sin uso de `GenerateToken`.
-  - [ ] Una sola validación del token por petición (handler de autenticación).
+  - [x] Una sola validación del token por petición (handler de autenticación).
+  - [x] Los errores de arranque de la API ya no se silencian (código de salida distinto de 0).
   - [ ] Usuarios semilla solo en entorno Development.
 - [ ] **Prueba de integración End-to-End**:
   - Levantar la base de datos ejecutando `00_Master_PeajeSys.sql` en PostgreSQL local.
