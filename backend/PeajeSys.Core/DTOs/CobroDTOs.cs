@@ -204,6 +204,18 @@ public class CobroRequestDto
     [JsonPropertyName("recibido")]
     public decimal? Recibido { get; set; }
 
+    [JsonPropertyName("monto_tarifa")]
+    public decimal? MontoTarifa { get; set; }
+
+    [JsonPropertyName("estado_paso")]
+    public string? EstadoPaso { get; set; }
+
+    [JsonPropertyName("numero_ticket")]
+    public string? NumeroTicket { get; set; }
+
+    [JsonPropertyName("usuario_sistema")]
+    public string? UsuarioSistema { get; set; }
+
     public string ObtenerPlaca()
     {
         string raw = PlacaDetectada ?? Placa ?? string.Empty;
