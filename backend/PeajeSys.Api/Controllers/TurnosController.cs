@@ -48,16 +48,20 @@ public class TurnosController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<TurnoDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TurnoDto>>> ListarTurnos(
-        [FromQuery] int? caseta,
-        [FromQuery] int? id_caseta,
-        [FromQuery] int? operador,
-        [FromQuery] int? id_operador,
-        [FromQuery] string? estado)
+        [FromQuery] int? caseta = null,
+        [FromQuery] int? id_caseta = null,
+        [FromQuery] string? operador = null,
+        [FromQuery] string? id_operador = null,
+        [FromQuery] string? estado = null,
+        [FromQuery] string? fecha = null,
+        [FromQuery] int? estacion = null,
+        [FromQuery] int? id_estacion = null)
     {
         int? casetaFiltro = id_caseta ?? caseta;
-        int? operadorFiltro = id_operador ?? operador;
+        string? operadorFiltro = !string.IsNullOrWhiteSpace(id_operador) ? id_operador : operador;
+        int? estacionFiltro = id_estacion ?? estacion;
 
-        var turnos = await _turnoService.ListarTurnosAsync(casetaFiltro, operadorFiltro, estado);
+        var turnos = await _turnoService.ListarTurnosAsync(casetaFiltro, operadorFiltro, estado, fecha, estacionFiltro);
         return Ok(turnos);
     }
 

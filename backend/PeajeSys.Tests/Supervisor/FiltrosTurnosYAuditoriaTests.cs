@@ -153,6 +153,11 @@ public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
     public async Task Auditoria_FiltroPorDiaCivilBogota_RespetaBordesUtc()
     {
         using var db = NuevoContexto();
+        // Transacciones asociadas
+        for (long i = 1; i <= 4; i++)
+        {
+            db.TransaccionesPeaje.Add(new TransaccionPeaje { IdTransaccion = i, NumeroTicket = $"TCK-{i}", PlacaDetectada = "ABC-123" });
+        }
         // Dia civil 2026-11-21 en Bogota (UTC-5) = [2026-11-21T05:00Z, 2026-11-22T05:00Z)
         db.AuditoriasTransaccion.AddRange(
             new AuditoriaTransaccion { IdAuditoria = 1, IdTransaccion = 1, TipoOperacion = "INSERT", UsuarioSistema = "user1", FechaHoraEvento = new DateTime(2026, 11, 21, 4, 59, 59, DateTimeKind.Utc) }, // Fuera (20-nov 23:59:59 Bogota)

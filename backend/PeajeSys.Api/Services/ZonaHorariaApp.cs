@@ -21,6 +21,17 @@ public static class ZonaHorariaApp
         return TimeZoneInfo.CreateCustomTimeZone("America/Bogota", TimeSpan.FromHours(-5), "Bogota", "Bogota");
     }
 
+    /// <summary>Zona horaria resuelta de la aplicacion.</summary>
+    public static TimeZoneInfo ZonaInfo => Zona.Value;
+
+    /// <summary>Convierte un DateTime a UTC interpretando Unspecified en la zona de la aplicacion.</summary>
+    public static DateTime AUtc(DateTime dt)
+    {
+        if (dt.Kind == DateTimeKind.Utc) return dt;
+        var unspec = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+        return TimeZoneInfo.ConvertTimeToUtc(unspec, Zona.Value);
+    }
+
     /// <summary>Rango UTC [inicio del dia civil, inicio del dia siguiente) para un dia de la zona de la aplicacion.</summary>
     public static (DateTime InicioUtc, DateTime FinUtc) RangoUtcDelDia(DateOnly dia)
     {
