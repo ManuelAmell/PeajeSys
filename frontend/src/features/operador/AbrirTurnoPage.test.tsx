@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
-import { renderConProveedores, screen } from '@/test/render';
+import { renderConProveedores, screen, waitFor } from '@/test/render';
 import { AbrirTurnoPage } from './AbrirTurnoPage';
 import { reiniciarDb } from '@/mocks/db';
+import { borrarToken, guardarToken } from '@/api/sesionToken';
+import { tokenFalso } from '@/mocks/token';
 
 describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
   const usuarioRecaudador = {
@@ -16,6 +18,36 @@ describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
 
   beforeEach(() => {
     reiniciarDb();
+    guardarToken(tokenFalso('14'));
+  });
+
+  afterEach(() => {
+    borrarToken();
+  });
+
+  it('al cargar los datos preselecciona la primera caseta libre', async () => {
+    renderConProveedores(<AbrirTurnoPage />, {
+      usuarioInicial: usuarioRecaudador,
+      initialEntries: ['/operador/abrir-turno'],
+    });
+
+    const select = (await screen.findByLabelText(/Caseta/i)) as HTMLSelectElement;
+    const primeraLibre = Array.from(select.options).find(
+      (o) => o.value !== '0' && !o.disabled,
+    );
+    expect(primeraLibre).toBeDefined();
+    await waitFor(() => expect(select.value).toBe(primeraLibre!.value));
+    expect(select.value).not.toBe('0');
+  });
+
+  it('las etiquetas de horario se nombran por su texto visible, sin aria-label redundante', async () => {
+    renderConProveedores(<AbrirTurnoPage />, {
+      usuarioInicial: usuarioRecaudador,
+      initialEntries: ['/operador/abrir-turno'],
+    });
+
+    const diurno = await screen.findByRole('radio', { name: /Diurno/i });
+    expect(diurno.closest('label')).not.toHaveAttribute('aria-label');
   });
 
   it('renderiza el formulario con título, selector de caseta, fondo inicial y horario', async () => {
