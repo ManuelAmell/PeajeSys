@@ -83,3 +83,21 @@ export function useCerrarTurno() {
     },
   });
 }
+
+export interface DatosAbrirTurno {
+  id_caseta: number;
+  fondo_inicial_caja: number;
+  diurno: boolean;
+  id_operador?: number;
+}
+
+export async function abrirTurno(_datos: DatosAbrirTurno): Promise<Turno> {
+  throw new Error('abrirTurno no implementado');
+}
+
+export function useAbrirTurno() {
+  return useMutation<Turno, Error, DatosAbrirTurno>({
+    mutationFn: abrirTurno,
+  });
+}
+
