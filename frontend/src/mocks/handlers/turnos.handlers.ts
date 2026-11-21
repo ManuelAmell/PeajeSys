@@ -26,11 +26,15 @@ export const turnosHandlers = [
     }
     if (estacion) {
       const idEst = parseInt(estacion, 10);
-      const casetasEstacion = db.casetas.filter((c) => c.id_estacion === idEst).map((c) => c.id_caseta);
+      const casetasEstacion = db.casetas
+        .filter((c) => c.id_estacion === idEst)
+        .map((c) => c.id_caseta);
       lista = lista.filter((t) => casetasEstacion.includes(t.id_caseta));
     }
     if (operadorCod) {
-      const op = db.operadores.find((o) => o.codigo_empleado.toUpperCase() === operadorCod);
+      const op = db.operadores.find(
+        (o) => o.codigo_empleado.toUpperCase() === operadorCod,
+      );
       if (op) {
         lista = lista.filter((t) => t.id_operador === op.id_operador);
       } else {
@@ -51,7 +55,12 @@ export const turnosHandlers = [
 
     if (!turno) {
       return HttpResponse.json(
-        { error: { codigo: 'TURNO_NO_ENCONTRADO', mensaje: `Turno ${id} no encontrado.` } },
+        {
+          error: {
+            codigo: 'TURNO_NO_ENCONTRADO',
+            mensaje: `Turno ${id} no encontrado.`,
+          },
+        },
         { status: 404 },
       );
     }
@@ -103,7 +112,12 @@ export const turnosHandlers = [
     const turnoExistente = db.turnos.find((t) => t.id_turno === id);
     if (!turnoExistente) {
       return HttpResponse.json(
-        { error: { codigo: 'TURNO_NO_ENCONTRADO', mensaje: `Turno ${id} no encontrado.` } },
+        {
+          error: {
+            codigo: 'TURNO_NO_ENCONTRADO',
+            mensaje: `Turno ${id} no encontrado.`,
+          },
+        },
         { status: 404 },
       );
     }
@@ -121,12 +135,130 @@ export const turnosHandlers = [
     }
 
     try {
-      const turnoCerrado = db.cerrarTurno(id, parse.data.total_declarado_cierre);
+      const turnoCerrado = db.cerrarTurno(
+        id,
+        parse.data.total_declarado_cierre,
+      );
       return HttpResponse.json(turnoCerrado, { status: 200 });
     } catch (err) {
       return HttpResponse.json(
         { error: { codigo: 'ERROR_CIERRE', mensaje: (err as Error).message } },
         { status: 400 },
+      );
+    }
+  }),
+
+  http.post('/api/turnos/abrir', async ({ request }) => {
+    let body: Record<string, unknown> = {};
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'CUERPO_INVALIDO',
+            mensaje: 'El cuerpo de la petición debe ser un JSON válido.',
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const idCaseta = Number(body?.id_caseta ?? 0);
+    const fondoInicial = Number(body?.fondo_inicial_caja ?? 0);
+    const diurno = body?.diurno !== undefined ? Boolean(body.diurno) : true;
+
+    if (!idCaseta || idCaseta <= 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'CASETA_REQUERIDA',
+            mensaje: 'El identificador de caseta es invalido.',
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    let idOperador = Number(body?.id_operador ?? 0);
+    if (!idOperador || idOperador <= 0) {
+      const authHeader =
+        request.headers.get('authorization') ||
+        request.headers.get('Authorization');
+      if (authHeader) {
+        const token = authHeader.replace(/^Bearer\s+/i, '');
+        const partes = token.split('.');
+        if (partes.length >= 2 && partes[1]) {
+          try {
+            const raw = atob(partes[1].replace(/-/g, '+').replace(/_/g, '/'));
+            const payload = JSON.parse(raw);
+            const sub = payload.sub || payload.nameid;
+            if (sub) idOperador = parseInt(sub, 10);
+          } catch {
+            // ignorar fallo de parseo
+          }
+        }
+      }
+    }
+
+    const db = getDb();
+    if (!idOperador || idOperador <= 0) {
+      // Fallback a REC-002 si no se pudo determinar
+      const op = db.operadores.find(
+        (o) => o.codigo_empleado === 'REC-002' || o.rol === 'RECAUDADOR',
+      );
+      idOperador = op?.id_operador ?? 1;
+    }
+
+    // Regla: caseta sin turno ABIERTO
+    const casetaOcupada = db.turnos.some(
+      (t) => t.id_caseta === idCaseta && t.estado === 'ABIERTO',
+    );
+    if (casetaOcupada) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'CASETA_OCUPADA',
+            mensaje: 'La caseta ya tiene un turno ABIERTO.',
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    // Regla: operador sin turno ABIERTO
+    const operadorActivo = db.turnos.some(
+      (t) => t.id_operador === idOperador && t.estado === 'ABIERTO',
+    );
+    if (operadorActivo) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'OPERADOR_CON_TURNO_ACTIVO',
+            mensaje: 'El operador ya tiene un turno ABIERTO en el sistema.',
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    try {
+      const nuevoTurno = db.abrirTurno({
+        id_caseta: idCaseta,
+        id_operador: idOperador,
+        fondo_inicial_caja: fondoInicial,
+        diurno,
+      });
+
+      return HttpResponse.json(nuevoTurno, { status: 201 });
+    } catch (err) {
+      const mensaje =
+        err instanceof Error ? err.message : 'Error al abrir el turno';
+      const codigo =
+        mensaje === 'CASETA_OCUPADA' ? 'CASETA_OCUPADA' : 'ERROR_APERTURA';
+      return HttpResponse.json(
+        { error: { codigo, mensaje } },
+        { status: codigo === 'CASETA_OCUPADA' ? 409 : 400 },
       );
     }
   }),

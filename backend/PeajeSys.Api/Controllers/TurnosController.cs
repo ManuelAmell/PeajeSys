@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -29,6 +30,15 @@ public class TurnosController : ControllerBase
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AbrirTurnoResponseDto>> AbrirTurno([FromBody] AbrirTurnoRequestDto request)
     {
+        if (request.IdOperador <= 0)
+        {
+            string? sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+            if (int.TryParse(sub, out int idOperadorToken))
+            {
+                request.IdOperador = idOperadorToken;
+            }
+        }
+
         var response = await _turnoService.AbrirTurnoAsync(request);
         return StatusCode(StatusCodes.Status201Created, response);
     }
