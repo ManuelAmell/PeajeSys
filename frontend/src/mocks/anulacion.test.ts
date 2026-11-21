@@ -20,11 +20,15 @@ const anular = (id: number, motivo: unknown, sub?: string) =>
   });
 
 const turno = async (id: number) =>
-  (await (await fetch(`${BASE}/turnos/${id}`)).json()) as { total_recaudado_efectivo: number };
+  (await (await fetch(`${BASE}/turnos/${id}`)).json()) as {
+    total_recaudado_efectivo: number;
+  };
 
 describe('MSW: anulación de transacciones (imita a la API real)', () => {
   it('el listado de un turno incluye siempre anulada (booleano)', async () => {
-    const lista = (await (await fetch(`${BASE}/turnos/9/transacciones`)).json()) as FilaTx[];
+    const lista = (await (
+      await fetch(`${BASE}/turnos/9/transacciones`)
+    ).json()) as FilaTx[];
 
     expect(lista.length).toBeGreaterThan(0);
     expect(lista.every((t) => t.anulada === false)).toBe(true);
@@ -40,13 +44,17 @@ describe('MSW: anulación de transacciones (imita a la API real)', () => {
     expect(cuerpo.auditoria.tipo_operacion).toBe('VOID');
     expect(cuerpo.auditoria.motivo).toBe('Cobro duplicado');
     expect((await turno(9)).total_recaudado_efectivo).toBe(antes - 10500);
-    const lista = (await (await fetch(`${BASE}/turnos/9/transacciones`)).json()) as FilaTx[];
+    const lista = (await (
+      await fetch(`${BASE}/turnos/9/transacciones`)
+    ).json()) as FilaTx[];
     expect(lista.find((t) => t.id_transaccion === 11)?.anulada).toBe(true);
   });
 
   it('anular por telepeaje devuelve el saldo a la cuenta y no toca el recaudo', async () => {
     const db = getDb();
-    const cuenta = db.cuentas_telepeaje.find((c) => c.placa_vehiculo === 'KJN456')!;
+    const cuenta = db.cuentas_telepeaje.find(
+      (c) => c.placa_vehiculo === 'KJN456',
+    )!;
     const saldoAntes = cuenta.saldo_disponible;
     const { transaccion } = db.registrarTransaccion({
       id_turno: 9,
@@ -63,7 +71,10 @@ describe('MSW: anulación de transacciones (imita a la API real)', () => {
     const res = await anular(transaccion.id_transaccion, 'Lectura errónea');
 
     expect(res.status).toBe(200);
-    expect(db.cuentas_telepeaje.find((c) => c.placa_vehiculo === 'KJN456')!.saldo_disponible).toBe(saldoAntes);
+    expect(
+      db.cuentas_telepeaje.find((c) => c.placa_vehiculo === 'KJN456')!
+        .saldo_disponible,
+    ).toBe(saldoAntes);
     expect((await turno(9)).total_recaudado_efectivo).toBe(recaudoAntes);
   });
 
@@ -123,6 +134,8 @@ describe('MSW: anulación de transacciones (imita a la API real)', () => {
       estado_paso: 'APROBADO',
       usuario_sistema: 'EMP-002',
     });
-    expect((await anular(transaccion.id_transaccion, 'Motivo', '3')).status).toBe(200);
+    expect(
+      (await anular(transaccion.id_transaccion, 'Motivo', '3')).status,
+    ).toBe(200);
   });
 });

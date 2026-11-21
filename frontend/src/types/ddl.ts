@@ -234,6 +234,8 @@ export interface TransaccionPeaje {
   numero_ticket: string;
   fecha_hora: string;
   estado_paso: EstadoPaso;
+  /** Solo lo trae el listado de un turno: true si hay un VOID en la auditoría. */
+  anulada?: boolean;
 }
 
 export interface TransaccionPeajeNueva {
