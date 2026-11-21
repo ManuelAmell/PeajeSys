@@ -45,8 +45,8 @@ export function textoEjes(min: number, max: number): string {
 }
 
 /** Peso máximo en toneladas con coma decimal; null cuando el DML no lo define. */
-export function textoPeso(peso: number | null): string {
-  if (peso === null) {
+export function textoPeso(peso: number | null | undefined): string {
+  if (peso == null) {
     return 'No definida';
   }
   return `${String(peso).replace('.', ',')} t`;
