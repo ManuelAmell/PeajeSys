@@ -85,6 +85,8 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 
 ## 🎯 4. Próximos pasos finales / Sustentación
 
+- [ ] **Revisión de Seguridad y JWT**:
+  - Revisar [backend/PeajeSys.Core/Security/JwtTokenService.cs](backend/PeajeSys.Core/Security/JwtTokenService.cs): validar sobrecargas de `GenerateToken`, claims (`codigo_empleado`), expiración y compatibilidad con los controladores de autenticación.
 - [ ] **Prueba de integración End-to-End**:
   - Levantar la base de datos ejecutando `00_Master_PeajeSys.sql` en PostgreSQL local.
   - Iniciar la Web API (`dotnet run --project backend/PeajeSys.Api`).
