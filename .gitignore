@@ -20,7 +20,6 @@ x86/
 bld/
 [Ll]og/
 [Ll]ogs/
-appsettings.Development.json
 appsettings.Local.json
 [Tt]est[Rr]esults/
 coverage*.xml

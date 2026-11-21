@@ -34,6 +34,7 @@ backend/
 ├── PeajeSys.Api/                  # Web API REST (Controladores, Middlewares, DI, Program.cs)
 ├── PeajeSys.Core/                 # Dominio (Entidades, Enums, DTOs, Interfaces, Servicios)
 ├── PeajeSys.Data/                 # Infraestructura (DbContext, Fluent Mappings, Repositorios)
+├── PeajeSys.Dominio/              # Clases de dominio complementarias (peaje, user, operacion, telePeaje, reportes)
 └── PeajeSys.Tests/                # Pruebas Unitarias y de Integracion (xUnit, FluentAssertions)
 ```
 
