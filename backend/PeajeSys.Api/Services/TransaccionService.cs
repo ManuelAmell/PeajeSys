@@ -56,6 +56,14 @@ public class TransaccionService : ITransaccionService
                 new Dictionary<string, string> { ["motivo"] = $"Maximo {MaxMotivo} caracteres." });
         }
 
+        // La estrategia de reintentos de Npgsql exige ejecutar la transaccion de usuario dentro de ella.
+        var estrategia = _context.Database.CreateExecutionStrategy();
+        return await estrategia.ExecuteAsync(() => AnularEnTransaccionAsync(idTransaccion, motivo, actor));
+    }
+
+    private async Task<AnulacionTransaccionResponseDto> AnularEnTransaccionAsync(long idTransaccion, string motivo, ActorOperacion actor)
+    {
+        _context.ChangeTracker.Clear(); // un reintento debe partir de un estado limpio
         bool relacional = _context.Database.IsRelational();
         await using var tx = relacional ? await _context.Database.BeginTransactionAsync() : null;
 
