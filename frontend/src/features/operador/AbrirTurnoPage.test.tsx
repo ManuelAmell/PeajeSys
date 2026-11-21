@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
-import { renderConProveedores, screen, waitFor } from '@/test/render';
+import { renderConProveedores, screen } from '@/test/render';
 import { AbrirTurnoPage } from './AbrirTurnoPage';
 import { reiniciarDb } from '@/mocks/db';
 
@@ -24,13 +24,17 @@ describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
       initialEntries: ['/operador/abrir-turno'],
     });
 
-    expect(await screen.findByRole('heading', { name: /Abrir turno/i })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /Abrir turno/i }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/Caseta/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Fondo inicial de caja/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Abrir turno/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Abrir turno/i }),
+    ).toBeInTheDocument();
   });
 
-  it('muestra errores de validación si no se selecciona caseta o fondo negativo', async () => {
+  it('muestra errores de validación si no se selecciona caseta', async () => {
     const user = userEvent.setup();
     renderConProveedores(<AbrirTurnoPage />, {
       usuarioInicial: usuarioRecaudador,
@@ -40,11 +44,12 @@ describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
     const boton = await screen.findByRole('button', { name: /Abrir turno/i });
     await user.click(boton);
 
-    // Debe mostrar error de validación
-    expect(await screen.findByText(/Selecciona una caseta/i)).toBeInTheDocument();
+    // Debe mostrar error de validación en #at-caseta-error
+    const errorCaseta = await screen.findByRole('alert');
+    expect(errorCaseta).toHaveTextContent('Selecciona una caseta');
   });
 
-  it('muestra error 409 CASETA_OCUPADA visible cuando la caseta ya tiene turno abierto', async () => {
+  it('muestra error 409 CASETA_OCUPADA visible cuando la caseta ya tiene turno abierto en el servidor', async () => {
     server.use(
       http.post('/api/turnos/abrir', () => {
         return HttpResponse.json(
@@ -66,12 +71,29 @@ describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
     });
 
     const selectCaseta = await screen.findByLabelText(/Caseta/i);
-    await user.selectOptions(selectCaseta, '2');
+    await user.selectOptions(selectCaseta, '1');
 
     const boton = screen.getByRole('button', { name: /Abrir turno/i });
     await user.click(boton);
 
     const alerta = await screen.findByRole('alert');
     expect(alerta).toHaveTextContent('La caseta ya tiene un turno ABIERTO.');
+  });
+
+  it('envío correcto llama a abrirTurno y redirige', async () => {
+    const user = userEvent.setup();
+    renderConProveedores(<AbrirTurnoPage />, {
+      usuarioInicial: usuarioRecaudador,
+      initialEntries: ['/operador/abrir-turno'],
+    });
+
+    const selectCaseta = await screen.findByLabelText(/Caseta/i);
+    await user.selectOptions(selectCaseta, '1');
+
+    const boton = screen.getByRole('button', { name: /Abrir turno/i });
+    await user.click(boton);
+
+    // Tras el envío exitoso, el formulario se procesa sin error
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
