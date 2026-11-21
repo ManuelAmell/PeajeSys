@@ -42,6 +42,37 @@ describe('Pantalla Abrir Turno (AbrirTurnoPage)', () => {
     expect(select.value).not.toBe('0');
   });
 
+  it('marca las casetas ocupadas y preselecciona la primera libre usando el campo ocupada, sin consultar /turnos', async () => {
+    let consultasTurnos = 0;
+    server.use(
+      http.get('/api/turnos', () => {
+        consultasTurnos += 1;
+        return HttpResponse.json([]);
+      }),
+      http.get('/api/casetas', () =>
+        HttpResponse.json([
+          { id_caseta: 1, id_estacion: 1, numero_carril: 1, tipo_carril: 'MANUAL', estado: 'OPERATIVA', ocupada: true },
+          { id_caseta: 2, id_estacion: 1, numero_carril: 2, tipo_carril: 'MANUAL', estado: 'OPERATIVA', ocupada: true },
+          { id_caseta: 3, id_estacion: 1, numero_carril: 3, tipo_carril: 'MIXTO', estado: 'OPERATIVA', ocupada: false },
+          { id_caseta: 4, id_estacion: 1, numero_carril: 4, tipo_carril: 'MIXTO', estado: 'OPERATIVA' },
+        ]),
+      ),
+    );
+
+    renderConProveedores(<AbrirTurnoPage />, {
+      usuarioInicial: usuarioRecaudador,
+      initialEntries: ['/operador/abrir-turno'],
+    });
+
+    const select = (await screen.findByLabelText(/Caseta/i)) as HTMLSelectElement;
+    await waitFor(() => expect(select.value).toBe('3'));
+    const opciones = Array.from(select.options).filter((o) => o.value !== '0');
+    const deshabilitadas = opciones.filter((o) => o.disabled).map((o) => o.value);
+    expect(deshabilitadas).toEqual(['1', '2']);
+    expect(opciones.find((o) => o.value === '1')!.textContent).toMatch(/Ocupada/);
+    expect(consultasTurnos).toBe(0);
+  });
+
   it('las etiquetas de horario se nombran por su texto visible, sin aria-label redundante', async () => {
     renderConProveedores(<AbrirTurnoPage />, {
       usuarioInicial: usuarioRecaudador,
