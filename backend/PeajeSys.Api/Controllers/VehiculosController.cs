@@ -22,6 +22,7 @@ public class VehiculosController : ControllerBase
 
     [HttpGet("{placa}")]
     [ProducesResponseType(typeof(VehiculoConsultaDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<VehiculoConsultaDto>> ConsultarVehiculo([FromRoute] string placa)
     {
         var resultado = await _vehiculoService.ConsultarVehiculoAsync(placa);
