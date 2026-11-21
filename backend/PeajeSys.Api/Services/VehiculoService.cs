@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using PeajeSys.Core.DTOs;
+using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
 using PeajeSys.Data;
 
@@ -27,16 +28,7 @@ public class VehiculoService : IVehiculoService
 
         if (vehiculo == null)
         {
-            // Respuesta por defecto con categoria sugerida CAT_I y sin cuenta TAG
-            return new VehiculoConsultaDto
-            {
-                Placa = placaNorm,
-                Encontrado = false,
-                IdCategoria = 1,
-                CategoriaCodigo = "CAT_I",
-                CategoriaDescripcion = "Automoviles, camperos y camionetas",
-                TieneTag = false
-            };
+            throw new NotFoundException("VEHICULO_NO_ENCONTRADO", $"Vehiculo con placa {placaNorm} no encontrado en el sistema.");
         }
 
         var cuenta = await _context.CuentasTelepeaje
