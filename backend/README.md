@@ -88,6 +88,8 @@ Una vez iniciada la API:
 
 > Ejecuta siempre `dotnet run` desde `backend/PeajeSys.Api` (no con `--project` desde otra carpeta): así se cargan `appsettings.json` y el perfil de `Properties/launchSettings.json`, que fija el entorno `Development` y el puerto `5080`.
 
+> Con `dotnet run` (perfil de `launchSettings.json`, entorno `Development`) los usuarios semilla EMP-001…EMP-010 y ADM-001 entran con la contraseña de demo `Turno123*` (`Security:DefaultDevPassword`). En cualquier otro entorno quedan deshabilitados.
+
 ### 4.3 Configuración de la clave JWT
 
 La clave secreta del JWT **no está en el repositorio**. Debes definirla en tu máquina antes de iniciar la API (mínimo 32 bytes en UTF-8).
