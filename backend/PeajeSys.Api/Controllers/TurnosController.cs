@@ -48,8 +48,8 @@ public class TurnosController : ControllerBase
         return Ok(response);
     }
 
-    // El listado queda visible para todos los roles: la pantalla Abrir turno del recaudador necesita ver los
-    // turnos ABIERTOS de las demas casetas para marcarlas como ocupadas.
+    // El RECAUDADOR solo recibe sus propios turnos (aunque mande operador=); supervisor y administrador, todos.
+    // La ocupacion de casetas se consulta en GET /api/casetas (campo ocupada).
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<TurnoDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TurnoDto>>> ListarTurnos(
@@ -66,7 +66,7 @@ public class TurnosController : ControllerBase
         string? operadorFiltro = !string.IsNullOrWhiteSpace(id_operador) ? id_operador : operador;
         int? estacionFiltro = id_estacion ?? estacion;
 
-        var turnos = await _turnoService.ListarTurnosAsync(casetaFiltro, operadorFiltro, estado, fecha, estacionFiltro);
+        var turnos = await _turnoService.ListarTurnosAsync(casetaFiltro, operadorFiltro, estado, fecha, estacionFiltro, ActorOperacionClaims.Desde(User));
         return Ok(turnos);
     }
 

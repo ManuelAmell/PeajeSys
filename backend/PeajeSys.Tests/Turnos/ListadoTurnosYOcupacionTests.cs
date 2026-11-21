@@ -34,6 +34,7 @@ public class ListadoTurnosYOcupacionTests
         var db = new PeajeSysDbContext(options);
         db.Operadores.Add(new Operador { IdOperador = 1, CodigoEmpleado = "REC-001", Rol = Roles.Recaudador });
         db.Operadores.Add(new Operador { IdOperador = 2, CodigoEmpleado = "REC-002", Rol = Roles.Recaudador });
+        db.EstacionesPeaje.Add(new EstacionPeaje { IdEstacion = 1, Nombre = "E1", CodigoEstacion = "E1" });
         db.Casetas.Add(new Caseta { IdCaseta = 1, IdEstacion = 1 });
         db.Casetas.Add(new Caseta { IdCaseta = 2, IdEstacion = 1 });
         db.Casetas.Add(new Caseta { IdCaseta = 3, IdEstacion = 1 });
@@ -127,12 +128,23 @@ public class ListadoTurnosHttpTests : IClassFixture<PeajeSysApiMemoriaFactory>
     private readonly HttpClient _cliente;
     private readonly PeajeSysApiMemoriaFactory _fabrica;
 
+    private static readonly object Candado = new();
+    private static bool _sembrado;
+
     public ListadoTurnosHttpTests(PeajeSysApiMemoriaFactory fabrica)
     {
         _fabrica = fabrica;
         _cliente = fabrica.CreateClient();
+        lock (Candado)
+        {
+            if (_sembrado) return;
+            _sembrado = true;
+        }
         using var alcance = fabrica.Services.CreateScope();
         var db = alcance.ServiceProvider.GetRequiredService<PeajeSysDbContext>();
+        db.EstacionesPeaje.Add(new EstacionPeaje { IdEstacion = 1, Nombre = "E1", CodigoEstacion = "E1" });
+        db.Operadores.Add(new Operador { IdOperador = 51, CodigoEmpleado = "REC-051", Rol = Roles.Recaudador });
+        db.Operadores.Add(new Operador { IdOperador = 52, CodigoEmpleado = "REC-052", Rol = Roles.Recaudador });
         db.Casetas.Add(new Caseta { IdCaseta = 501, IdEstacion = 1 });
         db.Casetas.Add(new Caseta { IdCaseta = 502, IdEstacion = 1 });
         db.Turnos.Add(new Turno { IdCaseta = 501, IdOperador = 51, FondoInicialCaja = 1000, Estado = "ABIERTO" });
@@ -158,9 +170,10 @@ public class ListadoTurnosHttpTests : IClassFixture<PeajeSysApiMemoriaFactory>
     [Fact]
     public async Task Turnos_Recaudador_NoVeTurnosAjenosNiConOperadorAjeno()
     {
-        var sinFiltro = await Get("/api/turnos?estado=ABIERTO", 52, Roles.Recaudador, "REC-052");
+        var sinFiltro = await Get("/api/turnos", 52, Roles.Recaudador, "REC-052");
         var conAjeno = await Get("/api/turnos?operador=51", 52, Roles.Recaudador, "REC-052");
 
+        Assert.NotEmpty(sinFiltro.EnumerateArray());
         Assert.DoesNotContain(sinFiltro.EnumerateArray(), t => t.GetProperty("id_operador").GetInt32() != 52);
         Assert.DoesNotContain(conAjeno.EnumerateArray(), t => t.GetProperty("id_operador").GetInt32() != 52);
         Assert.DoesNotContain(sinFiltro.EnumerateArray(), t => t.GetProperty("id_operador").GetInt32() == 51);
