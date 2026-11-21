@@ -10,12 +10,23 @@ namespace PeajeSys.Tests.Api;
 /// </summary>
 public class PeajeSysApiFactory : WebApplicationFactory<Program>
 {
+    protected virtual bool DefinirClave => true;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-        builder.UseSetting("JwtSettings:SecretKey", JwtPruebas.Clave);
+        if (DefinirClave)
+        {
+            builder.UseSetting("JwtSettings:SecretKey", JwtPruebas.Clave);
+        }
         builder.UseSetting("JwtSettings:Issuer", JwtPruebas.Issuer);
         builder.UseSetting("JwtSettings:Audience", JwtPruebas.Audience);
         builder.UseSetting("JwtSettings:ExpirationHours", JwtPruebas.ExpirationHours.ToString());
     }
+}
+
+/// <summary>Variante sin JwtSettings:SecretKey para comprobar que el arranque falla.</summary>
+public sealed class PeajeSysApiSinClaveFactory : PeajeSysApiFactory
+{
+    protected override bool DefinirClave => false;
 }

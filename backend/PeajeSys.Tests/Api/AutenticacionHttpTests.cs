@@ -100,4 +100,30 @@ public class AutenticacionHttpTests : IClassFixture<PeajeSysApiFactory>
         var r = await Enviar(HttpMethod.Get, "/api/operadores", GenerarToken(Roles.Administrador, reloj: reloj));
         Assert.Equal(HttpStatusCode.Unauthorized, r.StatusCode);
     }
+
+    [Fact]
+    public void Arranque_SinClaveJwt_FallaMencionandoLaClave()
+    {
+        using var fabrica = new PeajeSysApiSinClaveFactory();
+        var ex = Record.Exception(() => fabrica.CreateClient());
+        Assert.NotNull(ex);
+        Assert.Contains("JwtSettings:SecretKey", Aplanar(ex!));
+    }
+
+    private static string Aplanar(Exception ex)
+    {
+        var sb = new System.Text.StringBuilder();
+        var pendientes = new Stack<Exception>();
+        pendientes.Push(ex);
+        while (pendientes.Count > 0)
+        {
+            var actual = pendientes.Pop();
+            sb.AppendLine(actual.Message);
+            if (actual is AggregateException agg)
+                foreach (var interna in agg.InnerExceptions) pendientes.Push(interna);
+            else if (actual.InnerException != null)
+                pendientes.Push(actual.InnerException);
+        }
+        return sb.ToString();
+    }
 }
