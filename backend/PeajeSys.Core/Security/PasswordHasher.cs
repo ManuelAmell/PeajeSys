@@ -10,8 +10,9 @@ public class PasswordHasher : IPasswordHasher
     private readonly string _defaultDevPassword;
     private readonly HashSet<string> _seedUsers;
 
-    public PasswordHasher(int costFactor = 12, string defaultDevPassword = "Turno123*")
+    public PasswordHasher(int costFactor, string defaultDevPassword, bool usuariosSemillaHabilitados)
     {
+        UsuariosSemillaHabilitados = usuariosSemillaHabilitados;
         _costFactor = costFactor;
         _defaultDevPassword = defaultDevPassword;
         _seedUsers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -21,6 +22,8 @@ public class PasswordHasher : IPasswordHasher
             "ADM-001"
         };
     }
+
+    public bool UsuariosSemillaHabilitados { get; }
 
     public string HashPassword(string password)
     {
@@ -40,6 +43,9 @@ public class PasswordHasher : IPasswordHasher
 
     public bool VerifySeedUser(string codigoEmpleado, string password)
     {
+        if (!UsuariosSemillaHabilitados)
+            return false;
+
         if (string.IsNullOrWhiteSpace(codigoEmpleado) || string.IsNullOrEmpty(password))
             return false;
 

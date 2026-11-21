@@ -7,6 +7,7 @@ namespace PeajeSys.Core.Interfaces;
 
 public interface IPasswordHasher
 {
+    bool UsuariosSemillaHabilitados { get; }
     string HashPassword(string password);
     bool VerifyPassword(string password, string hash);
     bool VerifySeedUser(string codigoEmpleado, string password);
