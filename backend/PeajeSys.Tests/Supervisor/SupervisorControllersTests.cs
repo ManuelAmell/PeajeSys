@@ -92,7 +92,14 @@ public class SupervisorControllersTests
 
         public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
         {
-            throw new NotImplementedException();
+            return Task.FromResult(new CuentaTelepeajeDetalleDto
+            {
+                IdCuenta = 1,
+                PlacaVehiculo = placa.ToUpperInvariant(),
+                TagRfidSerial = "TAG-COL-0001",
+                SaldoDisponible = 50000m,
+                EstadoCuenta = "ACTIVA"
+            });
         }
 
         public Task<RecargaTagResponseDto> RecargarCuentaAsync(RecargaTagRequestDto request, string usuarioResponsable)
