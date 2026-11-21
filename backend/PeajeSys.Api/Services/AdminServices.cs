@@ -461,6 +461,10 @@ public class EstacionCasetaService : IEstacionCasetaService
         }
 
         var lista = await query.ToListAsync();
+        var ocupadas = (await _context.Turnos
+            .Where(t => t.Estado == "ABIERTO")
+            .Select(t => t.IdCaseta)
+            .ToListAsync()).ToHashSet();
         return lista.Select(c => new CasetaDto
         {
             IdCaseta = c.IdCaseta,
@@ -468,7 +472,8 @@ public class EstacionCasetaService : IEstacionCasetaService
             EstacionNombre = c.Estacion?.Nombre,
             NumeroCarril = c.NumeroCarril,
             TipoCarril = c.TipoCarril,
-            Estado = c.Estado
+            Estado = c.Estado,
+            Ocupada = ocupadas.Contains(c.IdCaseta)
         });
     }
 
@@ -487,7 +492,8 @@ public class EstacionCasetaService : IEstacionCasetaService
             EstacionNombre = c.Estacion?.Nombre,
             NumeroCarril = c.NumeroCarril,
             TipoCarril = c.TipoCarril,
-            Estado = c.Estado
+            Estado = c.Estado,
+            Ocupada = await _context.Turnos.AnyAsync(t => t.IdCaseta == c.IdCaseta && t.Estado == "ABIERTO")
         };
     }
 
