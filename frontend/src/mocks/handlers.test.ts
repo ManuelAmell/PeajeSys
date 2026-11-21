@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { tokenFalso } from '@/mocks/token';
 
 describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
   describe('1. Autenticación (POST /api/auth/login)', () => {
@@ -165,6 +166,40 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       );
       const est1 = await resEst1.json();
       expect(est1.length).toBe(4);
+    });
+  });
+
+  describe('2b. Ocupación de casetas y listado de turnos acotado por rol', () => {
+    const pedirTurnos = async (query: string, sub?: string) => {
+      const res = await fetch(`http://localhost:3000/api/turnos${query}`, {
+        headers: sub ? { Authorization: `Bearer ${tokenFalso(sub)}` } : {},
+      });
+      return (await res.json()) as { id_turno: number; id_operador: number }[];
+    };
+
+    it('GET /api/casetas devuelve ocupada según haya turno ABIERTO', async () => {
+      const casetas = (await (await fetch(`http://localhost:3000/api/casetas`)).json()) as {
+        id_caseta: number;
+        ocupada: boolean;
+      }[];
+      const ocupadas = casetas.filter((c) => c.ocupada).map((c) => c.id_caseta);
+      expect(ocupadas.sort()).toEqual([2, 3]);
+      expect(casetas.find((c) => c.id_caseta === 1)!.ocupada).toBe(false);
+    });
+
+    it('GET /api/turnos de un recaudador solo devuelve los suyos, aunque pida operador ajeno', async () => {
+      // sub 2 = EMP-002 (RECAUDADOR) con el turno 9 abierto; sub 4 = EMP-004 con el turno 10.
+      const propios = await pedirTurnos('?estado=ABIERTO', '2');
+      expect(propios.map((t) => t.id_turno)).toEqual([9]);
+      const ajeno = await pedirTurnos('?operador=EMP-004', '2');
+      expect(ajeno.every((t) => t.id_operador === 2)).toBe(true);
+      expect(ajeno.some((t) => t.id_turno === 10)).toBe(false);
+    });
+
+    it('GET /api/turnos de un supervisor devuelve todos', async () => {
+      // sub 3 = EMP-003 (SUPERVISOR).
+      const abiertos = await pedirTurnos('?estado=ABIERTO', '3');
+      expect(abiertos.map((t) => t.id_turno).sort((a, b) => a - b)).toEqual([9, 10]);
     });
   });
 
