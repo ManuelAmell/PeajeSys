@@ -88,7 +88,8 @@ public class TarifaService : ITarifaService
 
     public async Task<TarifaDto> CrearTarifaConVigenciaAsync(CrearTarifaRequestDto request, string usuarioResponsable)
     {
-        if (request.Monto <= 0)
+        decimal monto = request.MontoTarifa ?? request.Monto;
+        if (monto <= 0)
         {
             throw new AppException("ERROR_VALIDACION", "El monto de la tarifa debe ser mayor a cero.", 422);
         }
@@ -98,7 +99,12 @@ public class TarifaService : ITarifaService
             throw new AppException("ERROR_VALIDACION", "Estacion y categoria son campos requeridos.", 422);
         }
 
-        var fechaInicio = request.FechaInicioVigencia ?? DateTime.UtcNow;
+        var fechaInicio = (request.FechaInicioVigencia ?? DateTime.UtcNow).Date;
+        var fechaFin = request.FechaFinVigencia?.Date;
+        if (fechaFin.HasValue && fechaFin.Value < fechaInicio)
+        {
+            throw new AppException("ERROR_VALIDACION", "fecha_fin_vigencia debe ser mayor o igual a fecha_inicio_vigencia.", 422);
+        }
 
         // Regla Atomica de Vigencia: Buscar tarifa previa activa para la misma estacion y categoria
         var tarifaPrevia = await _context.Tarifas
@@ -110,7 +116,7 @@ public class TarifaService : ITarifaService
         {
             IdEstacion = request.IdEstacion,
             IdCategoria = request.IdCategoria,
-            Monto = request.Monto,
+            Monto = monto,
             ResolucionLegal = request.ResolucionLegal ?? "Res. MinTransporte Vigente",
             FechaInicioVigencia = fechaInicio,
             FechaFinVigencia = null,
@@ -119,6 +125,7 @@ public class TarifaService : ITarifaService
 
         // Actualizar vigencia previa
         ActualizarVigenciaTarifa(tarifaPrevia, nuevaTarifa);
+        nuevaTarifa.FechaFinVigencia = fechaFin;
 
         _context.Tarifas.Add(nuevaTarifa);
 
@@ -159,8 +166,8 @@ public class TarifaService : ITarifaService
         CategoriaCodigo = t.Categoria?.Codigo,
         Monto = t.Monto,
         ResolucionLegal = t.ResolucionLegal,
-        FechaInicioVigencia = t.FechaInicioVigencia,
-        FechaFinVigencia = t.FechaFinVigencia,
+        FechaInicioVigencia = t.FechaInicioVigencia.ToString("yyyy-MM-dd"),
+        FechaFinVigencia = t.FechaFinVigencia?.ToString("yyyy-MM-dd"),
         Activa = t.Activa
     };
 }
