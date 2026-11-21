@@ -449,8 +449,25 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
         };
     }
 
-    public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+    public async Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
     {
-        throw new NotImplementedException();
+        string placaNorm = (placa ?? string.Empty).Trim().ToUpperInvariant().Replace(" ", "");
+
+        var cuenta = await _context.CuentasTelepeaje
+            .FirstOrDefaultAsync(c => c.PlacaVehiculo == placaNorm);
+
+        if (cuenta == null)
+        {
+            throw new NotFoundException("CUENTA_NO_ENCONTRADA", $"No existe cuenta de telepeaje asociada a la placa {placaNorm}.");
+        }
+
+        return new CuentaTelepeajeDetalleDto
+        {
+            IdCuenta = cuenta.IdCuenta,
+            PlacaVehiculo = cuenta.PlacaVehiculo,
+            TagRfidSerial = cuenta.TagRfidSerial,
+            SaldoDisponible = cuenta.SaldoDisponible,
+            EstadoCuenta = cuenta.EstadoCuenta
+        };
     }
 }
