@@ -6,8 +6,6 @@ export default function OperadorFeatureRoutes() {
   return (
     <Routes>
       <Route path="abrir-turno" element={<AbrirTurnoPage />} />
-      <Route path="/abrir-turno" element={<AbrirTurnoPage />} />
-      <Route path="/operador/abrir-turno" element={<AbrirTurnoPage />} />
       <Route path="*" element={<OperadorTerminalPage />} />
     </Routes>
   );

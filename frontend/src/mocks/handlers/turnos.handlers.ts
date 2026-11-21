@@ -3,6 +3,23 @@ import { esquemaTurnoCierre } from '@/types';
 import { procesarControlLectura } from '../control';
 import { getDb } from '../db';
 
+/** Id del operador (claim sub) del token Bearer de la petición, o null si falta o no es válido. */
+function idOperadorDelToken(request: Request): number | null {
+  const cabecera = request.headers.get('authorization');
+  const token = cabecera?.replace(/^Bearer\s+/i, '');
+  const partes = token?.split('.');
+  if (!partes || partes.length < 2 || !partes[1]) return null;
+  try {
+    const payload = JSON.parse(
+      atob(partes[1].replace(/-/g, '+').replace(/_/g, '/')),
+    ) as { sub?: string; nameid?: string };
+    const id = parseInt(String(payload.sub ?? payload.nameid ?? ''), 10);
+    return Number.isInteger(id) && id > 0 ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 export const turnosHandlers = [
   http.get('/api/turnos', async ({ request }) => {
     const { errorResponse, esVacio } = await procesarControlLectura(request);
@@ -149,6 +166,21 @@ export const turnosHandlers = [
   }),
 
   http.post('/api/turnos/abrir', async ({ request }) => {
+    // Igual que la API: el turno se abre siempre a nombre del operador del token;
+    // el id_operador del cuerpo se ignora.
+    const idOperador = idOperadorDelToken(request);
+    if (idOperador === null) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'NO_AUTENTICADO',
+            mensaje: 'Token JWT ausente, expirado o inválido.',
+          },
+        },
+        { status: 401 },
+      );
+    }
+
     let body: Record<string, unknown> = {};
     try {
       body = (await request.json()) as Record<string, unknown>;
@@ -180,35 +212,20 @@ export const turnosHandlers = [
       );
     }
 
-    let idOperador = Number(body?.id_operador ?? 0);
-    if (!idOperador || idOperador <= 0) {
-      const authHeader =
-        request.headers.get('authorization') ||
-        request.headers.get('Authorization');
-      if (authHeader) {
-        const token = authHeader.replace(/^Bearer\s+/i, '');
-        const partes = token.split('.');
-        if (partes.length >= 2 && partes[1]) {
-          try {
-            const raw = atob(partes[1].replace(/-/g, '+').replace(/_/g, '/'));
-            const payload = JSON.parse(raw);
-            const sub = payload.sub || payload.nameid;
-            if (sub) idOperador = parseInt(sub, 10);
-          } catch {
-            // ignorar fallo de parseo
-          }
-        }
-      }
+    if (fondoInicial < 0) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'ERROR_VALIDACION',
+            mensaje: 'El fondo inicial de caja no puede ser negativo.',
+            campos: { fondo_inicial_caja: 'Debe ser mayor o igual a 0.' },
+          },
+        },
+        { status: 422 },
+      );
     }
 
     const db = getDb();
-    if (!idOperador || idOperador <= 0) {
-      // Fallback a REC-002 si no se pudo determinar
-      const op = db.operadores.find(
-        (o) => o.codigo_empleado === 'REC-002' || o.rol === 'RECAUDADOR',
-      );
-      idOperador = op?.id_operador ?? 1;
-    }
 
     // Regla: caseta sin turno ABIERTO
     const casetaOcupada = db.turnos.some(
@@ -242,24 +259,13 @@ export const turnosHandlers = [
       );
     }
 
-    try {
-      const nuevoTurno = db.abrirTurno({
-        id_caseta: idCaseta,
-        id_operador: idOperador,
-        fondo_inicial_caja: fondoInicial,
-        diurno,
-      });
+    const nuevoTurno = db.abrirTurno({
+      id_caseta: idCaseta,
+      id_operador: idOperador,
+      fondo_inicial_caja: fondoInicial,
+      diurno,
+    });
 
-      return HttpResponse.json(nuevoTurno, { status: 201 });
-    } catch (err) {
-      const mensaje =
-        err instanceof Error ? err.message : 'Error al abrir el turno';
-      const codigo =
-        mensaje === 'CASETA_OCUPADA' ? 'CASETA_OCUPADA' : 'ERROR_APERTURA';
-      return HttpResponse.json(
-        { error: { codigo, mensaje } },
-        { status: codigo === 'CASETA_OCUPADA' ? 409 : 400 },
-      );
-    }
+    return HttpResponse.json(nuevoTurno, { status: 201 });
   }),
 ];
