@@ -19,7 +19,7 @@
 export type EstadoEstacion = 'ACTIVA' | 'INACTIVA' | 'MANTENIMIENTO';
 export type TipoCarril = 'MANUAL' | 'TELEPEAJE_EXCLUSIVO' | 'MIXTO';
 export type EstadoCaseta = 'OPERATIVA' | 'CERRADA' | 'MANTENIMIENTO';
-export type RolOperador = 'RECAUDADOR' | 'SUPERVISOR';
+export type RolOperador = 'RECAUDADOR' | 'SUPERVISOR' | 'ADMINISTRADOR';
 export type EstadoOperador = 'ACTIVO' | 'INACTIVO';
 export type EstadoTurno = 'ABIERTO' | 'CERRADO';
 export type EstadoCuentaTelepeaje = 'ACTIVA' | 'SUSPENDIDA';
@@ -29,8 +29,8 @@ export type TipoOperacionAuditoria = 'INSERT' | 'UPDATE' | 'VOID';
 
 /**
  * Rol extendido en frontend para administración de catálogo.
- * NOTA: En la base de datos física (DDL) los operadores solo tienen rol RECAUDADOR o SUPERVISOR.
- * El rol ADMIN solo existe a nivel de frontend/sesión (e.g. ADMIN-01) y no corresponde a una fila en OPERADOR.
+ * NOTA: En la base de datos física (DDL) los operadores tienen rol RECAUDADOR, SUPERVISOR o ADMINISTRADOR.
+ * El rol ADMIN es el nombre que la sesión del frontend da a ADMINISTRADOR (e.g. ADM-001).
  */
 export type RolFrontend = RolOperador | 'ADMIN';
 

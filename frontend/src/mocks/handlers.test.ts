@@ -26,19 +26,34 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       expect(data.error.mensaje).toBe('Escribe tu contraseña.');
     });
 
-    it('permite acceso al usuario exclusivo de frontend ADMIN-01 con rol ADMIN', async () => {
+    it('permite acceso a ADM-001 (administrador de la semilla) con cualquier contraseña no vacía', async () => {
       const res = await fetch(`http://localhost:3000/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo: 'ADMIN-01', clave: 'cualquiera' }),
+        body: JSON.stringify({ codigo: 'ADM-001', clave: 'cualquiera' }),
       });
       expect(res.status).toBe(200);
       const data = await res.json();
-      expect(data.usuario.codigo).toBe('ADMIN-01');
+      expect(data.usuario.codigo).toBe('ADM-001');
       expect(data.usuario.rol).toBe('ADMINISTRADOR');
       expect(data.usuario.rol_txt).toBe('Administrador');
       expect(data.usuario.destino_txt).toEqual(expect.any(String));
       expect(data.token).toMatch(/^[\w-]+\.[\w-]+\.[\w-]+$/);
+    });
+
+    it.each([
+      ['SUP-001', 'SUPERVISOR', '/supervisor'],
+      ['ADM-001', 'ADMINISTRADOR', '/admin'],
+    ])('acepta al usuario del equipo %s con su rol real', async (codigo, rol, destino) => {
+      const res = await fetch(`http://localhost:3000/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo, clave: 'cualquiera' }),
+      });
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.usuario.rol).toBe(rol);
+      expect(data.usuario.destino).toBe(destino);
     });
 
     it('rechaza empleado inexistente con HTTP 404', async () => {

@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const esquemaEstadoEstacion = z.enum(['ACTIVA', 'INACTIVA', 'MANTENIMIENTO']);
 export const esquemaTipoCarril = z.enum(['MANUAL', 'TELEPEAJE_EXCLUSIVO', 'MIXTO']);
 export const esquemaEstadoCaseta = z.enum(['OPERATIVA', 'CERRADA', 'MANTENIMIENTO']);
-export const esquemaRolOperador = z.enum(['RECAUDADOR', 'SUPERVISOR']);
+export const esquemaRolOperador = z.enum(['RECAUDADOR', 'SUPERVISOR', 'ADMINISTRADOR']);
 export const esquemaEstadoOperador = z.enum(['ACTIVO', 'INACTIVO']);
 export const esquemaEstadoTurno = z.enum(['ABIERTO', 'CERRADO']);
 export const esquemaEstadoCuentaTelepeaje = z.enum(['ACTIVA', 'SUSPENDIDA']);

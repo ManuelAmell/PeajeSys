@@ -46,7 +46,7 @@ describe('Esquema de credenciales de inicio de sesión (esquemaLogin)', () => {
   });
 
   it('acepta el caso válido con 8 caracteres exactos', () => {
-    const datos = esquemaLogin.parse({ codigo: 'ADMIN-01', clave: 'prueba' });
-    expect(datos.codigo).toBe('ADMIN-01');
+    const datos = esquemaLogin.parse({ codigo: 'ADM-001', clave: 'prueba' });
+    expect(datos.codigo).toBe('ADM-001');
   });
 });

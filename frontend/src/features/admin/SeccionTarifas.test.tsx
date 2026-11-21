@@ -7,10 +7,10 @@ import { renderConProveedores, screen, waitFor } from '@/test/render';
 import { SeccionTarifas } from './SeccionTarifas';
 
 const admin = {
-  id: 'ADMIN-01',
+  id: 'ADM-001',
   nombre: 'Administración',
   rol: 'ADMIN' as const,
-  codigo: 'ADMIN-01',
+  codigo: 'ADM-001',
 };
 
 function renderSeccion() {
@@ -134,7 +134,7 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('$ 10.500 -> $ 11.200')).toBeInTheDocument();
     expect(
-      screen.getByText(/ADMIN-01 · Res. MinTransporte 0045\/2026/),
+      screen.getByText(/ADM-001 · Res. MinTransporte 0045\/2026/),
     ).toBeInTheDocument();
 
     await waitFor(async () => {

@@ -18,8 +18,8 @@ export function SeccionUsuariosPrueba({ alUsar }: SeccionUsuariosPruebaProps) {
         Usuarios de prueba
       </h2>
       <p className="m-0 text-[15px] text-texto-2">
-        Simulación sin backend: cualquier contraseña sirve. Los empleados salen
-        del DML del Avance 2.
+        Simulación sin backend: cualquier contraseña sirve. Los usuarios son
+        los del equipo, cargados en la base de datos.
       </p>
       <div className="flex flex-col gap-[8px]">
         {USUARIOS_DEMO.map((demo) => (

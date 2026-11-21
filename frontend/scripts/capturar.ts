@@ -143,7 +143,7 @@ function obtenerUsuarioDeRol(rol: OpcionesCaptura['rol']) {
       };
     case 'ADMIN':
       return {
-        id: 'ADMIN-01',
+        id: 'ADM-001',
         nombre: 'Administración',
         rol: 'ADMIN' as const,
       };
