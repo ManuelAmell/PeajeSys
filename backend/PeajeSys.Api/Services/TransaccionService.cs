@@ -35,11 +35,17 @@ public class TransaccionService : ITransaccionService
         }
         ExigirPropiedad(turno, actor);
 
+        // Una sola consulta: la subconsulta EXISTS evita un viaje a la BD por transaccion.
         var filas = await _context.TransaccionesPeaje.AsNoTracking()
             .Where(t => t.IdTurno == idTurno)
             .OrderBy(t => t.FechaHora).ThenBy(t => t.IdTransaccion)
+            .Select(t => new
+            {
+                Transaccion = t,
+                Anulada = _context.AuditoriasTransaccion.Any(a => a.IdTransaccion == t.IdTransaccion && a.TipoOperacion == "VOID")
+            })
             .ToListAsync();
-        return filas.Select(ADto).ToList();
+        return filas.Select(f => ADto(f.Transaccion, f.Anulada)).ToList();
     }
 
     public async Task<AnulacionTransaccionResponseDto> AnularAsync(long idTransaccion, AnularTransaccionRequestDto request, ActorOperacion actor)
@@ -127,7 +133,7 @@ public class TransaccionService : ITransaccionService
 
         return new AnulacionTransaccionResponseDto
         {
-            Transaccion = ADto(transaccion),
+            Transaccion = ADto(transaccion, anulada: true),
             Auditoria = new AuditoriaItemDto
             {
                 IdAuditoria = auditoria.IdAuditoria,
@@ -149,7 +155,7 @@ public class TransaccionService : ITransaccionService
         }
     }
 
-    private static TransaccionDetalleDto ADto(TransaccionPeaje t) => new()
+    private static TransaccionDetalleDto ADto(TransaccionPeaje t, bool anulada) => new()
     {
         IdTransaccion = t.IdTransaccion,
         IdTurno = t.IdTurno,
@@ -160,6 +166,7 @@ public class TransaccionService : ITransaccionService
         MetodoPago = t.MetodoPago,
         NumeroTicket = t.NumeroTicket,
         FechaHora = t.FechaHora,
-        EstadoPaso = t.EstadoPaso
+        EstadoPaso = t.EstadoPaso,
+        Anulada = anulada
     };
 }

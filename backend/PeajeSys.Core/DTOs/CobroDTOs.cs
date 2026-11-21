@@ -259,6 +259,10 @@ public class TransaccionDetalleDto
 
     [JsonPropertyName("estado_paso")]
     public string EstadoPaso { get; set; } = "APROBADO";
+
+    /// <summary>True si existe un VOID en AUDITORIA_TRANSACCION para esta transaccion. Siempre se serializa.</summary>
+    [JsonPropertyName("anulada")]
+    public bool Anulada { get; set; }
 }
 
 public class DetallePagoTelepeajeDto
