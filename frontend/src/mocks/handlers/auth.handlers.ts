@@ -9,7 +9,10 @@ import { getDb } from '../db';
 /** Token falso con formato JWT (tres segmentos base64url), como el de la API real. */
 function tokenFalso(sub: string): string {
   const b64 = (o: object) =>
-    btoa(JSON.stringify(o)).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+    btoa(JSON.stringify(o))
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
   return `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub })}.firma-simulada`;
 }
 
@@ -36,7 +39,9 @@ export const authHandlers = [
       );
     }
 
-    const codigo = String(body.codigo || '').trim().toUpperCase();
+    const codigo = String(body.codigo || '')
+      .trim()
+      .toUpperCase();
     const clave = String(body.clave || '');
 
     // Validación 1: Código requerido (Login.dc.html:123)
@@ -70,7 +75,9 @@ export const authHandlers = [
     // En modo mocks no se verifica la contraseña: MSW no puede comprobar BCrypt sin dependencias
     // nuevas, así que cualquier contraseña no vacía se acepta (la API real valida el hash de la BD).
     const db = getDb();
-    const emp = db.operadores.find((o) => o.codigo_empleado.toUpperCase() === codigo);
+    const emp = db.operadores.find(
+      (o) => o.codigo_empleado.toUpperCase() === codigo,
+    );
 
     // Validación 3: Empleado no existe (Login.dc.html:126)
     if (!emp) {
@@ -79,7 +86,9 @@ export const authHandlers = [
           error: {
             codigo: 'EMPLEADO_NO_ENCONTRADO',
             mensaje: `No existe un empleado con el código ${codigo}.`,
-            campos: { codigo: `No existe un empleado con el código ${codigo}.` },
+            campos: {
+              codigo: `No existe un empleado con el código ${codigo}.`,
+            },
           },
         },
         { status: 404 },
@@ -93,7 +102,9 @@ export const authHandlers = [
           error: {
             codigo: 'EMPLEADO_INACTIVO',
             mensaje: `El usuario ${codigo} está INACTIVO. Pide a un administrador que lo active.`,
-            campos: { codigo: `El usuario ${codigo} está INACTIVO. Pide a un administrador que lo active.` },
+            campos: {
+              codigo: `El usuario ${codigo} está INACTIVO. Pide a un administrador que lo active.`,
+            },
           },
         },
         { status: 403 },
@@ -129,24 +140,32 @@ export const authHandlers = [
         (t) => t.id_operador === emp.id_operador && t.estado === 'ABIERTO',
       );
 
-      // Validación 5: Recaudador sin turno abierto -> HTTP 409 Conflict (Login.dc.html:128)
+      // Recaudador sin turno abierto -> HTTP 200 sin turno_abierto (pantalla Abrir turno)
       if (!turnoAbierto) {
         return HttpResponse.json(
           {
-            error: {
-              codigo: 'SIN_TURNO_ABIERTO',
-              mensaje: `${nombreCompleto} no tiene un turno abierto. El supervisor debe asignarle una caseta antes de cobrar.`,
-              campos: {
-                codigo: `${nombreCompleto} no tiene un turno abierto. El supervisor debe asignarle una caseta antes de cobrar.`,
-              },
+            token: tokenFalso(String(emp.id_operador)),
+            usuario: {
+              id: String(emp.id_operador),
+              codigo: emp.codigo_empleado,
+              nombre: nombreCorto,
+              nombre_completo: nombreCompleto,
+              rol: 'RECAUDADOR',
+              rol_txt: 'Recaudador',
+              destino: '/operador/abrir-turno',
+              destino_txt: 'Abrir turno en caseta',
             },
           },
-          { status: 409 },
+          { status: 200 },
         );
       }
 
-      const caseta = db.casetas.find((c) => c.id_caseta === turnoAbierto.id_caseta);
-      const estacion = caseta ? db.estaciones.find((e) => e.id_estacion === caseta.id_estacion) : undefined;
+      const caseta = db.casetas.find(
+        (c) => c.id_caseta === turnoAbierto.id_caseta,
+      );
+      const estacion = caseta
+        ? db.estaciones.find((e) => e.id_estacion === caseta.id_estacion)
+        : undefined;
 
       return HttpResponse.json(
         {

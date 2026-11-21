@@ -25,10 +25,15 @@ export async function obtenerTurno(id: number): Promise<Turno> {
   });
 }
 
-export async function obtenerTransaccionesTurno(idTurno: number): Promise<TransaccionPeaje[]> {
-  return clienteHttp.get<TransaccionPeaje[]>(`/turnos/${idTurno}/transacciones`, {
-    schema: z.array(esquemaTransaccionPeaje),
-  });
+export async function obtenerTransaccionesTurno(
+  idTurno: number,
+): Promise<TransaccionPeaje[]> {
+  return clienteHttp.get<TransaccionPeaje[]>(
+    `/turnos/${idTurno}/transacciones`,
+    {
+      schema: z.array(esquemaTransaccionPeaje),
+    },
+  );
 }
 
 export async function cerrarTurno({
@@ -62,7 +67,10 @@ export function useTurno(id: number, opciones?: { enabled?: boolean }) {
   });
 }
 
-export function useTransaccionesTurno(idTurno: number, opciones?: { enabled?: boolean }) {
+export function useTransaccionesTurno(
+  idTurno: number,
+  opciones?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: clavesApi.turnos.transacciones(idTurno),
     queryFn: () => obtenerTransaccionesTurno(idTurno),
@@ -77,9 +85,40 @@ export function useCerrarTurno() {
     mutationFn: cerrarTurno,
     onSuccess: (turnoActualizado) => {
       queryClient.invalidateQueries({ queryKey: clavesApi.turnos.todas });
-      queryClient.setQueryData(clavesApi.turnos.detalle(turnoActualizado.id_turno), turnoActualizado);
+      queryClient.setQueryData(
+        clavesApi.turnos.detalle(turnoActualizado.id_turno),
+        turnoActualizado,
+      );
       queryClient.invalidateQueries({ queryKey: clavesApi.auditoria.todas });
       queryClient.invalidateQueries({ queryKey: clavesApi.recaudo.todas });
+    },
+  });
+}
+
+export interface DatosAbrirTurno {
+  id_caseta: number;
+  fondo_inicial_caja: number;
+  diurno: boolean;
+  id_operador?: number;
+}
+
+export async function abrirTurno(datos: DatosAbrirTurno): Promise<Turno> {
+  return clienteHttp.post<Turno>('/turnos/abrir', datos, {
+    schema: esquemaTurno,
+  });
+}
+
+export function useAbrirTurno() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: abrirTurno,
+    onSuccess: (nuevoTurno) => {
+      queryClient.invalidateQueries({ queryKey: clavesApi.turnos.todas });
+      queryClient.setQueryData(
+        clavesApi.turnos.detalle(nuevoTurno.id_turno),
+        nuevoTurno,
+      );
     },
   });
 }
