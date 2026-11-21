@@ -43,19 +43,6 @@ public class JwtTokenService : IJwtTokenService
         _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
-    public string GenerateToken(string codigoEmpleado, string idOperador, string nombre, string rol, string? casetaId = null)
-    {
-        int.TryParse(idOperador, out int idOp);
-        return GenerateToken(new Operador
-        {
-            IdOperador = idOp,
-            CodigoEmpleado = codigoEmpleado,
-            Nombres = nombre,
-            Apellidos = string.Empty,
-            Rol = rol
-        });
-    }
-
     public string GenerateToken(Operador operador)
     {
         var now = _timeProvider.GetUtcNow();
