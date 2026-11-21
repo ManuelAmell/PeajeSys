@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using PeajeSys.Core.Interfaces;
 
 namespace PeajeSys.Core.Security;
@@ -7,23 +6,11 @@ namespace PeajeSys.Core.Security;
 public class PasswordHasher : IPasswordHasher
 {
     private readonly int _costFactor;
-    private readonly string _defaultDevPassword;
-    private readonly HashSet<string> _seedUsers;
 
-    public PasswordHasher(int costFactor, string defaultDevPassword, bool usuariosSemillaHabilitados)
+    public PasswordHasher(int costFactor)
     {
-        UsuariosSemillaHabilitados = usuariosSemillaHabilitados;
         _costFactor = costFactor;
-        _defaultDevPassword = defaultDevPassword;
-        _seedUsers = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "EMP-001", "EMP-002", "EMP-003", "EMP-004", "EMP-005",
-            "EMP-006", "EMP-007", "EMP-008", "EMP-009", "EMP-010",
-            "ADM-001"
-        };
     }
-
-    public bool UsuariosSemillaHabilitados { get; }
 
     public string HashPassword(string password)
     {
@@ -39,22 +26,5 @@ public class PasswordHasher : IPasswordHasher
             return false;
 
         return BCryptImplementation.Verify(password, hash);
-    }
-
-    public bool VerifySeedUser(string codigoEmpleado, string password)
-    {
-        if (!UsuariosSemillaHabilitados)
-            return false;
-
-        if (string.IsNullOrWhiteSpace(codigoEmpleado) || string.IsNullOrEmpty(password))
-            return false;
-
-        string normalizedCode = codigoEmpleado.Trim().ToUpperInvariant();
-        if (_seedUsers.Contains(normalizedCode))
-        {
-            return password == _defaultDevPassword;
-        }
-
-        return false;
     }
 }

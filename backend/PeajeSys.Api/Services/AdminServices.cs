@@ -261,6 +261,11 @@ public class OperadorAdminService : IOperadorAdminService
         string rol = (request.Rol ?? "RECAUDADOR").Trim().ToUpperInvariant();
         string estado = (request.Estado ?? "ACTIVO").Trim().ToUpperInvariant();
         string password = request.ObtenerPassword();
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            throw new AppException("ERROR_VALIDACION", "La contrasena es requerida para crear un operador.", 422);
+        }
+
         string passwordHash = _passwordHasher.HashPassword(password);
 
         var nuevo = new Operador
