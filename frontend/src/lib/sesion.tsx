@@ -6,11 +6,69 @@ import {
   useCallback,
   ReactNode,
 } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { borrarToken } from '@/api/sesionToken';
+import { ErrorApi } from '@/api/clienteHttp';
 import { Rol, Usuario, rutaPorDefectoSegunRol } from './roles';
 
 const CLAVE_STORAGE_SESION = 'peajesys_sesion';
+
+let suscriptorCerrarSesion: (() => void) | null = null;
+let navegadorGlobal: ((ruta: string) => void) | null = null;
+
+export function registrarNavegadorGlobal(
+  fn: ((ruta: string) => void) | null,
+): void {
+  navegadorGlobal = fn;
+}
+
+export function haySesionActiva(): boolean {
+  if (typeof window !== 'undefined') {
+    const datos = window.sessionStorage?.getItem?.(CLAVE_STORAGE_SESION);
+    if (datos) return true;
+  }
+  return false;
+}
+
+export function cerrarSesion(): void {
+  guardarSesionEnStorage(null);
+  borrarToken();
+  if (suscriptorCerrarSesion) {
+    suscriptorCerrarSesion();
+  }
+}
+
+export function manejarSesionExpirada(error: unknown): void {
+  if (!(error instanceof ErrorApi) || error.estado !== 401) {
+    return;
+  }
+
+  if (error.codigo === 'CREDENCIALES_INVALIDAS') {
+    return;
+  }
+
+  if (!haySesionActiva()) {
+    return;
+  }
+
+  cerrarSesion();
+  toast.error('Tu sesión expiró, vuelve a iniciar sesión');
+  navegadorGlobal?.('/login');
+}
+
+export function ManejadorSesionExpirada() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    registrarNavegadorGlobal((ruta) => {
+      navigate(ruta, { replace: true });
+    });
+    return () => registrarNavegadorGlobal(null);
+  }, [navigate]);
+
+  return null;
+}
 
 interface ContextoSesionTipo {
   usuario: Usuario | null;
@@ -65,7 +123,10 @@ export function SesionProvider({
   usuarioInicial = null,
 }: SesionProviderProps) {
   const [usuario, setUsuario] = useState<Usuario | null>(() => {
-    if (usuarioInicial) return usuarioInicial;
+    if (usuarioInicial) {
+      guardarSesionEnStorage(usuarioInicial);
+      return usuarioInicial;
+    }
     return leerSesionDeStorage();
   });
 
@@ -74,10 +135,17 @@ export function SesionProvider({
     guardarSesionEnStorage(nuevoUsuario);
   }, []);
 
-  const cerrarSesion = useCallback(() => {
-    setUsuario(null);
-    guardarSesionEnStorage(null);
-    borrarToken();
+  const cerrarSesionContexto = useCallback(() => {
+    cerrarSesion();
+  }, []);
+
+  useEffect(() => {
+    suscriptorCerrarSesion = () => {
+      setUsuario(null);
+    };
+    return () => {
+      suscriptorCerrarSesion = null;
+    };
   }, []);
 
   useEffect(() => {
@@ -88,7 +156,9 @@ export function SesionProvider({
   }, [usuarioInicial]);
 
   return (
-    <ContextoSesion.Provider value={{ usuario, iniciarSesion, cerrarSesion }}>
+    <ContextoSesion.Provider
+      value={{ usuario, iniciarSesion, cerrarSesion: cerrarSesionContexto }}
+    >
       {children}
     </ContextoSesion.Provider>
   );

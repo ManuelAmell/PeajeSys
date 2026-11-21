@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 import { toast } from 'sonner';
 import { server } from '@/mocks/server';
 import { renderConProveedores, screen, waitFor } from '@/test/render';
-import { RequireRol, useSesion } from '@/lib/sesion';
+import { RequireRol } from '@/lib/sesion';
 import { clienteHttp } from '@/api/clienteHttp';
 import { guardarToken, obtenerToken, borrarToken } from '@/api/sesionToken';
 import { useLogin } from '@/api/recursos/auth';
@@ -57,7 +57,7 @@ describe('F15: Manejo de sesión caducada ante error 401', () => {
     borrarToken();
     window.sessionStorage.clear();
     vi.clearAllMocks();
-    vi.spyOn(toast, 'error').mockImplementation(() => '' as any);
+    vi.spyOn(toast, 'error').mockImplementation(() => 'mock-toast-id');
   });
 
   it('un 401 en una consulta protegida con sesión activa cierra la sesión y navega a /login', async () => {
