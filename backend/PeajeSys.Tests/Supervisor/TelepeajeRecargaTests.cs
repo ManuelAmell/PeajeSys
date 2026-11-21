@@ -135,6 +135,11 @@ public class TelepeajeRecargaTests
                 FechaHora = DateTime.UtcNow
             });
         }
+
+        public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [Fact]
