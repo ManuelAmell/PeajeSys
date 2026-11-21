@@ -77,8 +77,8 @@ Valida credenciales de acceso para recaudadores, supervisores y administradores.
 - **Cuerpo de la petición**:
 ```json
 {
-  "codigo": "EMP-001",
-  "clave": "Turno123*"
+  "codigo": "SUP-001",
+  "clave": "Samuel2026*"
 }
 ```
 - **Respuesta 200 OK (Recaudador con turno abierto)**:
