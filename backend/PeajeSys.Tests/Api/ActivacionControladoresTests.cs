@@ -35,7 +35,10 @@ public class ActivacionControladoresTests : IClassFixture<PeajeSysApiFactory>
         var tipo = TiposControlador().Single(t => t.Name == nombre);
         using var scope = _fabrica.Services.CreateScope();
 
-        var instancia = ActivatorUtilities.CreateInstance(scope.ServiceProvider, tipo);
+        // Es lo mismo que hace MVC (DefaultControllerActivator): CreateFactory valida los
+        // constructores y es la llamada que falla con "Multiple constructors accepting...".
+        var fabricaControlador = ActivatorUtilities.CreateFactory(tipo, Type.EmptyTypes);
+        var instancia = fabricaControlador(scope.ServiceProvider, null);
 
         Assert.IsType(tipo, instancia);
     }
