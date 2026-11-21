@@ -81,16 +81,16 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
     expect(errores).toEqual([]);
   });
 
-  test('1.5 ADMIN-01 entra a la administración', async ({ page }) => {
+  test('1.5 ADM-001 entra a la administración', async ({ page }) => {
     const errores = escucharConsola(page);
     await page.goto('/login');
 
-    await page.fill('#lg-codigo', 'ADMIN-01');
+    await page.fill('#lg-codigo', 'ADM-001');
     await page.fill('#lg-clave', 'admin123');
     await page.click('button[type="submit"]');
 
     // Muestra tarjeta «Ir a …»
-    await expect(page.locator('text=Hola, Administración')).toBeVisible();
+    await expect(page.locator('text=Hola, Manuel Amell')).toBeVisible();
     const btnIr = page.locator('button', { hasText: /Ir a la administración/i });
     await expect(btnIr).toBeVisible();
     await btnIr.click();

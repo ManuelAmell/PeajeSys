@@ -123,12 +123,12 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
     ).toBeInTheDocument();
   });
 
-  it('ADMIN-01 administrador entra y va a /admin', async () => {
-    const usuario = await escribirCredenciales('ADMIN-01', 'prueba');
+  it('ADM-001 administrador entra y va a /admin', async () => {
+    const usuario = await escribirCredenciales('ADM-001', 'prueba');
 
     const tarjeta = await screen.findByRole('status');
-    expect(tarjeta).toHaveTextContent('Hola, Administración');
-    expect(tarjeta).toHaveTextContent('Administrador · ADMIN-01');
+    expect(tarjeta).toHaveTextContent('Hola, Manuel Amell');
+    expect(tarjeta).toHaveTextContent('Administrador · ADM-001');
 
     await usuario.click(
       screen.getByRole('button', { name: 'Ir a la administración' }),

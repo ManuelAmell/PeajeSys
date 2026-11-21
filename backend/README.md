@@ -80,7 +80,7 @@ Una vez iniciada la API:
 
 > Ejecuta siempre `dotnet run` desde `backend/PeajeSys.Api` (no con `--project` desde otra carpeta): así se cargan `appsettings.json` y el perfil de `Properties/launchSettings.json`, que fija el entorno `Development` y el puerto `5080`.
 
-> Con `dotnet run` (perfil de `launchSettings.json`, entorno `Development`) los usuarios semilla EMP-001…EMP-010 y ADM-001 entran con la contraseña de demo `Turno123*` (`Security:DefaultDevPassword`). En cualquier otro entorno quedan deshabilitados.
+> Los usuarios de prueba viven en la base de datos con su contraseña cifrada (hash BCrypt hecho con `BCrypt.Net-Next`, BCrypt estándar compatible con pgcrypto). El login valida solo contra la tabla `operador`: consulta la sección «Usuarios de prueba» del [README raíz](../README.md#-usuarios-de-prueba).
 
 ### 4.3 Configuración de la clave JWT
 

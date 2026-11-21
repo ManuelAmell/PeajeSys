@@ -67,25 +67,8 @@ export const authHandlers = [
       );
     }
 
-    // Caso especial: ADMIN-01 (Rol exclusivo de frontend, no existe en la base de datos relacional)
-    if (codigo === 'ADMIN-01') {
-      return HttpResponse.json(
-        {
-          token: tokenFalso('ADMIN-01'),
-          usuario: {
-            id: 'ADMIN-01',
-            codigo: 'ADMIN-01',
-            nombre: 'Administración',
-            rol: 'ADMINISTRADOR',
-            rol_txt: 'Administrador',
-            destino: '/admin',
-            destino_txt: 'Ir a la administración',
-          },
-        },
-        { status: 200 },
-      );
-    }
-
+    // En modo mocks no se verifica la contraseña: MSW no puede comprobar BCrypt sin dependencias
+    // nuevas, así que cualquier contraseña no vacía se acepta (la API real valida el hash de la BD).
     const db = getDb();
     const emp = db.operadores.find((o) => o.codigo_empleado.toUpperCase() === codigo);
 
@@ -119,6 +102,26 @@ export const authHandlers = [
 
     const nombreCompleto = `${emp.nombres} ${emp.apellidos}`;
     const nombreCorto = nombreCompleto.split(' ').slice(0, 2).join(' ');
+
+    // Rol: ADMINISTRADOR (ADM-001 de la semilla)
+    if (emp.rol === 'ADMINISTRADOR') {
+      return HttpResponse.json(
+        {
+          token: tokenFalso(String(emp.id_operador)),
+          usuario: {
+            id: String(emp.id_operador),
+            codigo: emp.codigo_empleado,
+            nombre: nombreCorto,
+            nombre_completo: nombreCompleto,
+            rol: 'ADMINISTRADOR',
+            rol_txt: 'Administrador',
+            destino: '/admin',
+            destino_txt: 'Ir a la administración',
+          },
+        },
+        { status: 200 },
+      );
+    }
 
     // Rol: RECAUDADOR -> verificar si tiene turno abierto
     if (emp.rol === 'RECAUDADOR') {

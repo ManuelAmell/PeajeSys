@@ -66,8 +66,10 @@ CREATE TABLE OPERADOR (
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     codigo_empleado VARCHAR(20) NOT NULL UNIQUE,
-    rol VARCHAR(30) NOT NULL CHECK (rol IN ('RECAUDADOR', 'SUPERVISOR')),
-    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO', 'INACTIVO'))
+    rol VARCHAR(30) NOT NULL CHECK (rol IN ('RECAUDADOR', 'SUPERVISOR', 'ADMINISTRADOR')),
+    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO', 'INACTIVO')),
+    -- Hash BCrypt de la contrasena. NULL significa que el operador no puede iniciar sesion.
+    password_hash VARCHAR(100) NULL
 );
 
 -- TABLA 4: TURNO

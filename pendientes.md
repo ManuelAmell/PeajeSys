@@ -92,7 +92,8 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
   - [x] Retirar la sobrecarga sin uso de `GenerateToken`.
   - [x] Una sola validación del token por petición (handler de autenticación).
   - [x] Los errores de arranque de la API ya no se silencian (código de salida distinto de 0).
-  - [x] Usuarios semilla solo en entorno Development.
+  - [x] Usuarios del equipo en la base de datos con contraseña BCrypt; sin usuarios ni contraseñas fijos en el código.
+- [ ] Regenerar `Diccionario_Datos_PeajeSys.pdf` (en `database/01_Modelado` y `docs/entregas`) con la columna `OPERADOR.password_hash` y el rol `ADMINISTRADOR`.
 - [ ] **Prueba de integración End-to-End**:
   - Levantar la base de datos ejecutando `00_Master_PeajeSys.sql` en PostgreSQL local.
   - Iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api` y `dotnet run`; entorno Development, puerto 5080; no requiere configuración).

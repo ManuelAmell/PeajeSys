@@ -93,24 +93,24 @@ describe('Página de inicio de sesión (routes.tsx)', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        'Simulación sin backend: cualquier contraseña sirve. Los empleados salen del DML del Avance 2.',
+        'Simulación sin backend: cualquier contraseña sirve. Los usuarios son los del equipo, cargados en la base de datos.',
       ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
-        name: /EMP-002 · María Fernanda López Recaudadora con el turno 9 abierto/,
+        name: /REC-001 · Alex Florez Recaudador/,
       }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', {
-        name: /ADMIN-01 · Administración Usuario solo del front/,
+        name: /ADM-001 · Manuel Amell Administrador/,
       }),
     ).toBeInTheDocument();
 
     await usuario.click(
-      screen.getByRole('button', { name: /EMP-002 · María Fernanda López/ }),
+      screen.getByRole('button', { name: /SUP-001 · Samuel Otero/ }),
     );
-    expect(screen.getByLabelText('Código de empleado')).toHaveValue('EMP-002');
+    expect(screen.getByLabelText('Código de empleado')).toHaveValue('SUP-001');
     expect(screen.getByLabelText('Contraseña')).toHaveValue('prueba');
   });
 
@@ -122,7 +122,7 @@ describe('Página de inicio de sesión (routes.tsx)', () => {
       'Terminal de cobro',
     ],
     ['EMP-003', 'Juan David Rodríguez Silva', 'SUPERVISOR', 'Supervisión'],
-    ['ADMIN-01', 'Administración', 'ADMIN', 'Administración'],
+    ['ADM-001', 'Administración', 'ADMIN', 'Administración'],
   ] as const)(
     'si ya hay sesión, /login redirige a la página del rol (%s)',
     (codigo, nombre, rol, tituloDestino) => {

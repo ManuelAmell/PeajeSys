@@ -32,7 +32,7 @@ public class AuthControllerTests
             if (codigo == "EMP-999")
                 throw new NotFoundException("EMPLEADO_NO_ENCONTRADO", "Empleado no registrado en el sistema.");
 
-            if (password != "Turno123*")
+            if (password != "ClaveDePrueba2026*")
                 throw new UnauthorizedException("CREDENCIALES_INVALIDAS", "Codigo de empleado o contrasena incorrectos.");
 
             var response = new LoginResponseDto
@@ -98,7 +98,7 @@ public class AuthControllerTests
         var request = new LoginRequestDto
         {
             CodigoEmpleado = "EMP-001",
-            Password = "Turno123*"
+            Password = "ClaveDePrueba2026*"
         };
 
         // Act
@@ -119,7 +119,7 @@ public class AuthControllerTests
         var request = new LoginRequestDto
         {
             CodigoEmpleado = "EMP-009",
-            Password = "Turno123*"
+            Password = "ClaveDePrueba2026*"
         };
 
         // Act & Assert
@@ -151,7 +151,7 @@ public class AuthControllerTests
         var request = new LoginRequestDto
         {
             Codigo = "ADM-001",
-            Clave = "Turno123*"
+            Clave = "ClaveDePrueba2026*"
         };
 
         // Act

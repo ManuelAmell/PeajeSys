@@ -44,6 +44,8 @@ PeajeSys/database
 
 ---
 
+> **Usuarios de prueba (tabla `OPERADOR`)**: `OPERADOR` incluye la columna `password_hash VARCHAR(100) NULL` (hash BCrypt; NULL = el operador no puede iniciar sesión) y el rol `ADMINISTRADOR`. El DML carga los usuarios del equipo (ADM-001, SUP-001, REC-001, REC-002) con su hash; las contraseñas están en el README raíz. El diccionario de datos en PDF aún no refleja estos cambios (ver `pendientes.md`).
+
 ## 2. Instrucciones y Orden Exacto de Ejecución
 
 ### Opción A: Reconstrucción Completa con Script Maestro (Recomendada)
