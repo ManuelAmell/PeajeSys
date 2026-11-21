@@ -1,0 +1,23 @@
+{
+  "name": "peajesys",
+  "private": true,
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "postinstall": "pnpm --dir frontend install --frozen-lockfile",
+    "dev": "concurrently -k -n api,web -c blue,green \"pnpm:api\" \"pnpm:web\"",
+    "dev:mocks": "pnpm --dir frontend dev:mocks",
+    "api": "cd backend/PeajeSys.Api && dotnet run",
+    "web": "pnpm --dir frontend dev",
+    "db": "docker compose up -d",
+    "db:reset": "docker compose down -v && docker compose up -d",
+    "test": "pnpm test:api && pnpm test:web",
+    "test:api": "dotnet test backend",
+    "test:web": "pnpm --dir frontend test"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.5"
+  }
+}
