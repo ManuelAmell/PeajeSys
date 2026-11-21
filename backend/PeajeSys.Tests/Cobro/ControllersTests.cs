@@ -16,6 +16,19 @@ public class ControllersTests
     // Fakes de Servicio para Pruebas Unitarias
     // ==========================================
 
+    // Los controladores exigen estos servicios; estas pruebas no los usan.
+    private class FakeArqueoServiceMinimo : IArqueoService
+    {
+        public Task<ArqueoTurnoDto> CalcularArqueoAsync(long idTurno, decimal efectivoReportado)
+            => throw new NotSupportedException();
+    }
+
+    private class FakeReporteRecaudoServiceMinimo : IReporteRecaudoService
+    {
+        public Task<RecaudoDiarioDto> ObtenerRecaudoDiarioAsync(int? idEstacion, string? fecha)
+            => throw new NotSupportedException();
+    }
+
     private class FakeTurnoService : ITurnoService
     {
         public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
@@ -151,7 +164,7 @@ public class ControllersTests
     public async Task TurnosController_AbrirTurno_Retorna201ConDatosDeTurno()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
         var request = new AbrirTurnoRequestDto { IdCaseta = 2, IdOperador = 2, FondoInicialCaja = 100000 };
 
         // Act
@@ -169,7 +182,7 @@ public class ControllersTests
     public async Task TurnosController_CerrarTurno_Retorna200ConResumen()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
         var request = new CerrarTurnoRequestDto { TotalDeclaradoCierre = 10000 };
 
         // Act
@@ -187,7 +200,7 @@ public class ControllersTests
     public async Task TurnosController_ListarTurnos_Retorna200ConLista()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
 
         // Act
         var result = await controller.ListarTurnos(null, null, null, null, null);
@@ -202,7 +215,7 @@ public class ControllersTests
     public async Task TurnosController_ObtenerTurnoPorId_Retorna200ConTurno()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo());
 
         // Act
         var result = await controller.ObtenerTurnoPorId(1);
@@ -263,7 +276,7 @@ public class ControllersTests
     public async Task RecaudoController_CobroEfectivoValido_Retorna201ConTransaccionYCambio()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -290,7 +303,7 @@ public class ControllersTests
     public async Task RecaudoController_CobroEnTurnoCerrado_LanzaConflictExceptionTurnoCerrado()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 99, // Turno 99 simula estar cerrado
@@ -310,7 +323,7 @@ public class ControllersTests
     public async Task RecaudoController_EfectivoInsuficiente_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,

@@ -139,6 +139,12 @@ public class MatrizPruebasTests
         }
     }
 
+    private class FakeReporteRecaudoServiceMinimo : IReporteRecaudoService
+    {
+        public Task<RecaudoDiarioDto> ObtenerRecaudoDiarioAsync(int? idEstacion, string? fecha)
+            => throw new NotSupportedException();
+    }
+
     private class FakeArqueoService : IArqueoService
     {
         public Task<ArqueoTurnoDto> CalcularArqueoAsync(long idTurno, decimal efectivoReportado)
@@ -239,7 +245,7 @@ public class MatrizPruebasTests
     public async Task CP03_AbrirTurno_CasetaLibreOperadorHabilitado_RetornaEstadoAbierto()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService());
         var request = new AbrirTurnoRequestDto
         {
             IdCaseta = 1,     // Caseta libre
@@ -271,7 +277,7 @@ public class MatrizPruebasTests
     public async Task CP04_AbrirTurno_CasetaConTurnoActivo_LanzaConflictException409()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService());
         var request = new AbrirTurnoRequestDto
         {
             IdCaseta = 99,    // Caseta 99 simula ya ocupada
@@ -295,7 +301,7 @@ public class MatrizPruebasTests
     public async Task CP05_CobrarEfectivo_MontoSuficiente_RetornaTicketYCambioExacto()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -333,7 +339,7 @@ public class MatrizPruebasTests
     public async Task CP06_CobrarEfectivo_MontoMenorATarifa_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -358,7 +364,7 @@ public class MatrizPruebasTests
     public async Task CP07_CobrarTelepeaje_CuentaActivaSaldoSuficiente_RetornaTicketYSaldoPosterior()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -393,7 +399,7 @@ public class MatrizPruebasTests
     public async Task CP08_CobrarTelepeaje_SaldoInsuficienteOCuentaInactiva_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -423,7 +429,7 @@ public class MatrizPruebasTests
         decimal declarado, string estadoEsperado, decimal diferenciaEsperada)
     {
         // Arrange - Sistema tiene 10.500 de efectivo registrado
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService());
         var arqueoSvc = new FakeArqueoService();
 
         // Act - Cerrar turno y calcular arqueo
@@ -455,7 +461,7 @@ public class MatrizPruebasTests
     public async Task CP10_CobrarEnTurnoCerrado_LanzaConflictException409()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 99,   // 99 simula turno CERRADO
