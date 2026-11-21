@@ -8,6 +8,9 @@ import { clienteHttp } from '../clienteHttp';
 export interface FiltrosAuditoria {
   tipo?: string;
   q?: string;
+  fecha?: string;
+  fecha_inicio?: string;
+  fecha_fin?: string;
 }
 
 export async function obtenerAuditoria(

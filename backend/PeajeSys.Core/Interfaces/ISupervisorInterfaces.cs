@@ -27,13 +27,16 @@ public interface IAuditoriaService
 
     Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
         string? fecha,
-        DateTime? fechaInicio,
-        DateTime? fechaFin,
+        string? fechaInicio,
+        string? fechaFin,
         string? tipoOperacion,
         string? usuario,
         int page = 1,
         int limit = 50)
-        => ListarAuditoriaAsync(fechaInicio, fechaFin, tipoOperacion, usuario, page, limit);
+        => ListarAuditoriaAsync(
+            DateTime.TryParse(fechaInicio, out var fi) ? fi : null,
+            DateTime.TryParse(fechaFin, out var ff) ? ff : null,
+            tipoOperacion, usuario, page, limit);
 }
 
 public interface ITelepeajeMonitoreoService
