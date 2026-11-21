@@ -54,6 +54,7 @@ docker compose up -d
 ```
 - La primera vez crea la base `peajesys_db` y carga `00_Master_PeajeSys.sql` automáticamente (tarda un rato).
 - Para saber que terminó: `docker compose ps` debe mostrar el servicio `db` como `healthy`; el progreso se sigue con `docker compose logs -f db`.
+- Si `docker compose ps` muestra el servicio `exited`, revisa `docker compose logs db`, corrige y recarga con `docker compose down -v`.
 - Para entrar a la base: `docker compose exec db psql -U postgres -d peajesys_db`
 - Para reiniciar desde cero (borra los datos y vuelve a cargar el script): `docker compose down -v && docker compose up -d`
 
