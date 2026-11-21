@@ -121,7 +121,7 @@ public class TarifaConfiguration : IEntityTypeConfiguration<Tarifa>
         builder.Property(e => e.IdEstacion).HasColumnName("id_estacion").IsRequired();
         builder.Property(e => e.IdCategoria).HasColumnName("id_categoria").IsRequired();
         builder.Property(e => e.Monto).HasColumnName("monto").HasPrecision(10, 2).IsRequired();
-        builder.Property(e => e.ResolucionLegal).HasColumnName("resolucion_legal").HasMaxLength(50).IsRequired();
+        builder.Property(e => e.ResolucionLegal).HasColumnName("resolucion_legal").HasMaxLength(100).IsRequired();
         builder.Property(e => e.FechaInicioVigencia).HasColumnName("fecha_inicio_vigencia").HasColumnType("date").IsRequired();
         builder.Property(e => e.FechaFinVigencia).HasColumnName("fecha_fin_vigencia").HasColumnType("date");
         builder.Property(e => e.Activa).HasColumnName("activa").IsRequired();

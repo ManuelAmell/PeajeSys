@@ -131,6 +131,38 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     });
 
+builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var campos = new Dictionary<string, string>();
+        foreach (var (key, value) in context.ModelState)
+        {
+            if (value.Errors.Count > 0)
+            {
+                string rawKey = key.StartsWith("$.", StringComparison.Ordinal) ? key[2..] : key;
+                string campoSnake = string.Join('.', rawKey.Split('.').Select(p => JsonNamingPolicy.SnakeCaseLower.ConvertName(p)));
+                string mensajeError = !string.IsNullOrWhiteSpace(value.Errors[0].ErrorMessage)
+                    ? value.Errors[0].ErrorMessage
+                    : value.Errors[0].Exception?.Message ?? "Campo invalido.";
+                campos[campoSnake] = mensajeError;
+            }
+        }
+
+        var envelope = new PeajeSys.Core.DTOs.ErrorEnvelope
+        {
+            Error = new PeajeSys.Core.DTOs.ErrorDetails
+            {
+                Codigo = "ERROR_VALIDACION",
+                Mensaje = "Los datos proporcionados contienen errores de validacion.",
+                Campos = campos.Count > 0 ? campos : null
+            }
+        };
+
+        return new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(envelope);
+    };
+});
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -182,8 +214,8 @@ builder.Services.AddSwaggerGen(c =>
 var app = builder.Build();
 
 // Pipeline HTTP
-app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseSerilogRequestLogging();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
