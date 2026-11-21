@@ -21,16 +21,23 @@ export interface ParametrosRegistroTransaccion extends TransaccionPeajeNueva {
 
 export const esquemaRespuestaRegistroTransaccion = z.object({
   transaccion: esquemaTransaccionPeaje,
-  cambio: z.number().nullable(),
-  saldo_posterior: z.number().nullable(),
-  detalle_telepeaje: esquemaDetallePagoTelepeaje.nullable().optional(),
+  cambio: z.number().nullish(),
+  saldo_posterior: z.number().nullish(),
+  detalle_telepeaje: esquemaDetallePagoTelepeaje.nullish(),
 });
+
+/** La API no devuelve los ids del detalle dentro de la respuesta del cobro. */
+export type DetallePagoTelepeajeRespuesta = Omit<
+  DetallePagoTelepeaje,
+  'id_detalle_telepeaje' | 'id_transaccion'
+> &
+  Partial<Pick<DetallePagoTelepeaje, 'id_detalle_telepeaje' | 'id_transaccion'>>;
 
 export interface RespuestaRegistroTransaccion {
   transaccion: TransaccionPeaje;
-  cambio: number | null;
-  saldo_posterior: number | null;
-  detalle_telepeaje?: DetallePagoTelepeaje | null;
+  cambio?: number | null;
+  saldo_posterior?: number | null;
+  detalle_telepeaje?: DetallePagoTelepeajeRespuesta | null;
 }
 
 export const esquemaRespuestaAnulacionTransaccion = z.object({

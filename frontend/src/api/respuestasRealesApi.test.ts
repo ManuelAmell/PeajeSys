@@ -48,7 +48,9 @@ describe('respuestas reales de la API (claves nulas ausentes)', () => {
         estado_paso: 'APROBADO',
       },
     };
-    expect(esquemaRespuestaRegistroTransaccion.safeParse(real).success).toBe(true);
+    expect(esquemaRespuestaRegistroTransaccion.safeParse(real).success).toBe(
+      true,
+    );
   });
 
   it('cobro con TELEPEAJE sin cambio y con detalle_telepeaje sin ids', () => {
@@ -82,7 +84,9 @@ describe('respuestas reales de la API (claves nulas ausentes)', () => {
         antena_lectora_id: 'ANTENA-01',
       },
     };
-    expect(esquemaRespuestaRegistroTransaccion.safeParse(real).success).toBe(true);
+    expect(esquemaRespuestaRegistroTransaccion.safeParse(real).success).toBe(
+      true,
+    );
   });
 
   it('tarifa sin fecha_fin_vigencia (fecha_inicio_vigencia ya en YYYY-MM-DD)', () => {

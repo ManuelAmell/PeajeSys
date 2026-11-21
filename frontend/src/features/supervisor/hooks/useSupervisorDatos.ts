@@ -123,7 +123,7 @@ export function useSupervisorDatos() {
         pasosEfectivo,
         pasosTexto: formatearMoneda(pasosEfectivo),
         recaudadoTexto: formatearMoneda(t.total_recaudado_efectivo),
-        declaradoTexto: abierto || t.total_declarado_cierre === null
+        declaradoTexto: abierto || t.total_declarado_cierre == null
           ? 'Turno abierto'
           : formatearMoneda(t.total_declarado_cierre),
         diagnostico: arqueo.diagnostico,

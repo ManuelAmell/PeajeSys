@@ -110,8 +110,8 @@ export interface Turno {
   diurno: boolean;
   fondo_inicial_caja: number;
   total_recaudado_efectivo: number;
-  total_declarado_cierre: number | null;
-  diferencia_descuadre: number | null;
+  total_declarado_cierre?: number | null;
+  diferencia_descuadre?: number | null;
   estado: EstadoTurno;
 }
 
@@ -141,7 +141,7 @@ export interface CategoriaVehiculo {
   descripcion: string;
   numero_ejes_min: number;
   numero_ejes_max: number;
-  peso_maximo_ton: number | null;
+  peso_maximo_ton?: number | null;
   activo: boolean;
 }
 
@@ -163,9 +163,9 @@ export interface Tarifa {
   id_estacion: number;
   id_categoria: number;
   monto: number;
-  resolucion_legal: string | null;
+  resolucion_legal?: string | null;
   fecha_inicio_vigencia: string;
-  fecha_fin_vigencia: string | null;
+  fecha_fin_vigencia?: string | null;
   activa: boolean;
 }
 
@@ -186,9 +186,9 @@ export interface TarifaNueva {
 export interface Vehiculo {
   placa: string;
   id_categoria: number;
-  marca: string | null;
-  modelo: string | null;
-  color: string | null;
+  marca?: string | null;
+  modelo?: string | null;
+  color?: string | null;
 }
 
 export interface VehiculoNuevo {
@@ -226,7 +226,7 @@ export interface TransaccionPeaje {
   id_turno: number;
   id_tarifa: number;
   id_categoria: number;
-  placa_detectada: string | null;
+  placa_detectada?: string | null;
   monto_tarifa: number;
   metodo_pago: MetodoPago;
   numero_ticket: string;
@@ -256,7 +256,7 @@ export interface DetallePagoTelepeaje {
   id_cuenta: number;
   saldo_anterior: number;
   saldo_posterior: number;
-  antena_lectora_id: string | null;
+  antena_lectora_id?: string | null;
 }
 
 export interface DetallePagoTelepeajeNuevo {
@@ -277,7 +277,7 @@ export interface AuditoriaTransaccion {
   tipo_operacion: TipoOperacionAuditoria;
   usuario_sistema: string;
   fecha_hora_evento: string;
-  motivo: string | null;
+  motivo?: string | null;
 }
 
 export interface AuditoriaTransaccionNueva {
