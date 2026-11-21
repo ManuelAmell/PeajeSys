@@ -24,17 +24,17 @@ public class UsuariosEquipoSqlTests
         @"\('(?<doc>[^']+)',\s*'(?<nom>[^']+)',\s*'(?<ape>[^']+)',\s*'(?<cod>[^']+)',\s*'(?<rol>[^']+)',\s*'(?<est>[^']+)',\s*'(?<hash>\$2[ab]\$[^']+)'\)",
         RegexOptions.Compiled);
 
+    // Sube hasta la raiz del repo (la carpeta que contiene database/00_Master_PeajeSys.sql).
     private static string RutaRepo(string relativa)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null)
         {
-            var candidata = Path.Combine(dir.FullName, relativa);
-            if (File.Exists(candidata))
-                return candidata;
+            if (File.Exists(Path.Combine(dir.FullName, "database", "00_Master_PeajeSys.sql")))
+                return Path.Combine(dir.FullName, relativa);
             dir = dir.Parent;
         }
-        throw new FileNotFoundException("No se encontro " + relativa + " subiendo desde " + AppContext.BaseDirectory);
+        throw new DirectoryNotFoundException("No se encontro la raiz del repo subiendo desde " + AppContext.BaseDirectory);
     }
 
     private static List<UsuarioSql> Leer(string relativa) =>
