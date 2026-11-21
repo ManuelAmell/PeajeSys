@@ -127,8 +127,9 @@ public class TurnoServiceTests
             return Task.FromResult(turno);
         }
 
-        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
+        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, ActorOperacion actor)
         {
+            int? idOperador = int.TryParse(operador, out var idParseado) ? idParseado : null;
             var resultado = new List<TurnoDto>();
             foreach (var t in _turnos.Values)
             {
