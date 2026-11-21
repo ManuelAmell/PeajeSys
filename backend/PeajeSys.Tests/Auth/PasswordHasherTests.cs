@@ -9,7 +9,7 @@ public class PasswordHasherTests
 
     public PasswordHasherTests()
     {
-        _hasher = new PasswordHasher(costFactor: 12, defaultDevPassword: "Turno123*", usuariosSemillaHabilitados: true);
+        _hasher = new PasswordHasher(costFactor: 12);
     }
 
     [Fact]
@@ -56,73 +56,22 @@ public class PasswordHasherTests
         Assert.False(resultado);
     }
 
-    [Theory]
-    [InlineData("EMP-001")]
-    [InlineData("EMP-002")]
-    [InlineData("EMP-004")]
-    [InlineData("EMP-005")]
-    [InlineData("ADM-001")]
-    public void VerifySeedUser_UsuariosSemillaConClaveDesarrollo_RetornaTrue(string codigoEmpleado)
+    [Fact]
+    public void VerifyPassword_HashGeneradoPorPgcrypto_LoAcepta()
     {
-        // Act
-        bool resultado = _hasher.VerifySeedUser(codigoEmpleado, "Turno123*");
+        // Hash literal producido por PostgreSQL: crypt('Prueba2026*', gen_salt('bf', 12)).
+        // Garantiza que la implementacion BCrypt propia es estandar y compatible con pgcrypto.
+        const string hashPgcrypto = "$2a$12$vZSnXOz/BVv83fhz.QHV4Oxb611ibFKKZbFlZH4YtQwIOTCEh8Sya";
 
-        // Assert
-        Assert.True(resultado, $"El usuario semilla {codigoEmpleado} deberia validarse exitosamente con Turno123*");
-    }
-
-    [Theory]
-    [InlineData("EMP-001")]
-    [InlineData("EMP-002")]
-    [InlineData("ADM-001")]
-    public void VerifySeedUser_ClaveIncorrecta_RetornaFalse(string codigoEmpleado)
-    {
-        // Act
-        bool resultado = _hasher.VerifySeedUser(codigoEmpleado, "ClaveInvalida999");
-
-        // Assert
-        Assert.False(resultado);
+        Assert.True(BCryptImplementation.Verify("Prueba2026*", hashPgcrypto));
+        Assert.True(_hasher.VerifyPassword("Prueba2026*", hashPgcrypto));
+        Assert.False(_hasher.VerifyPassword("prueba2026*", hashPgcrypto));
     }
 
     [Fact]
-    public void VerifySeedUser_UsuarioNoSemilla_RetornaFalse()
+    public void VerifyPassword_HashNuloOVacio_RetornaFalse()
     {
-        // Act
-        bool resultado = _hasher.VerifySeedUser("EMP-999", "Turno123*");
-
-        // Assert
-        Assert.False(resultado);
+        Assert.False(_hasher.VerifyPassword("ClaveSegura2026*", null!));
+        Assert.False(_hasher.VerifyPassword("ClaveSegura2026*", string.Empty));
     }
-
-    [Fact]
-    public void UsuariosSemillaHabilitados_ReflejaElParametroDelConstructor()
-    {
-        Assert.True(_hasher.UsuariosSemillaHabilitados);
-        Assert.False(CrearSinSemilla().UsuariosSemillaHabilitados);
-    }
-
-    [Theory]
-    [InlineData("EMP-001")]
-    [InlineData("EMP-010")]
-    [InlineData("ADM-001")]
-    public void VerifySeedUser_SemillaDeshabilitada_RetornaFalseConClaveDeDemo(string codigoEmpleado)
-    {
-        var hasher = CrearSinSemilla();
-
-        Assert.False(hasher.VerifySeedUser(codigoEmpleado, "Turno123*"));
-    }
-
-    [Fact]
-    public void HashYVerifyPassword_SemillaDeshabilitada_SiguenFuncionando()
-    {
-        var hasher = CrearSinSemilla();
-
-        string hash = hasher.HashPassword("ClaveSegura2026*");
-
-        Assert.True(hasher.VerifyPassword("ClaveSegura2026*", hash));
-        Assert.False(hasher.VerifyPassword("otra", hash));
-    }
-
-    private static PasswordHasher CrearSinSemilla() =>
-        new(costFactor: 4, defaultDevPassword: "Turno123*", usuariosSemillaHabilitados: false);
 }
