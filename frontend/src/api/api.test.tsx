@@ -149,7 +149,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
     it('login autentica credenciales válidas y retorna usuario con turno abierto', async () => {
       const respuesta = await login({
         codigo: 'EMP-002',
-        clave: 'Turno123*',
+        clave: 'Samuel2026*',
       });
 
       expect(respuesta.usuario.codigo).toBe('EMP-002');
@@ -340,7 +340,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
       result.current.mutate({
         codigo: 'EMP-002',
-        clave: 'Turno123*',
+        clave: 'Samuel2026*',
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));

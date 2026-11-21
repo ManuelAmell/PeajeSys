@@ -100,8 +100,10 @@ CREATE TABLE OPERADOR (
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     codigo_empleado VARCHAR(20) NOT NULL UNIQUE,
-    rol VARCHAR(30) NOT NULL CHECK (rol IN ('RECAUDADOR', 'SUPERVISOR')),
-    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO', 'INACTIVO'))
+    rol VARCHAR(30) NOT NULL CHECK (rol IN ('RECAUDADOR', 'SUPERVISOR', 'ADMINISTRADOR')),
+    estado VARCHAR(20) NOT NULL DEFAULT 'ACTIVO' CHECK (estado IN ('ACTIVO', 'INACTIVO')),
+    -- Hash BCrypt de la contrasena. NULL significa que el operador no puede iniciar sesion.
+    password_hash VARCHAR(100) NULL
 );
 
 -- TABLA 4: TURNO
@@ -283,6 +285,15 @@ INSERT INTO OPERADOR (numero_documento, nombres, apellidos, codigo_empleado, rol
 ('1047999000', 'Diana Marcela', 'Suárez Ruiz', 'EMP-008', 'RECAUDADOR', 'ACTIVO'),
 ('1047123987', 'Jorge Luis', 'Vargas Romero', 'EMP-009', 'RECAUDADOR', 'INACTIVO'),
 ('1047456123', 'Claudia Patricia', 'Gutiérrez Polo', 'EMP-010', 'RECAUDADOR', 'ACTIVO');
+
+-- 3.1 Usuarios del equipo (con acceso al sistema). password_hash es BCrypt (coste 12);
+-- las contrasenas de prueba estan documentadas en el README raiz (seccion "Usuarios de prueba").
+-- EMP-001 a EMP-010 son datos historicos sin contrasena (password_hash NULL): no pueden iniciar sesion.
+INSERT INTO OPERADOR (numero_documento, nombres, apellidos, codigo_empleado, rol, estado, password_hash) VALUES
+('1000000001', 'Manuel', 'Amell', 'ADM-001', 'ADMINISTRADOR', 'ACTIVO', '$2a$12$2UMb0Tq2fZdus2W5SMD9NeTIOQMZ.Ajjz8haPu9pSEExPx8AahdPy'),
+('1000000002', 'Samuel', 'Otero', 'SUP-001', 'SUPERVISOR', 'ACTIVO', '$2a$12$lPx4Ahvqf1beuXGikrcp/.cfGgyhaT7SPNwQ1epnhlmlerIULWmca'),
+('1000000003', 'Alex', 'Florez', 'REC-001', 'RECAUDADOR', 'ACTIVO', '$2a$12$RrFlJM6LMAkJMpbUqwUl4uNLRn2YWRcwN3QxtIXsCdYFiFC2XRZh6'),
+('1000000004', 'Camilo', 'Guzmán', 'REC-002', 'RECAUDADOR', 'ACTIVO', '$2a$12$mvbqdoO3JMq427rfQzQ5Cu1SLNdlYh4rFX56k0aRSzB9kdbmtJfg.');
 
 -- 4. TABLA: CATEGORIA_VEHICULO (Clasificación oficial colombiana Mintransporte - 7 registros)
 INSERT INTO CATEGORIA_VEHICULO (codigo, descripcion, numero_ejes_min, numero_ejes_max, peso_maximo_ton, activo) VALUES

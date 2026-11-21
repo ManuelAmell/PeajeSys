@@ -121,7 +121,7 @@ public class CrearOperadorRequestDto
 
     public string ObtenerDocumento() => (NumeroDocumento ?? DocumentoIdentidad ?? string.Empty).Trim();
     public string ObtenerCodigo() => (CodigoEmpleado ?? Codigo ?? string.Empty).Trim().ToUpperInvariant();
-    public string ObtenerPassword() => Password ?? Clave ?? "Turno123*";
+    public string ObtenerPassword() => Password ?? Clave ?? string.Empty;
 }
 
 public class ActualizarEstadoRequestDto

@@ -124,10 +124,11 @@ describe('Esquemas Zod y restricciones DDL (CHECKs y límites)', () => {
       estado: 'ACTIVO' as const,
     };
 
-    it('CHECK rol IN (RECAUDADOR, SUPERVISOR)', () => {
+    it('CHECK rol IN (RECAUDADOR, SUPERVISOR, ADMINISTRADOR)', () => {
       expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'RECAUDADOR' }).success).toBe(true);
       expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'SUPERVISOR' }).success).toBe(true);
-      expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'ADMINISTRADOR' }).success).toBe(false);
+      expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'ADMINISTRADOR' }).success).toBe(true);
+      expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'GERENTE' }).success).toBe(false);
     });
 
     it('CHECK estado IN (ACTIVO, INACTIVO)', () => {

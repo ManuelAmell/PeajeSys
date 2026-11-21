@@ -231,11 +231,6 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
           {errorAccion}
         </p>
       )}
-
-      <p className="m-0 text-[15px] text-texto-2">
-        El usuario ADMIN-01 que usa esta vista es solo del front: no existe en
-        la tabla OPERADOR del DDL (dato de prueba).
-      </p>
     </section>
   );
 }
