@@ -19,8 +19,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PUERTO = 5183;
-const SALIDA = '/home/amell/orca/reportes/capturas/B2';
-const CHROMIUM = process.env.PLAYWRIGHT_CHROMIUM_PATH || '/usr/bin/chromium';
+// Salida relativa a la raiz del frontend; sobreescribible con CAPTURAS_SALIDA.
+const SALIDA =
+  process.env.CAPTURAS_SALIDA ||
+  path.resolve(__dirname, '..', '..', '..', 'capturas', 'B2');
+// Chromium del sistema solo si existe; si no, Playwright usa su navegador propio.
+const CHROMIUM =
+  process.env.PLAYWRIGHT_CHROMIUM_PATH ||
+  (fs.existsSync('/usr/bin/chromium') ? '/usr/bin/chromium' : undefined);
 
 interface Escenario {
   nombre: string;
