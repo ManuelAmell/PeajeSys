@@ -79,7 +79,8 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
   - Suite de 166 pruebas unitarias e integración con xUnit, Moq y FluentAssertions (**166/166 PASS**, cobertura generada en `coverage.cobertura.xml`).
   - Compatible con SDK .NET 11 y .NET 8 LTS mediante `Directory.Build.props` (`RollForward=Major`).
 - [x] **Clases de dominio complementarias**:
-  - Clases base en `backend/peaje/`, `backend/user/`, `backend/operacion/`, `backend/telePeaje/`, `backend/reportes/`.
+  - Clases base en `backend/PeajeSys.Dominio/` (`peaje/`, `user/`, `operacion/`, `telePeaje/`, `reportes/`).
+  - El proyecto `PeajeSys.Dominio` forma parte de `PeajeSys.sln`.
 
 ---
 
