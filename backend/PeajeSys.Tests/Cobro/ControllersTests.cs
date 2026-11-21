@@ -114,16 +114,8 @@ public class ControllersTests
                 });
             }
 
-            // Vehiculo no registrado: retorna valores por defecto con CAT_I y sin TAG
-            return Task.FromResult(new VehiculoConsultaDto
-            {
-                Placa = norm,
-                Encontrado = false,
-                IdCategoria = 1,
-                CategoriaCodigo = "CAT_I",
-                CategoriaDescripcion = "Automoviles, camperos y camionetas",
-                TieneTag = false
-            });
+            // Vehiculo no registrado: lanza NotFoundException con codigo VEHICULO_NO_ENCONTRADO
+            throw new NotFoundException("VEHICULO_NO_ENCONTRADO", $"Vehiculo con placa {norm} no encontrado en el sistema.");
         }
     }
 
@@ -250,22 +242,15 @@ public class ControllersTests
     }
 
     [Fact]
-    public async Task VehiculosController_ConsultarVehiculoNoRegistrado_RetornaCategoriaSugeridaSinTag()
+    public async Task VehiculosController_ConsultarVehiculoNoRegistrado_LanzaNotFoundException()
     {
         // Arrange
         var controller = new VehiculosController(new FakeVehiculoService());
 
-        // Act
-        var result = await controller.ConsultarVehiculo("XYZ999");
-
-        // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var vehiculo = Assert.IsType<VehiculoConsultaDto>(okResult.Value);
-        Assert.Equal("XYZ999", vehiculo.Placa);
-        Assert.False(vehiculo.Encontrado);
-        Assert.False(vehiculo.TieneTag);
-        Assert.Equal(1, vehiculo.IdCategoria);
-        Assert.Equal("CAT_I", vehiculo.CategoriaCodigo);
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => controller.ConsultarVehiculo("XYZ999"));
+        Assert.Equal("VEHICULO_NO_ENCONTRADO", ex.Codigo);
+        Assert.Equal(404, ex.StatusCode);
     }
 
     // ==========================================
