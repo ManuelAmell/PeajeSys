@@ -10,6 +10,8 @@ public interface ITurnoService
     Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request);
     Task<TurnoDto> ObtenerTurnoAsync(long idTurno);
     Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado);
+    Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha = null, int? idEstacion = null)
+        => ListarTurnosAsync(idCaseta, int.TryParse(operador, out var id) ? id : null, estado);
 }
 
 public interface IVehiculoService

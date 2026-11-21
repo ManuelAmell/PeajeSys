@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -220,9 +221,23 @@ public class AuditoriaService : IAuditoriaService
         _context = context;
     }
 
-    public async Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
+    public Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
         DateTime? fechaInicio,
         DateTime? fechaFin,
+        string? tipoOperacion,
+        string? usuario,
+        int page = 1,
+        int limit = 50)
+    {
+        string? fiStr = fechaInicio?.ToString("o");
+        string? ffStr = fechaFin?.ToString("o");
+        return ListarAuditoriaAsync(null, fiStr, ffStr, tipoOperacion, usuario, page, limit);
+    }
+
+    public async Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
+        string? fecha,
+        string? fechaInicio,
+        string? fechaFin,
         string? tipoOperacion,
         string? usuario,
         int page = 1,
@@ -232,16 +247,73 @@ public class AuditoriaService : IAuditoriaService
         if (limit < 1) limit = 50;
         if (limit > 500) limit = 500;
 
-        var query = _context.AuditoriasTransaccion.Include(a => a.Transaccion).AsQueryable();
+        DateTime? inicioUtc = null;
+        DateTime? finUtc = null;
+        bool finExclusivo = false;
 
-        if (fechaInicio.HasValue)
+        if (!string.IsNullOrWhiteSpace(fecha))
         {
-            query = query.Where(a => a.FechaHoraEvento >= fechaInicio.Value);
+            if (!DateOnly.TryParseExact(fecha.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dia) && !DateOnly.TryParse(fecha.Trim(), out dia))
+            {
+                throw new AppException("FILTRO_INVALIDO", "La fecha proporcionada no es valida. Formato esperado: YYYY-MM-DD.", 400);
+            }
+            (inicioUtc, finUtc) = ZonaHorariaApp.RangoUtcDelDia(dia);
+            finExclusivo = true;
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(fechaInicio))
+            {
+                if (DateOnly.TryParseExact(fechaInicio.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var di))
+                {
+                    inicioUtc = ZonaHorariaApp.RangoUtcDelDia(di).InicioUtc;
+                }
+                else if (DateTime.TryParse(fechaInicio.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dtI))
+                {
+                    inicioUtc = ZonaHorariaApp.AUtc(dtI);
+                }
+                else
+                {
+                    throw new AppException("FILTRO_INVALIDO", "La fecha de inicio no es valida.", 400);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(fechaFin))
+            {
+                if (DateOnly.TryParseExact(fechaFin.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var df))
+                {
+                    finUtc = ZonaHorariaApp.RangoUtcDelDia(df).FinUtc;
+                    finExclusivo = true;
+                }
+                else if (DateTime.TryParse(fechaFin.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dtF))
+                {
+                    finUtc = ZonaHorariaApp.AUtc(dtF);
+                    finExclusivo = false;
+                }
+                else
+                {
+                    throw new AppException("FILTRO_INVALIDO", "La fecha de fin no es valida.", 400);
+                }
+            }
         }
 
-        if (fechaFin.HasValue)
+        var query = _context.AuditoriasTransaccion.Include(a => a.Transaccion).AsQueryable();
+
+        if (inicioUtc.HasValue)
         {
-            query = query.Where(a => a.FechaHoraEvento <= fechaFin.Value);
+            query = query.Where(a => a.FechaHoraEvento >= inicioUtc.Value);
+        }
+
+        if (finUtc.HasValue)
+        {
+            if (finExclusivo)
+            {
+                query = query.Where(a => a.FechaHoraEvento < finUtc.Value);
+            }
+            else
+            {
+                query = query.Where(a => a.FechaHoraEvento <= finUtc.Value);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(tipoOperacion))

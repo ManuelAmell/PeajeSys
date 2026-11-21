@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -113,18 +114,66 @@ public class TurnoService : ITurnoService
         return MapearTurno(turno);
     }
 
-    public async Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
+    public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
     {
-        var query = _context.Turnos.AsQueryable();
+        return ListarTurnosAsync(idCaseta, idOperador?.ToString(), estado, null, null);
+    }
+
+    public async Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha = null, int? idEstacion = null)
+    {
+        if (idCaseta.HasValue && idCaseta.Value <= 0)
+        {
+            throw new AppException("FILTRO_INVALIDO", "El identificador de caseta no es valido.", 400);
+        }
+
+        if (idEstacion.HasValue && idEstacion.Value <= 0)
+        {
+            throw new AppException("FILTRO_INVALIDO", "El identificador de estacion no es valido.", 400);
+        }
+
+        DateTime? fechaFiltroDt = null;
+        if (!string.IsNullOrWhiteSpace(fecha))
+        {
+            if (!DateOnly.TryParseExact(fecha.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dia) && !DateOnly.TryParse(fecha.Trim(), out dia))
+            {
+                throw new AppException("FILTRO_INVALIDO", "La fecha proporcionada no es valida. Formato esperado: YYYY-MM-DD.", 400);
+            }
+            fechaFiltroDt = dia.ToDateTime(TimeOnly.MinValue);
+        }
+
+        var query = _context.Turnos
+            .Include(t => t.Caseta)
+            .Include(t => t.Operador)
+            .AsQueryable();
 
         if (idCaseta.HasValue)
         {
             query = query.Where(t => t.IdCaseta == idCaseta.Value);
         }
 
-        if (idOperador.HasValue)
+        if (idEstacion.HasValue)
         {
-            query = query.Where(t => t.IdOperador == idOperador.Value);
+            query = query.Where(t => t.Caseta != null && t.Caseta.IdEstacion == idEstacion.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(operador))
+        {
+            string opTrim = operador.Trim();
+            string opUpper = opTrim.ToUpperInvariant();
+            if (int.TryParse(opTrim, out int opId))
+            {
+                query = query.Where(t => t.IdOperador == opId || (t.Operador != null && t.Operador.CodigoEmpleado.ToUpper() == opUpper));
+            }
+            else
+            {
+                query = query.Where(t => t.Operador != null && t.Operador.CodigoEmpleado.ToUpper() == opUpper);
+            }
+        }
+
+        if (fechaFiltroDt.HasValue)
+        {
+            var f = fechaFiltroDt.Value;
+            query = query.Where(t => t.Fecha == f);
         }
 
         if (!string.IsNullOrWhiteSpace(estado))

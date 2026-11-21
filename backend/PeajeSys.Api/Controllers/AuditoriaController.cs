@@ -25,19 +25,20 @@ public class AuditoriaController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<AuditoriaItemDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<AuditoriaItemDto>>> ListarAuditoria(
-        [FromQuery] DateTime? fecha_inicio,
-        [FromQuery] DateTime? fecha_fin,
-        [FromQuery] string? tipo,
-        [FromQuery] string? tipo_operacion,
-        [FromQuery] string? usuario,
-        [FromQuery] string? q,
+        [FromQuery] string? fecha_inicio = null,
+        [FromQuery] string? fecha_fin = null,
+        [FromQuery] string? tipo = null,
+        [FromQuery] string? tipo_operacion = null,
+        [FromQuery] string? usuario = null,
+        [FromQuery] string? q = null,
+        [FromQuery] string? fecha = null,
         [FromQuery] int page = 1,
         [FromQuery] int limit = 50)
     {
         string? operacionFiltro = tipo_operacion ?? tipo;
         string? usuarioFiltro = usuario ?? q;
 
-        var items = await _auditoriaService.ListarAuditoriaAsync(fecha_inicio, fecha_fin, operacionFiltro, usuarioFiltro, page, limit);
+        var items = await _auditoriaService.ListarAuditoriaAsync(fecha, fecha_inicio, fecha_fin, operacionFiltro, usuarioFiltro, page, limit);
         return Ok(items);
     }
 }
