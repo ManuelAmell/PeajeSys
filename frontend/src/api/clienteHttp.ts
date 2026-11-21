@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { borrarToken, obtenerToken } from './sesionToken';
 
 export interface DetalleErrorApi {
   codigo: string;
@@ -89,10 +90,19 @@ export async function clienteHttp<T>(
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
-  const finalHeaders = {
+  const finalHeaders: Record<string, string> = {
     ...defaultHeaders,
     ...((headers as Record<string, string>) || {}),
   };
+
+  // Token de sesión, salvo que el llamador ya pase su propia cabecera Authorization
+  const token = obtenerToken();
+  const traeAuthorization = Object.keys(finalHeaders).some(
+    (k) => k.toLowerCase() === 'authorization',
+  );
+  if (token && !traeAuthorization) {
+    finalHeaders.Authorization = `Bearer ${token}`;
+  }
 
   let response: Response;
   try {
@@ -110,6 +120,10 @@ export async function clienteHttp<T>(
 
   // Manejo de respuestas no exitosas (4xx / 5xx)
   if (!response.ok) {
+    // Un 401 con token enviado significa sesión caducada o inválida
+    if (response.status === 401 && token && !traeAuthorization) {
+      borrarToken();
+    }
     let errorData: RespuestaErrorApi | null = null;
     try {
       errorData = (await response.json()) as RespuestaErrorApi;

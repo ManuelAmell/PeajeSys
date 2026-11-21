@@ -107,9 +107,9 @@ export function FormularioLogin({ precarga = null }: FormularioLoginProps) {
     return (
       <TarjetaIrA
         nombre={ingresado.nombre}
-        rolTxt={ingresado.rolTxt}
+        rolTxt={ingresado.rol_txt}
         codigo={ingresado.codigo}
-        destinoTxt={ingresado.destinoTxt}
+        destinoTxt={ingresado.destino_txt}
         alNavegar={() => navigate(ingresado.destino)}
         alVolver={volver}
       />
