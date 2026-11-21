@@ -96,7 +96,7 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 - [ ] **Prueba de integración End-to-End**:
   - Levantar la base de datos ejecutando `00_Master_PeajeSys.sql` en PostgreSQL local.
   - Iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api` y `dotnet run`; entorno Development, puerto 5080; no requiere configuración).
-  - Cambiar `VITE_USAR_MOCKS=false` en `frontend/.env` para validar la comunicación real Frontend $\leftrightarrow$ Backend $\leftrightarrow$ PostgreSQL.
+  - Desde la raíz: `pnpm install` y `pnpm dev` (API + frontend contra la BD real; `pnpm dev:mocks` para usar solo los mocks).
 - [ ] **Preparación de la sustentación final**:
   - Revisar diapositivas de presentación basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.
   - Demostración en vivo de los 3 roles en el frontend y la ejecución de los triggers / funciones en PostgreSQL.
