@@ -51,6 +51,8 @@ export const esquemaCaseta = z.object({
   numero_carril: z.number().int().gt(0, 'El número de carril debe ser mayor que 0'),
   tipo_carril: esquemaTipoCarril,
   estado: esquemaEstadoCaseta,
+  /** Calculado por la API: true si la caseta tiene un turno ABIERTO. */
+  ocupada: z.boolean().optional(),
 });
 
 export const esquemaCasetaNueva = z.object({

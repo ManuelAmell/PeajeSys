@@ -6,7 +6,7 @@ import { LayoutApp } from '@/components/layout/LayoutApp';
 import { Button } from '@/components/ui/button';
 import { EstadoCargando, EstadoError } from '@/components/feedback/EstadoDatos';
 import { useCasetas, useEstaciones } from '@/api/recursos/estaciones';
-import { useTurnos, useAbrirTurno } from '@/api/recursos/turnos';
+import { useAbrirTurno } from '@/api/recursos/turnos';
 import { ErrorApi } from '@/api/clienteHttp';
 import { formatearMoneda } from '@/lib/formato';
 import type { Caseta } from '@/types';
@@ -34,9 +34,6 @@ export function AbrirTurnoPage() {
     isError: errorCasetas,
     refetch: reintentarCasetas,
   } = useCasetas();
-  const { data: turnosAbiertos, isLoading: cargandoTurnos } = useTurnos({
-    estado: 'ABIERTO',
-  });
 
   const mutacionAbrir = useAbrirTurno();
 
@@ -45,14 +42,12 @@ export function AbrirTurnoPage() {
     return casetas.filter((c) => c.estado === 'OPERATIVA');
   }, [casetas]);
 
-  const casetasOcupadasIds = useMemo(() => {
-    if (!turnosAbiertos) return new Set<number>();
-    return new Set(
-      turnosAbiertos
-        .filter((t) => t.estado === 'ABIERTO')
-        .map((t) => t.id_caseta),
-    );
-  }, [turnosAbiertos]);
+  // La ocupación la calcula la API (campo ocupada de /casetas): no se listan turnos ajenos.
+  const casetasOcupadasIds = useMemo(
+    () =>
+      new Set((casetas ?? []).filter((c) => c.ocupada).map((c) => c.id_caseta)),
+    [casetas],
+  );
 
   const casetasPorEstacion = useMemo(() => {
     const mapa = new Map<
@@ -114,8 +109,7 @@ export function AbrirTurnoPage() {
   const fondoActual = watch('fondo_inicial_caja');
   const diurnoActual = watch('diurno');
 
-  const cargandoRecursos =
-    cargandoEstaciones || cargandoCasetas || cargandoTurnos;
+  const cargandoRecursos = cargandoEstaciones || cargandoCasetas;
   const hayErrorRecursos = Boolean(errorEstaciones || errorCasetas);
 
   const enviar = async (datos: FormularioAbrirTurnoValores) => {

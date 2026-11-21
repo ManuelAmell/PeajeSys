@@ -35,6 +35,18 @@ export const turnosHandlers = [
     const db = getDb();
     let lista = [...db.turnos];
 
+    // Igual que la API: un RECAUDADOR (rol deducido del sub del token) solo recibe sus turnos,
+    // ignorando operador=. Sin token válido no se acota (las rutas protegidas lo exigen en la API real).
+    const idActor = idOperadorDelToken(request);
+    const actor =
+      idActor === null
+        ? undefined
+        : db.operadores.find((o) => o.id_operador === idActor);
+    const soloPropios = actor?.rol === 'RECAUDADOR';
+    if (soloPropios) {
+      lista = lista.filter((t) => t.id_operador === actor.id_operador);
+    }
+
     if (estado) {
       lista = lista.filter((t) => t.estado === estado);
     }
@@ -48,7 +60,7 @@ export const turnosHandlers = [
         .map((c) => c.id_caseta);
       lista = lista.filter((t) => casetasEstacion.includes(t.id_caseta));
     }
-    if (operadorCod) {
+    if (operadorCod && !soloPropios) {
       const op = db.operadores.find(
         (o) => o.codigo_empleado.toUpperCase() === operadorCod,
       );
