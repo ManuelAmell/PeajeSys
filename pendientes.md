@@ -86,10 +86,14 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 ## 🎯 4. Próximos pasos finales / Sustentación
 
 - [ ] **Revisión de Seguridad y JWT**:
-  - Revisar [backend/PeajeSys.Core/Security/JwtTokenService.cs](backend/PeajeSys.Core/Security/JwtTokenService.cs): validar sobrecargas de `GenerateToken`, claims (`codigo_empleado`), expiración y compatibilidad con los controladores de autenticación.
+  - [x] Clave JWT fuera del repositorio (user-secrets / `JwtSettings__SecretKey`) y validación de configuración al arrancar.
+  - [ ] Validación estricta del token (`exp` obligatorio, `nbf`, `iss`, `aud`, `alg`).
+  - [ ] Retirar la sobrecarga sin uso de `GenerateToken`.
+  - [ ] Una sola validación del token por petición (handler de autenticación).
+  - [ ] Usuarios semilla solo en entorno Development.
 - [ ] **Prueba de integración End-to-End**:
   - Levantar la base de datos ejecutando `00_Master_PeajeSys.sql` en PostgreSQL local.
-  - Iniciar la Web API (`dotnet run --project backend/PeajeSys.Api`).
+  - Configurar la clave JWT (ver `backend/README.md`, sección 4.3) e iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api && dotnet run`, entorno Development y puerto 5080).
   - Cambiar `VITE_USAR_MOCKS=false` en `frontend/.env` para validar la comunicación real Frontend $\leftrightarrow$ Backend $\leftrightarrow$ PostgreSQL.
 - [ ] **Preparación de la sustentación final**:
   - Revisar diapositivas de presentación basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.

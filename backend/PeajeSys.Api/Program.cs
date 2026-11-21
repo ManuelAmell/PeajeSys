@@ -11,7 +11,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using PeajeSys.Api.Configuration;
 using PeajeSys.Api.Middlewares;
 using PeajeSys.Api.Services;
 using PeajeSys.Core.Enums;
@@ -63,12 +65,17 @@ string defaultDevPassword = builder.Configuration.GetValue<string>("Security:Def
 
 builder.Services.AddSingleton<IPasswordHasher>(_ => new PasswordHasher(bcryptCost, defaultDevPassword));
 
-string secretKey = builder.Configuration.GetValue<string>("JwtSettings:SecretKey", "ClaveSecretaSuperSeguraParaPeajeSys2026!*ClaveLargaMinimo32Bytes")!;
-string issuer = builder.Configuration.GetValue<string>("JwtSettings:Issuer", "PeajeSys.Api")!;
-string audience = builder.Configuration.GetValue<string>("JwtSettings:Audience", "PeajeSys.Client")!;
-int expirationHours = builder.Configuration.GetValue<int>("JwtSettings:ExpirationHours", 8);
+// JWT: la clave viene de user-secrets o JwtSettings__SecretKey; sin ella la API no arranca
+builder.Services.AddSingleton<IValidateOptions<JwtSettings>, JwtSettingsValidator>();
+builder.Services.AddOptions<JwtSettings>()
+    .Bind(builder.Configuration.GetSection(JwtSettings.Seccion))
+    .ValidateOnStart();
 
-builder.Services.AddSingleton<IJwtTokenService>(_ => new JwtTokenService(secretKey, issuer, audience, expirationHours));
+builder.Services.AddSingleton<IJwtTokenService>(sp =>
+{
+    var jwt = sp.GetRequiredService<IOptions<JwtSettings>>().Value;
+    return new JwtTokenService(jwt.SecretKey, jwt.Issuer, jwt.Audience, jwt.ExpirationHours);
+});
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Servicios de Negocio: Recaudo, Turnos y Vehiculos (BK-03)
