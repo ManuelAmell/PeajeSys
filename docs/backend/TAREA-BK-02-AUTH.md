@@ -19,6 +19,7 @@ Implementar el sistema de autenticación y autorización basado en JSON Web Toke
    - Implementación con `BCrypt.Net-Next` para hash y verificación de contraseñas con factor de costo 12.
    - Soporte para verificación de usuarios semilla del DML (`EMP-001`, `EMP-002`, `EMP-004`, `EMP-005`, `ADM-001`).
    - *Nota de diseño*: Dado que la tabla física `OPERADOR` del DDL no posee columna `password_hash`, en esta fase de desarrollo se utiliza una clave estándar de desarrollo (ej. `Turno123*` como en el frontend) o un diccionario en memoria / configuración `appsettings.json` para validar las credenciales de los operadores semilla, permitiendo compatibilidad total sin requerir alteraciones al DDL existente.
+   - *Nota de actualización (2026-11-21)*: la nota anterior queda como historial y ya no aplica. Ahora `OPERADOR` sí tiene la columna `password_hash VARCHAR(100) NULL` (hash BCrypt; NULL = sin acceso) y el rol `ADMINISTRADOR`. El login valida solo contra la base de datos; se retiraron los usuarios semilla, `Turno123*` y `Security:DefaultDevPassword`. El hash se hace con `BCrypt.Net-Next` (BCrypt estándar, compatible con pgcrypto), que reemplazó a la implementación propia, incompatible con el estándar. Los usuarios del equipo están documentados en el README raíz.
 
 2. **Servicio de Generación de Tokens JWT (`IJwtTokenService`)**:
    - Generación de token firmado con HMAC-SHA256 (`SecurityAlgorithms.HmacSha256`).
