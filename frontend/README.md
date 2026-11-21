@@ -3,16 +3,37 @@
 Frontend para la operación, supervisión y administración de las estaciones de peaje Gambote y La Ceballos.
 Desarrollado en React 18, Vite, TypeScript estricto, Tailwind CSS y componentes shadcn/ui accesibles basados en Radix UI.
 
+## 0. Arranque rápido
+
+Desde la **raíz** del repositorio, igual en Windows (cmd/PowerShell) y Linux, sin crear ningún `.env`:
+
+```bash
+pnpm install
+pnpm dev          # API (.NET, 5080) + frontend (Vite, 5180) conectados
+pnpm dev:mocks    # solo el frontend con datos simulados (MSW), sin backend
+```
+
+- `pnpm dev` usa `frontend/.env.development` (`VITE_USAR_MOCKS=false`): el frontend llama a `/api` y Vite lo reenvía a la API real mediante un proxy. Necesita PostgreSQL para los datos; sin BD, la API responde pero las consultas fallan.
+- `pnpm dev:mocks` usa `frontend/.env.mocks` (`VITE_USAR_MOCKS=true`) y no necesita backend ni BD.
+- Ya no hace falta un `.env`. Si quieres sobrescribir algo, crea `frontend/.env.local` (no se versiona); `frontend/.env.example` muestra las variables.
+- `VITE_API_PROXY_TARGET` cambia el destino del proxy (por defecto `http://localhost:5080`).
+
 ## 1. Comandos principales
 
 Todos los comandos se ejecutan dentro del directorio `frontend/`:
 
 ```bash
-# Desarrollo local (puerto 5180 con --strictPort)
+# Desarrollo local contra la API real (puerto 5180 con --strictPort)
 pnpm dev
+
+# Desarrollo local solo con mocks (sin backend)
+pnpm dev:mocks
 
 # Compilación de producción (TypeScript + Vite)
 pnpm build
+
+# Compilación en modo mocks (la usan los E2E)
+pnpm build:mocks
 
 # Servidor de vista previa de la compilación
 pnpm preview
@@ -35,7 +56,10 @@ pnpm test
 # Pruebas unitarias con reporte de cobertura v8 (umbral ≥ 80%)
 pnpm test:cov
 
-# Pruebas de extremo a extremo (E2E) con Playwright y Chromium del sistema
+# Pruebas de extremo a extremo (E2E) con Playwright
+# Compila solo en modo mocks (`pnpm build:mocks`), no depende de ningún .env.
+# Si no hay Chromium del sistema (/usr/bin/chromium o PLAYWRIGHT_CHROMIUM_PATH):
+#   pnpm exec playwright install chromium
 pnpm e2e
 
 # Generación automatizada de capturas en claro/oscuro y escritorio/móvil
@@ -47,15 +71,19 @@ pnpm capturar -- --ruta <ruta> --rol <rol> --espera <selector> --salida <carpeta
 En esta máquina (memoria RAM limitada de ~7 GB con ~1,5 GB libres):
 
 1. **Verificar memoria antes de tareas pesadas**:
+
    ```bash
    free -m
    ```
+
    Si la memoria disponible es inferior a 1 GB, esperar a que el sistema libere recursos.
 
 2. **Ejecutar tareas pesadas en primer plano bajo candado y prioridad baja**:
+
    ```bash
    flock /tmp/peajesys-pesado.lock nice -n 10 pnpm <tarea>
    ```
+
    Aplica obligatoriamente a: `pnpm install`, `pnpm test:cov`, `pnpm build`, `pnpm e2e` y `pnpm capturar`.
    **Nunca** lanzar instalaciones o builds en segundo plano ni en paralelo.
 
@@ -68,19 +96,20 @@ En esta máquina (memoria RAM limitada de ~7 GB con ~1,5 GB libres):
 
 Cada bloque tiene un puerto único asignado para evitar colisiones:
 
-| Bloque | Función | Puerto |
-| --- | --- | --- |
-| **B0** | Esqueleto base y diseño compartido | **5180** |
-| **B1a** | API tipada, Zod y TanStack Query | **5181** |
-| **B1b** | Semilla de datos y mocks MSW | **5182** |
-| **B2** | Inicio de sesión | **5183** |
-| **B3** | Terminal de operador y cierre de turno | **5184** |
-| **B4** | Supervisión y arqueos | **5185** |
-| **B5** | Administración | **5186** |
-| **B6** | Pruebas E2E completas | **5187** |
-| **Integración** | Fusión en develop | **5188** |
+| Bloque          | Función                                | Puerto   |
+| --------------- | -------------------------------------- | -------- |
+| **B0**          | Esqueleto base y diseño compartido     | **5180** |
+| **B1a**         | API tipada, Zod y TanStack Query       | **5181** |
+| **B1b**         | Semilla de datos y mocks MSW           | **5182** |
+| **B2**          | Inicio de sesión                       | **5183** |
+| **B3**          | Terminal de operador y cierre de turno | **5184** |
+| **B4**          | Supervisión y arqueos                  | **5185** |
+| **B5**          | Administración                         | **5186** |
+| **B6**          | Pruebas E2E completas                  | **5187** |
+| **Integración** | Fusión en develop                      | **5188** |
 
 Siempre usar `--strictPort` en `vite dev` o `vite preview`. Al terminar cualquier servidor, verificar que el puerto quedó libre:
+
 ```bash
 ss -ltnp | grep <puerto>
 ```
@@ -196,6 +225,7 @@ flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
 ```
 
 Requisitos del script:
+
 - Genera 4 imágenes PNG por pantalla (claro y oscuro, 1280 px y 390 px).
 - Cada imagen debe pesar **≥ 30 KB** (si pesa menos, la captura falla).
 - Falla si se detecta cualquier error de consola durante la navegación. Las entradas automáticas de Chromium por respuestas simuladas de MSW (`Failed to load resource: … 403/409/500`) se listan aparte como «red simulada esperada» y no invalidan la captura.
