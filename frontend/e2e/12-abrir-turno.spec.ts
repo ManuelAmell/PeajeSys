@@ -13,11 +13,12 @@ test.describe('Caso 12: Apertura de turno (REC-002 sin turno abre turno y accede
     await page.fill('#lg-clave', 'prueba123');
     await page.click('button[type="submit"]');
 
-    // Debe mostrar la tarjeta "Ir a..." hacia Abrir turno o redirigir a /operador/abrir-turno
-    const botonIr = page.locator('button', { hasText: /abrir turno/i });
-    if (await botonIr.isVisible()) {
-      await botonIr.click();
-    }
+    // Tarjeta "Ir a..." hacia Abrir turno
+    const botonIr = page
+      .locator('[role="status"]')
+      .getByRole('button', { name: /abrir turno/i });
+    await expect(botonIr).toBeVisible();
+    await botonIr.click();
 
     await expect(page).toHaveURL(/\/operador\/abrir-turno/);
     await expect(page.locator('h1')).toHaveText(/Abrir turno/i);

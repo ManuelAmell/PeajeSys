@@ -28,11 +28,11 @@ export const USUARIOS_DEMO: UsuarioDemo[] = [
   {
     codigo: 'REC-001',
     nombre: 'Alex Florez',
-    nota: 'Recaudador (sin turno abierto en la simulación: muestra el aviso)',
+    nota: 'Recaudador (sin turno abierto: va a la pantalla Abrir turno)',
   },
   {
     codigo: 'REC-002',
     nombre: 'Camilo Guzmán',
-    nota: 'Recaudador (sin turno abierto en la simulación: muestra el aviso)',
+    nota: 'Recaudador (sin turno abierto: va a la pantalla Abrir turno)',
   },
 ];
