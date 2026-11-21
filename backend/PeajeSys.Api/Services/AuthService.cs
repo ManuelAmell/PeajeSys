@@ -46,8 +46,8 @@ public class AuthService : IAuthService
         var operador = await _dbContext.Operadores
             .FirstOrDefaultAsync(o => o.CodigoEmpleado.ToUpper() == codigo.ToUpper());
 
-        // Soporte para usuario administrador semilla si no esta fisicamente en la tabla operador
-        if (operador == null && codigo.Equals("ADM-001", StringComparison.OrdinalIgnoreCase))
+        // Administrador semilla ficticio: solo si los usuarios semilla estan habilitados (Development)
+        if (operador == null && _passwordHasher.UsuariosSemillaHabilitados && codigo.Equals("ADM-001", StringComparison.OrdinalIgnoreCase))
         {
             operador = new Operador
             {
