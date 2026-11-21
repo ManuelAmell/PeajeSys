@@ -28,6 +28,19 @@ public class JwtTokenService : IJwtTokenService
         _expiration = TimeSpan.FromHours(expirationHours);
     }
 
+    public string GenerateToken(string codigoEmpleado, string idOperador, string nombre, string rol, string? casetaId = null)
+    {
+        int.TryParse(idOperador, out int idOp);
+        return GenerateToken(new Operador
+        {
+            IdOperador = idOp,
+            CodigoEmpleado = codigoEmpleado,
+            Nombres = nombre,
+            Apellidos = string.Empty,
+            Rol = rol
+        });
+    }
+
     public string GenerateToken(Operador operador)
     {
         var now = DateTimeOffset.UtcNow;
@@ -116,7 +129,10 @@ public class JwtTokenService : IJwtTokenService
             if (root.TryGetProperty("role", out var roleEl))
                 claims.Add(new Claim(ClaimTypes.Role, roleEl.GetString() ?? string.Empty));
             if (root.TryGetProperty("codigo", out var codEl))
+            {
                 claims.Add(new Claim("codigo", codEl.GetString() ?? string.Empty));
+                claims.Add(new Claim("codigo_empleado", codEl.GetString() ?? string.Empty));
+            }
 
             var identity = new ClaimsIdentity(claims, "Bearer");
             return new ClaimsPrincipal(identity);

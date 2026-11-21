@@ -15,6 +15,7 @@ public interface IPasswordHasher
 public interface IJwtTokenService
 {
     string GenerateToken(Operador operador);
+    string GenerateToken(string codigoEmpleado, string idOperador, string nombre, string rol, string? casetaId = null);
     ClaimsPrincipal? ValidateToken(string token);
 }
 

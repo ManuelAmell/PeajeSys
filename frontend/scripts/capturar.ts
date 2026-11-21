@@ -197,7 +197,8 @@ async function ejecutar() {
   }
 
   const chromiumPath =
-    process.env.PLAYWRIGHT_CHROMIUM_PATH || '/usr/bin/chromium';
+    process.env.PLAYWRIGHT_CHROMIUM_PATH ||
+    (process.platform === 'linux' ? '/usr/bin/chromium' : undefined);
 
   const browser = await chromium.launch({
     executablePath: chromiumPath,

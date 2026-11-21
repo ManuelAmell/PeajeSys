@@ -1,7 +1,8 @@
 import { defineConfig } from '@playwright/test';
 
 const chromiumExecutable =
-  process.env.PLAYWRIGHT_CHROMIUM_PATH || '/usr/bin/chromium';
+  process.env.PLAYWRIGHT_CHROMIUM_PATH ||
+  (process.platform === 'linux' ? '/usr/bin/chromium' : undefined);
 
 export default defineConfig({
   testDir: '.',
