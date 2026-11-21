@@ -167,8 +167,10 @@ flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
   --ruta /operador \
   --rol RECAUDADOR \
   --espera h1 \
-  --salida /home/amell/orca/reportes/capturas/B3/
+  --salida ./capturas/B3/
 ```
+
+La carpeta `capturas/` no se versiona (esta en `.gitignore`).
 
 Opciones de interacción (para capturar estados que requieren acciones, por ejemplo errores de formulario o interacción con diálogos y modales):
 
@@ -188,7 +190,7 @@ flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
   --llenar '#lg-clave=prueba' \
   --clic 'button[type="submit"]' \
   --espera-despues '#lg-error' \
-  --salida /home/amell/orca/reportes/capturas/B2/ \
+  --salida ./capturas/B2/ \
   --nombre login-inactivo \
   --puerto 5183
 ```
