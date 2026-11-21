@@ -56,7 +56,8 @@ public class OperadorConfiguration : IEntityTypeConfiguration<Operador>
         builder.Property(e => e.CodigoEmpleado).HasColumnName("codigo_empleado").HasMaxLength(20).IsRequired();
         builder.Property(e => e.Rol).HasColumnName("rol").HasMaxLength(30).IsRequired();
         builder.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).IsRequired();
-        builder.Ignore(e => e.PasswordHash);
+
+        builder.Property(e => e.PasswordHash).HasColumnName("password_hash").HasMaxLength(100);
 
         builder.HasIndex(e => e.NumeroDocumento).IsUnique();
         builder.HasIndex(e => e.CodigoEmpleado).IsUnique();

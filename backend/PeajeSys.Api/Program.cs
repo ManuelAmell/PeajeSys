@@ -62,9 +62,8 @@ builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
 // Servicios de Seguridad y Autenticacion (BK-02)
 int bcryptCost = builder.Configuration.GetValue<int>("Security:BcryptCostFactor", 12);
-string defaultDevPassword = builder.Configuration.GetValue<string>("Security:DefaultDevPassword", "Turno123*")!;
 
-builder.Services.AddSingleton<IPasswordHasher>(_ => new PasswordHasher(bcryptCost, defaultDevPassword, usuariosSemillaHabilitados: builder.Environment.IsDevelopment()));
+builder.Services.AddSingleton<IPasswordHasher>(_ => new PasswordHasher(bcryptCost));
 
 // JWT: la clave viene de user-secrets o JwtSettings__SecretKey; sin ella la API no arranca
 builder.Services.AddSingleton<IValidateOptions<JwtSettings>, JwtSettingsValidator>();

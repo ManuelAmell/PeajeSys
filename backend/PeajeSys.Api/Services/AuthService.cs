@@ -46,21 +46,6 @@ public class AuthService : IAuthService
         var operador = await _dbContext.Operadores
             .FirstOrDefaultAsync(o => o.CodigoEmpleado.ToUpper() == codigo.ToUpper());
 
-        // Administrador semilla ficticio: solo si los usuarios semilla estan habilitados (Development)
-        if (operador == null && _passwordHasher.UsuariosSemillaHabilitados && codigo.Equals("ADM-001", StringComparison.OrdinalIgnoreCase))
-        {
-            operador = new Operador
-            {
-                IdOperador = 999,
-                CodigoEmpleado = "ADM-001",
-                NumeroDocumento = "0000000000",
-                Nombres = "Administrador",
-                Apellidos = "Principal",
-                Rol = Roles.Administrador,
-                Estado = EstadosOperador.Activo
-            };
-        }
-
         if (operador == null)
         {
             throw new NotFoundException("EMPLEADO_NO_ENCONTRADO", "Empleado no registrado en el sistema.");
@@ -72,17 +57,10 @@ public class AuthService : IAuthService
             throw new ForbiddenException("USUARIO_INACTIVO", "El operador se encuentra inactivo en el sistema.");
         }
 
-        // Validar credenciales usando BCrypt o validacion de usuarios semilla
-        bool esValido = false;
-        if (!string.IsNullOrEmpty(operador.PasswordHash))
-        {
-            esValido = _passwordHasher.VerifyPassword(password, operador.PasswordHash);
-        }
-
-        if (!esValido)
-        {
-            esValido = _passwordHasher.VerifySeedUser(operador.CodigoEmpleado, password);
-        }
+        // Validar credenciales solo contra el hash BCrypt guardado en la base de datos.
+        // Hash NULL (operador sin acceso) y clave incorrecta responden igual para no revelar nada.
+        bool esValido = !string.IsNullOrEmpty(operador.PasswordHash)
+            && _passwordHasher.VerifyPassword(password, operador.PasswordHash);
 
         if (!esValido)
         {
@@ -144,20 +122,6 @@ public class AuthService : IAuthService
         {
             operador = await _dbContext.Operadores
                 .FirstOrDefaultAsync(o => o.CodigoEmpleado.ToUpper() == identificadorOperador.ToUpper());
-        }
-
-        if (operador == null && identificadorOperador.Equals("ADM-001", StringComparison.OrdinalIgnoreCase))
-        {
-            operador = new Operador
-            {
-                IdOperador = 999,
-                CodigoEmpleado = "ADM-001",
-                NumeroDocumento = "0000000000",
-                Nombres = "Administrador",
-                Apellidos = "Principal",
-                Rol = Roles.Administrador,
-                Estado = EstadosOperador.Activo
-            };
         }
 
         if (operador == null)
