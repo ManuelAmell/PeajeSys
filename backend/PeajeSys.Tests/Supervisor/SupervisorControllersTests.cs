@@ -90,6 +90,18 @@ public class SupervisorControllersTests
             return Task.FromResult<IEnumerable<MonitoreoCuentaTelepeajeDto>>(list);
         }
 
+        public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+        {
+            return Task.FromResult(new CuentaTelepeajeDetalleDto
+            {
+                IdCuenta = 1,
+                PlacaVehiculo = placa.ToUpperInvariant(),
+                TagRfidSerial = "TAG-COL-0001",
+                SaldoDisponible = 50000m,
+                EstadoCuenta = "ACTIVA"
+            });
+        }
+
         public Task<RecargaTagResponseDto> RecargarCuentaAsync(RecargaTagRequestDto request, string usuarioResponsable)
         {
             return Task.FromResult(new RecargaTagResponseDto
