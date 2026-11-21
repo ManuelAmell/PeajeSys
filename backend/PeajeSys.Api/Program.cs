@@ -256,3 +256,5 @@ public class CustomBearerAuthenticationHandler : AuthenticationHandler<Authentic
         return Task.FromResult(AuthenticateResult.Success(ticket));
     }
 }
+
+public partial class Program { }
