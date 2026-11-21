@@ -80,6 +80,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Servicios de Negocio: Recaudo, Turnos y Vehiculos (BK-03)
 builder.Services.AddScoped<ITurnoService, TurnoService>();
+builder.Services.AddScoped<ITransaccionService, TransaccionService>();
 builder.Services.AddScoped<IVehiculoService, VehiculoService>();
 builder.Services.AddScoped<ICobroService, CobroService>();
 
