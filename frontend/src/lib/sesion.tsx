@@ -7,6 +7,7 @@ import {
   ReactNode,
 } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { borrarToken } from '@/api/sesionToken';
 import { Rol, Usuario, rutaPorDefectoSegunRol } from './roles';
 
 const CLAVE_STORAGE_SESION = 'peajesys_sesion';
@@ -76,6 +77,7 @@ export function SesionProvider({
   const cerrarSesion = useCallback(() => {
     setUsuario(null);
     guardarSesionEnStorage(null);
+    borrarToken();
   }, []);
 
   useEffect(() => {

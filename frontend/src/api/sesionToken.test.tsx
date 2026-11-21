@@ -4,7 +4,12 @@ import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { server } from '@/mocks/server';
-import { clienteHttp, ErrorApi, esquemaRespuestaLogin, useLogin } from './index';
+import {
+  clienteHttp,
+  ErrorApi,
+  esquemaRespuestaLogin,
+  useLogin,
+} from './index';
 import { borrarToken, guardarToken, obtenerToken } from './sesionToken';
 
 const TOKEN_REAL = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIn0.firma';
@@ -88,13 +93,18 @@ describe('clienteHttp y el token de sesion', () => {
       }),
     );
     guardarToken('x');
-    await clienteHttp('/prueba-token', { headers: { Authorization: 'Bearer otro' } });
+    await clienteHttp('/prueba-token', {
+      headers: { Authorization: 'Bearer otro' },
+    });
     expect(cabecera).toBe('Bearer otro');
   });
 
   it('un 401 con token borra el token y lanza ErrorApi', async () => {
     server.use(
-      http.get('*/api/prueba-token', () => new HttpResponse(null, { status: 401 })),
+      http.get(
+        '*/api/prueba-token',
+        () => new HttpResponse(null, { status: 401 }),
+      ),
     );
     guardarToken('x');
     await expect(clienteHttp('/prueba-token')).rejects.toBeInstanceOf(ErrorApi);
@@ -105,7 +115,9 @@ describe('clienteHttp y el token de sesion', () => {
 describe('useLogin y el token', () => {
   it('guarda el token en onSuccess', async () => {
     server.use(
-      http.post('*/api/auth/login', () => HttpResponse.json(RESPUESTA_REAL_RECAUDADOR)),
+      http.post('*/api/auth/login', () =>
+        HttpResponse.json(RESPUESTA_REAL_RECAUDADOR),
+      ),
     );
     const { result } = renderHook(() => useLogin(), { wrapper });
     result.current.mutate({ codigo: 'EMP-001', clave: 'Turno123*' });
