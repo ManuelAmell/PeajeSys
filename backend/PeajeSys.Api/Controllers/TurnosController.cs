@@ -15,14 +15,9 @@ namespace PeajeSys.Api.Controllers;
 public class TurnosController : ControllerBase
 {
     private readonly ITurnoService _turnoService;
-    private readonly IArqueoService? _arqueoService;
+    private readonly IArqueoService _arqueoService;
 
-    public TurnosController(ITurnoService turnoService)
-        : this(turnoService, null)
-    {
-    }
-
-    public TurnosController(ITurnoService turnoService, IArqueoService? arqueoService)
+    public TurnosController(ITurnoService turnoService, IArqueoService arqueoService)
     {
         _turnoService = turnoService;
         _arqueoService = arqueoService;
@@ -84,9 +79,6 @@ public class TurnosController : ControllerBase
         [FromQuery] decimal? efectivo_reportado,
         [FromQuery] decimal? reportado)
     {
-        if (_arqueoService == null)
-            throw new InvalidOperationException("IArqueoService no configurado.");
-
         decimal montoReportado = efectivo_reportado ?? reportado ?? 0;
         var resultado = await _arqueoService.CalcularArqueoAsync(id, montoReportado);
         return Ok(resultado);
