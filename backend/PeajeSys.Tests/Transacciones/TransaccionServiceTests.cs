@@ -223,7 +223,7 @@ public class TransaccionServiceTests
     }
 
     [Fact]
-    public async Task Listar_NoMarcaAnuladas_PorqueElEsquemaDelFrontendNoTieneEseCampo()
+    public async Task Listar_MarcaAnuladaSoloLasQueTienenVoid()
     {
         var (svc, _) = Crear();
         await svc.AnularAsync(TxEfectivo, Motivo(), Rec1);
@@ -231,6 +231,32 @@ public class TransaccionServiceTests
         var lista = await svc.ListarPorTurnoAsync(TurnoAbierto, Rec1);
 
         Assert.Equal(3, lista.Count);
-        Assert.Equal("APROBADO", lista[0].EstadoPaso);
+        Assert.True(lista.Single(t => t.IdTransaccion == TxEfectivo).Anulada);
+        Assert.False(lista.Single(t => t.IdTransaccion == TxTelepeaje).Anulada);
+        Assert.False(lista.Single(t => t.IdTransaccion == TxExento).Anulada);
+        // La anulacion no modifica TRANSACCION_PEAJE.
+        Assert.Equal("APROBADO", lista.Single(t => t.IdTransaccion == TxEfectivo).EstadoPaso);
+    }
+
+    [Fact]
+    public async Task Listar_IgnoraAuditoriasQueNoSonVoid()
+    {
+        var (svc, db) = Crear();
+        db.AuditoriasTransaccion.Add(new AuditoriaTransaccion { IdAuditoria = 900, IdTransaccion = TxTelepeaje, TipoOperacion = "INSERT", UsuarioSistema = "REC-001" });
+        db.SaveChanges();
+
+        var lista = await svc.ListarPorTurnoAsync(TurnoAbierto, Rec1);
+
+        Assert.All(lista, t => Assert.False(t.Anulada));
+    }
+
+    [Fact]
+    public async Task Anular_RespuestaMarcaLaTransaccionComoAnulada()
+    {
+        var (svc, _) = Crear();
+
+        var r = await svc.AnularAsync(TxEfectivo, Motivo(), Rec1);
+
+        Assert.True(r.Transaccion.Anulada);
     }
 }
