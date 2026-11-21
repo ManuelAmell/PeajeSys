@@ -55,9 +55,10 @@ export async function clienteHttp<T>(
 
   // Base URL configurable vía VITE_API_BASE_URL (por defecto '/api')
   const baseUrl = (
-    typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL
-      ? import.meta.env.VITE_API_BASE_URL
-      : '/api'
+    (typeof import.meta !== 'undefined' &&
+      import.meta.env?.VITE_API_BASE_URL) ||
+    (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) ||
+    '/api'
   ).replace(/\/$/, '');
 
   // Normalizar ruta para evitar dobles barras
@@ -65,7 +66,11 @@ export async function clienteHttp<T>(
   let url = `${baseUrl}${rutaNormalizada}`;
 
   // En entornos JSDOM/Node con window.location, anteponer el origen para URLs relativas
-  if (url.startsWith('/') && typeof window !== 'undefined' && window.location?.origin) {
+  if (
+    url.startsWith('/') &&
+    typeof window !== 'undefined' &&
+    window.location?.origin
+  ) {
     url = `${window.location.origin}${url}`;
   }
 
@@ -169,7 +174,8 @@ export async function clienteHttp<T>(
       throw new ErrorApi({
         estado: response.status,
         codigo: 'ERROR_VALIDACION_RESPUESTA',
-        mensaje: 'La respuesta del servidor no cumple el esquema de datos esperado.',
+        mensaje:
+          'La respuesta del servidor no cumple el esquema de datos esperado.',
         campos: Object.fromEntries(
           parseResult.error.issues.map((i) => [i.path.join('.'), i.message]),
         ),
@@ -184,14 +190,22 @@ export async function clienteHttp<T>(
 clienteHttp.get = <T>(ruta: string, opciones?: OpcionesClienteHttp<T>) =>
   clienteHttp<T>(ruta, { ...opciones, method: 'GET' });
 
-clienteHttp.post = <T>(ruta: string, body?: unknown, opciones?: OpcionesClienteHttp<T>) =>
+clienteHttp.post = <T>(
+  ruta: string,
+  body?: unknown,
+  opciones?: OpcionesClienteHttp<T>,
+) =>
   clienteHttp<T>(ruta, {
     ...opciones,
     method: 'POST',
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-clienteHttp.patch = <T>(ruta: string, body?: unknown, opciones?: OpcionesClienteHttp<T>) =>
+clienteHttp.patch = <T>(
+  ruta: string,
+  body?: unknown,
+  opciones?: OpcionesClienteHttp<T>,
+) =>
   clienteHttp<T>(ruta, {
     ...opciones,
     method: 'PATCH',
