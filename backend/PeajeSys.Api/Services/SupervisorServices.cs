@@ -448,4 +448,9 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
             Mensaje = $"Recarga exitosa por ${monto:N0} COP. Nuevo saldo: ${saldoNuevo:N0} COP."
         };
     }
+
+    public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+    {
+        throw new NotImplementedException();
+    }
 }

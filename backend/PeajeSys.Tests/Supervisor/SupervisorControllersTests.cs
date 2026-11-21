@@ -90,6 +90,11 @@ public class SupervisorControllersTests
             return Task.FromResult<IEnumerable<MonitoreoCuentaTelepeajeDto>>(list);
         }
 
+        public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<RecargaTagResponseDto> RecargarCuentaAsync(RecargaTagRequestDto request, string usuarioResponsable)
         {
             return Task.FromResult(new RecargaTagResponseDto

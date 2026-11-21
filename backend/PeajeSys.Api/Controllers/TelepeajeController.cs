@@ -46,4 +46,14 @@ public class TelepeajeController : ControllerBase
         var response = await _telepeajeService.RecargarCuentaAsync(request, usuario);
         return Ok(response);
     }
+
+    [HttpGet("api/cuentas-telepeaje/por-placa/{placa}")]
+    [HttpGet("api/telepeaje/cuentas/por-placa/{placa}")]
+    [ProducesResponseType(typeof(CuentaTelepeajeDetalleDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CuentaTelepeajeDetalleDto>> ObtenerCuentaPorPlaca([FromRoute] string placa)
+    {
+        var cuenta = await _telepeajeService.ObtenerCuentaPorPlacaAsync(placa);
+        return Ok(cuenta);
+    }
 }

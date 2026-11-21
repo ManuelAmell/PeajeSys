@@ -102,6 +102,21 @@ public class AutenticacionHttpTests : IClassFixture<PeajeSysApiFactory>
     }
 
     [Fact]
+    public async Task CuentasTelepeajePorPlaca_RecaudadorValido_NoDevuelve403()
+    {
+        var r = await Enviar(HttpMethod.Get, "/api/cuentas-telepeaje/por-placa/KJN456", GenerarToken(Roles.Recaudador));
+        Assert.NotEqual(HttpStatusCode.Forbidden, r.StatusCode);
+        Assert.NotEqual(HttpStatusCode.Unauthorized, r.StatusCode);
+    }
+
+    [Fact]
+    public async Task CuentasTelepeajeListado_RecaudadorValido_Devuelve403()
+    {
+        var r = await Enviar(HttpMethod.Get, "/api/cuentas-telepeaje", GenerarToken(Roles.Recaudador));
+        Assert.Equal(HttpStatusCode.Forbidden, r.StatusCode);
+    }
+
+    [Fact]
     public void Arranque_SinClaveJwt_FallaMencionandoLaClave()
     {
         using var fabrica = new PeajeSysApiSinClaveFactory();
