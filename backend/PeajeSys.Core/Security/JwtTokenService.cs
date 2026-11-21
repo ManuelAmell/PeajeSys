@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,8 +16,12 @@ public class JwtTokenService : IJwtTokenService
     private readonly string _issuer;
     private readonly string _audience;
     private readonly TimeSpan _expiration;
+    private readonly TimeProvider _timeProvider;
 
-    public JwtTokenService(string secretKey, string issuer, string audience, int expirationHours)
+    private const int MargenRelojSegundos = 30;
+
+    public JwtTokenService(string secretKey, string issuer, string audience, int expirationHours,
+        TimeProvider? timeProvider = null)
     {
         if (string.IsNullOrWhiteSpace(secretKey))
             throw new ArgumentException("La clave JWT es obligatoria.", nameof(secretKey));
@@ -28,10 +33,14 @@ public class JwtTokenService : IJwtTokenService
         if (string.IsNullOrWhiteSpace(audience))
             throw new ArgumentException("El audience JWT es obligatorio.", nameof(audience));
 
+        if (expirationHours <= 0)
+            throw new ArgumentException("La expiracion del JWT debe ser mayor que cero horas.", nameof(expirationHours));
+
         _secretKey = secretKey;
         _issuer = issuer;
         _audience = audience;
         _expiration = TimeSpan.FromHours(expirationHours);
+        _timeProvider = timeProvider ?? TimeProvider.System;
     }
 
     public string GenerateToken(string codigoEmpleado, string idOperador, string nombre, string rol, string? casetaId = null)
@@ -49,7 +58,7 @@ public class JwtTokenService : IJwtTokenService
 
     public string GenerateToken(Operador operador)
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = _timeProvider.GetUtcNow();
         var exp = now.Add(_expiration);
 
         var header = new Dictionary<string, object>
@@ -96,57 +105,97 @@ public class JwtTokenService : IJwtTokenService
         if (string.IsNullOrWhiteSpace(token)) return null;
 
         string[] parts = token.Trim().Split('.');
-        if (parts.Length != 3) return null;
-
-        string unsignedToken = $"{parts[0]}.{parts[1]}";
-        byte[] expectedSig;
-        using (var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_secretKey)))
-        {
-            expectedSig = hmac.ComputeHash(Encoding.UTF8.GetBytes(unsignedToken));
-        }
-
-        string expectedSigBase64 = Base64UrlEncode(expectedSig);
-        if (!CryptographicEquals(parts[2], expectedSigBase64))
-        {
-            return null;
-        }
+        if (parts.Length != 3 || parts.Any(string.IsNullOrEmpty)) return null;
 
         try
         {
-            byte[] payloadBytes = Base64UrlDecode(parts[1]);
-            string payloadJson = Encoding.UTF8.GetString(payloadBytes);
-            using var doc = JsonDocument.Parse(payloadJson);
-            var root = doc.RootElement;
+            using var header = JsonDocument.Parse(Base64UrlDecode(parts[0]));
+            if (!CabeceraValida(header.RootElement)) return null;
 
-            if (root.TryGetProperty("exp", out var expElement))
-            {
-                long expSeconds = expElement.GetInt64();
-                if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > expSeconds)
-                {
-                    return null;
-                }
-            }
+            if (!FirmaValida(parts[0], parts[1], parts[2])) return null;
 
-            var claims = new List<Claim>();
-            if (root.TryGetProperty("sub", out var subEl))
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, subEl.GetString() ?? string.Empty));
-            if (root.TryGetProperty("name", out var nameEl))
-                claims.Add(new Claim(ClaimTypes.Name, nameEl.GetString() ?? string.Empty));
-            if (root.TryGetProperty("role", out var roleEl))
-                claims.Add(new Claim(ClaimTypes.Role, roleEl.GetString() ?? string.Empty));
-            if (root.TryGetProperty("codigo", out var codEl))
-            {
-                claims.Add(new Claim("codigo", codEl.GetString() ?? string.Empty));
-                claims.Add(new Claim("codigo_empleado", codEl.GetString() ?? string.Empty));
-            }
+            using var payload = JsonDocument.Parse(Base64UrlDecode(parts[1]));
+            var root = payload.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return null;
+            if (!ValidarTiempos(root) || !ValidarEmisorYAudiencia(root)) return null;
 
-            var identity = new ClaimsIdentity(claims, "Bearer");
-            return new ClaimsPrincipal(identity);
+            return ConstruirPrincipal(root);
         }
-        catch
+        catch (Exception ex) when (ex is FormatException or JsonException or InvalidOperationException
+            or ArgumentException or OverflowException)
         {
+            // El handler de autenticacion registra el fallo al recibir null.
             return null;
         }
+    }
+
+    private static bool CabeceraValida(JsonElement cabecera)
+    {
+        if (cabecera.ValueKind != JsonValueKind.Object) return false;
+        if (!cabecera.TryGetProperty("alg", out var alg)
+            || alg.ValueKind != JsonValueKind.String
+            || alg.GetString() != "HS256") return false;
+        if (cabecera.TryGetProperty("typ", out var typ)
+            && (typ.ValueKind != JsonValueKind.String || typ.GetString() != "JWT")) return false;
+        return true;
+    }
+
+    private bool FirmaValida(string cabeceraB64, string payloadB64, string firmaB64)
+    {
+        byte[] recibida = Base64UrlDecode(firmaB64);
+        using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(_secretKey));
+        byte[] esperada = hmac.ComputeHash(Encoding.UTF8.GetBytes($"{cabeceraB64}.{payloadB64}"));
+        return CryptographicOperations.FixedTimeEquals(recibida, esperada);
+    }
+
+    private bool ValidarTiempos(JsonElement root)
+    {
+        long ahora = _timeProvider.GetUtcNow().ToUnixTimeSeconds();
+
+        if (!root.TryGetProperty("exp", out var exp) || exp.ValueKind != JsonValueKind.Number) return false;
+        if (ahora > exp.GetInt64() + MargenRelojSegundos) return false;
+
+        if (root.TryGetProperty("nbf", out var nbf))
+        {
+            if (nbf.ValueKind != JsonValueKind.Number) return false;
+            if (ahora + MargenRelojSegundos < nbf.GetInt64()) return false;
+        }
+        return true;
+    }
+
+    private bool ValidarEmisorYAudiencia(JsonElement root)
+    {
+        if (!root.TryGetProperty("iss", out var iss)
+            || iss.ValueKind != JsonValueKind.String
+            || !string.Equals(iss.GetString(), _issuer, StringComparison.Ordinal)) return false;
+
+        if (!root.TryGetProperty("aud", out var aud)) return false;
+        return aud.ValueKind switch
+        {
+            JsonValueKind.String => string.Equals(aud.GetString(), _audience, StringComparison.Ordinal),
+            JsonValueKind.Array => aud.EnumerateArray().Any(a =>
+                a.ValueKind == JsonValueKind.String
+                && string.Equals(a.GetString(), _audience, StringComparison.Ordinal)),
+            _ => false
+        };
+    }
+
+    private static ClaimsPrincipal ConstruirPrincipal(JsonElement root)
+    {
+        var claims = new List<Claim>();
+        if (root.TryGetProperty("sub", out var subEl))
+            claims.Add(new Claim(ClaimTypes.NameIdentifier, subEl.GetString() ?? string.Empty));
+        if (root.TryGetProperty("name", out var nameEl))
+            claims.Add(new Claim(ClaimTypes.Name, nameEl.GetString() ?? string.Empty));
+        if (root.TryGetProperty("role", out var roleEl))
+            claims.Add(new Claim(ClaimTypes.Role, roleEl.GetString() ?? string.Empty));
+        if (root.TryGetProperty("codigo", out var codEl))
+        {
+            claims.Add(new Claim("codigo", codEl.GetString() ?? string.Empty));
+            claims.Add(new Claim("codigo_empleado", codEl.GetString() ?? string.Empty));
+        }
+
+        return new ClaimsPrincipal(new ClaimsIdentity(claims, "Bearer"));
     }
 
     private static string Base64UrlEncode(byte[] input)
@@ -166,16 +215,5 @@ public class JwtTokenService : IJwtTokenService
             case 3: output += "="; break;
         }
         return Convert.FromBase64String(output);
-    }
-
-    private static bool CryptographicEquals(string a, string b)
-    {
-        if (a.Length != b.Length) return false;
-        int result = 0;
-        for (int i = 0; i < a.Length; i++)
-        {
-            result |= a[i] ^ b[i];
-        }
-        return result == 0;
     }
 }

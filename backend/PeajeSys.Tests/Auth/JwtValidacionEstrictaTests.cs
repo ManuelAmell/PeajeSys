@@ -256,4 +256,22 @@ public class JwtValidacionEstrictaTests
         Assert.Throws<ArgumentException>(
             () => new JwtTokenService(JwtPruebas.Clave, JwtPruebas.Issuer, JwtPruebas.Audience, horas));
     }
+
+    [Fact]
+    public void ValidateToken_RelojInyectado_RespetaExpiracionYMargen()
+    {
+        var reloj = new RelojFalso(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero));
+        var servicio = new JwtTokenService(
+            JwtPruebas.Clave, JwtPruebas.Issuer, JwtPruebas.Audience, 1, reloj);
+        string token = servicio.GenerateToken(new PeajeSys.Core.Entities.Operador
+        {
+            IdOperador = 3, CodigoEmpleado = "EMP-003", Nombres = "Ana", Apellidos = "Perez", Rol = "OPERADOR"
+        });
+
+        reloj.Avanzar(TimeSpan.FromHours(1) + TimeSpan.FromSeconds(29));
+        Assert.NotNull(servicio.ValidateToken(token));
+
+        reloj.Avanzar(TimeSpan.FromSeconds(2));
+        Assert.Null(servicio.ValidateToken(token));
+    }
 }
