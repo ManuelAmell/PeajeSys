@@ -52,7 +52,7 @@ public class MatrizPruebasTests
             });
         }
 
-        public Task<CerrarTurnoResponseDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
         {
             if (idTurno == 999)
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", "Turno no existe.");
@@ -60,7 +60,7 @@ public class MatrizPruebasTests
             decimal sistemaEfectivo = 10500m;
             decimal diferencia = request.TotalDeclaradoCierre - sistemaEfectivo;
 
-            return Task.FromResult(new CerrarTurnoResponseDto
+            return Task.FromResult(new TurnoDto
             {
                 IdTurno = idTurno,
                 IdCaseta = 1,
@@ -439,7 +439,7 @@ public class MatrizPruebasTests
         });
 
         var cerrarOk = Assert.IsType<OkObjectResult>(cerrarResult.Result);
-        var cierre = Assert.IsType<CerrarTurnoResponseDto>(cerrarOk.Value);
+        var cierre = Assert.IsType<TurnoDto>(cerrarOk.Value);
         Assert.Equal("CERRADO", cierre.Estado);
         Assert.Equal(diferenciaEsperada, cierre.DiferenciaDescuadre);
 
