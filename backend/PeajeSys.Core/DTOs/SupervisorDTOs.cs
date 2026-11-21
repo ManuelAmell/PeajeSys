@@ -121,25 +121,26 @@ public class AuditoriaItemDto
     public long IdAuditoria { get; set; }
 
     [JsonPropertyName("id_transaccion")]
-    public long? IdTransaccion { get; set; }
+    public long IdTransaccion { get; set; }
 
     [JsonPropertyName("tipo_operacion")]
     public string TipoOperacion { get; set; } = string.Empty;
 
-    [JsonPropertyName("usuario_responsable")]
-    public string UsuarioResponsable { get; set; } = string.Empty;
+    [JsonPropertyName("usuario_sistema")]
+    public string UsuarioSistema { get; set; } = string.Empty;
 
-    [JsonPropertyName("fecha_hora")]
-    public DateTime FechaHora { get; set; }
+    [JsonPropertyName("fecha_hora_evento")]
+    public DateTime FechaHoraEvento { get; set; }
 
-    [JsonPropertyName("datos_anteriores")]
-    public string? DatosAnteriores { get; set; }
+    [JsonPropertyName("motivo")]
+    public string? Motivo { get; set; }
 
-    [JsonPropertyName("datos_nuevos")]
-    public string? DatosNuevos { get; set; }
+    // Campos de solo lectura obtenidos por JOIN con TRANSACCION_PEAJE (el esquema del frontend los ignora).
+    [JsonPropertyName("placa_detectada")]
+    public string? PlacaDetectada { get; set; }
 
-    [JsonPropertyName("motivo_anulacion")]
-    public string? MotivoAnulacion { get; set; }
+    [JsonPropertyName("metodo_pago")]
+    public string? MetodoPago { get; set; }
 }
 
 // ============================================================

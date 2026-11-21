@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Exceptions;
@@ -229,16 +229,16 @@ public class AuditoriaService : IAuditoriaService
         if (limit < 1) limit = 50;
         if (limit > 500) limit = 500;
 
-        var query = _context.AuditoriasTransaccion.AsQueryable();
+        var query = _context.AuditoriasTransaccion.Include(a => a.Transaccion).AsQueryable();
 
         if (fechaInicio.HasValue)
         {
-            query = query.Where(a => a.FechaHora >= fechaInicio.Value);
+            query = query.Where(a => a.FechaHoraEvento >= fechaInicio.Value);
         }
 
         if (fechaFin.HasValue)
         {
-            query = query.Where(a => a.FechaHora <= fechaFin.Value);
+            query = query.Where(a => a.FechaHoraEvento <= fechaFin.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(tipoOperacion))
@@ -250,11 +250,11 @@ public class AuditoriaService : IAuditoriaService
         if (!string.IsNullOrWhiteSpace(usuario))
         {
             string usuarioNorm = usuario.Trim().ToUpperInvariant();
-            query = query.Where(a => a.UsuarioResponsable.ToUpper().Contains(usuarioNorm));
+            query = query.Where(a => a.UsuarioSistema.ToUpper().Contains(usuarioNorm));
         }
 
         // Orden cronologico descendente
-        query = query.OrderByDescending(a => a.FechaHora);
+        query = query.OrderByDescending(a => a.FechaHoraEvento);
 
         var items = await query
             .Skip((page - 1) * limit)
@@ -266,11 +266,11 @@ public class AuditoriaService : IAuditoriaService
             IdAuditoria = a.IdAuditoria,
             IdTransaccion = a.IdTransaccion,
             TipoOperacion = a.TipoOperacion,
-            UsuarioResponsable = a.UsuarioResponsable,
-            FechaHora = a.FechaHora,
-            DatosAnteriores = a.DatosAnteriores,
-            DatosNuevos = a.DatosNuevos,
-            MotivoAnulacion = a.MotivoAnulacion
+            UsuarioSistema = a.UsuarioSistema,
+            FechaHoraEvento = a.FechaHoraEvento,
+            Motivo = a.Motivo,
+            PlacaDetectada = a.Transaccion?.PlacaDetectada,
+            MetodoPago = a.Transaccion?.MetodoPago
         });
     }
 }
@@ -282,10 +282,12 @@ public class AuditoriaService : IAuditoriaService
 public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly ILogger<TelepeajeMonitoreoService> _logger;
 
-    public TelepeajeMonitoreoService(PeajeSysDbContext context)
+    public TelepeajeMonitoreoService(PeajeSysDbContext context, ILogger<TelepeajeMonitoreoService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<MonitoreoCuentaTelepeajeDto>> ListarCuentasMonitoreoAsync(
@@ -423,19 +425,12 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
 
         var ahora = DateTime.UtcNow;
 
-        // Registrar evento en AUDITORIA_TRANSACCION
-        var auditoria = new AuditoriaTransaccion
-        {
-            IdTransaccion = null,
-            TipoOperacion = "RECARGA_TAG",
-            UsuarioResponsable = string.IsNullOrWhiteSpace(usuarioResponsable) ? "SUPERVISOR" : usuarioResponsable,
-            FechaHora = ahora,
-            DatosAnteriores = JsonSerializer.Serialize(new { saldo_disponible = saldoAnterior }),
-            DatosNuevos = JsonSerializer.Serialize(new { saldo_disponible = saldoNuevo, monto_recargado = monto }),
-            MotivoAnulacion = null
-        };
+        // AUDITORIA_TRANSACCION exige una transaccion de peaje (id_transaccion NOT NULL): la recarga se registra en el log.
+        _logger.LogInformation(
+            "RECARGA_TAG usuario={Usuario} entidad=CUENTA_TELEPEAJE id={IdCuenta} placa={Placa} saldo_anterior={SaldoAnterior} saldo_nuevo={SaldoNuevo} monto={Monto}",
+            string.IsNullOrWhiteSpace(usuarioResponsable) ? "SUPERVISOR" : usuarioResponsable,
+            cuenta.IdCuenta, cuenta.PlacaVehiculo, saldoAnterior, saldoNuevo, monto);
 
-        _context.AuditoriasTransaccion.Add(auditoria);
         await _context.SaveChangesAsync();
 
         return new RecargaTagResponseDto
