@@ -31,11 +31,12 @@ public class TarifaDto
     [JsonPropertyName("resolucion_legal")]
     public string ResolucionLegal { get; set; } = string.Empty;
 
+    // Columnas DATE: se serializan como YYYY-MM-DD (igual que TurnoDto.fecha).
     [JsonPropertyName("fecha_inicio_vigencia")]
-    public DateTime FechaInicioVigencia { get; set; }
+    public string FechaInicioVigencia { get; set; } = string.Empty;
 
     [JsonPropertyName("fecha_fin_vigencia")]
-    public DateTime? FechaFinVigencia { get; set; }
+    public string? FechaFinVigencia { get; set; }
 
     [JsonPropertyName("activa")]
     public bool Activa { get; set; }
@@ -49,14 +50,22 @@ public class CrearTarifaRequestDto
     [JsonPropertyName("id_categoria")]
     public int IdCategoria { get; set; }
 
+    /// <summary>Alias legado de <see cref="MontoTarifa"/>.</summary>
     [JsonPropertyName("monto")]
     public decimal Monto { get; set; }
+
+    /// <summary>Nombre de la columna del DDL (monto_tarifa); tiene prioridad sobre el alias monto.</summary>
+    [JsonPropertyName("monto_tarifa")]
+    public decimal? MontoTarifa { get; set; }
 
     [JsonPropertyName("resolucion_legal")]
     public string? ResolucionLegal { get; set; }
 
     [JsonPropertyName("fecha_inicio_vigencia")]
     public DateTime? FechaInicioVigencia { get; set; }
+
+    [JsonPropertyName("fecha_fin_vigencia")]
+    public DateTime? FechaFinVigencia { get; set; }
 }
 
 // ============================================================
