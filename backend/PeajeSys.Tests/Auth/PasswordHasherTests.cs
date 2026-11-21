@@ -9,7 +9,7 @@ public class PasswordHasherTests
 
     public PasswordHasherTests()
     {
-        _hasher = new PasswordHasher(costFactor: 12, defaultDevPassword: "Turno123*");
+        _hasher = new PasswordHasher(costFactor: 12, defaultDevPassword: "Turno123*", usuariosSemillaHabilitados: true);
     }
 
     [Fact]
@@ -93,4 +93,36 @@ public class PasswordHasherTests
         // Assert
         Assert.False(resultado);
     }
+
+    [Fact]
+    public void UsuariosSemillaHabilitados_ReflejaElParametroDelConstructor()
+    {
+        Assert.True(_hasher.UsuariosSemillaHabilitados);
+        Assert.False(CrearSinSemilla().UsuariosSemillaHabilitados);
+    }
+
+    [Theory]
+    [InlineData("EMP-001")]
+    [InlineData("EMP-010")]
+    [InlineData("ADM-001")]
+    public void VerifySeedUser_SemillaDeshabilitada_RetornaFalseConClaveDeDemo(string codigoEmpleado)
+    {
+        var hasher = CrearSinSemilla();
+
+        Assert.False(hasher.VerifySeedUser(codigoEmpleado, "Turno123*"));
+    }
+
+    [Fact]
+    public void HashYVerifyPassword_SemillaDeshabilitada_SiguenFuncionando()
+    {
+        var hasher = CrearSinSemilla();
+
+        string hash = hasher.HashPassword("ClaveSegura2026*");
+
+        Assert.True(hasher.VerifyPassword("ClaveSegura2026*", hash));
+        Assert.False(hasher.VerifyPassword("otra", hash));
+    }
+
+    private static PasswordHasher CrearSinSemilla() =>
+        new(costFactor: 4, defaultDevPassword: "Turno123*", usuariosSemillaHabilitados: false);
 }
