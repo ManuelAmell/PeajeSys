@@ -17,7 +17,7 @@ public class PasswordHasher : IPasswordHasher
         if (string.IsNullOrEmpty(password))
             throw new ArgumentException("La contrasena no puede estar vacia.", nameof(password));
 
-        return BCryptImplementation.HashPassword(password, _costFactor);
+        return BCrypt.Net.BCrypt.HashPassword(password, workFactor: _costFactor);
     }
 
     public bool VerifyPassword(string password, string hash)
@@ -25,6 +25,14 @@ public class PasswordHasher : IPasswordHasher
         if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(hash))
             return false;
 
-        return BCryptImplementation.Verify(password, hash);
+        try
+        {
+            return BCrypt.Net.BCrypt.Verify(password, hash);
+        }
+        catch (BCrypt.Net.SaltParseException)
+        {
+            // Hash corrupto o con formato que no es BCrypt: no autentica.
+            return false;
+        }
     }
 }

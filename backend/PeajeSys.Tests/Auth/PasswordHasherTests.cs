@@ -63,9 +63,26 @@ public class PasswordHasherTests
         // Garantiza que la implementacion BCrypt propia es estandar y compatible con pgcrypto.
         const string hashPgcrypto = "$2a$12$vZSnXOz/BVv83fhz.QHV4Oxb611ibFKKZbFlZH4YtQwIOTCEh8Sya";
 
-        Assert.True(BCryptImplementation.Verify("Prueba2026*", hashPgcrypto));
         Assert.True(_hasher.VerifyPassword("Prueba2026*", hashPgcrypto));
         Assert.False(_hasher.VerifyPassword("prueba2026*", hashPgcrypto));
+    }
+
+    [Fact]
+    public void VerifyPassword_HashGeneradoPorElHasher_EsElLiteralQuePgcryptoReconoce()
+    {
+        // Hash literal producido por PasswordHasher (coste 12); en PostgreSQL se comprobo una sola vez que
+        // crypt('Inversa2026*', hash) = hash. Esta prueba no depende de la base de datos.
+        const string hashDelHasher = "$2a$12$425dKgrPZ9dVi8XZZLFbPegu8uviuoH3sGW9vzutDA3rXC9wRI7AO";
+
+        Assert.True(_hasher.VerifyPassword("Inversa2026*", hashDelHasher));
+        Assert.False(_hasher.VerifyPassword("inversa2026*", hashDelHasher));
+    }
+
+    [Fact]
+    public void VerifyPassword_HashCorrupto_RetornaFalseSinLanzar()
+    {
+        Assert.False(_hasher.VerifyPassword("ClaveSegura2026*", "$2a$12$esto-no-es-un-hash-valido"));
+        Assert.False(_hasher.VerifyPassword("ClaveSegura2026*", "texto-plano"));
     }
 
     [Fact]
