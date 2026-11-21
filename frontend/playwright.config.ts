@@ -35,9 +35,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm preview --port 5180 --strictPort',
+    command: 'pnpm build:mocks && pnpm preview --port 5180 --strictPort',
     port: 5180,
     reuseExistingServer: !process.env.CI,
-    timeout: 60000,
+    timeout: 180000,
   },
 });
