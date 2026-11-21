@@ -30,16 +30,7 @@ public class TurnosController : ControllerBase
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
     public async Task<ActionResult<AbrirTurnoResponseDto>> AbrirTurno([FromBody] AbrirTurnoRequestDto request)
     {
-        if (request.IdOperador <= 0)
-        {
-            string? sub = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-            if (int.TryParse(sub, out int idOperadorToken))
-            {
-                request.IdOperador = idOperadorToken;
-            }
-        }
-
-        var response = await _turnoService.AbrirTurnoAsync(request);
+        var response = await _turnoService.AbrirTurnoAsync(request, ActorOperacionClaims.Desde(User));
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
@@ -51,7 +42,7 @@ public class TurnosController : ControllerBase
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<TurnoDto>> CerrarTurno([FromRoute] long id, [FromBody] CerrarTurnoRequestDto request)
     {
-        var response = await _turnoService.CerrarTurnoAsync(id, request);
+        var response = await _turnoService.CerrarTurnoAsync(id, request, ActorOperacionClaims.Desde(User));
         return Ok(response);
     }
 
@@ -80,7 +71,7 @@ public class TurnosController : ControllerBase
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TurnoDto>> ObtenerTurnoPorId([FromRoute] long id)
     {
-        var turno = await _turnoService.ObtenerTurnoAsync(id);
+        var turno = await _turnoService.ObtenerTurnoAsync(id, ActorOperacionClaims.Desde(User));
         return Ok(turno);
     }
 

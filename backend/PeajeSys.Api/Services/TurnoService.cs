@@ -21,7 +21,7 @@ public class TurnoService : ITurnoService
         _context = context;
     }
 
-    public async Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
+    public async Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
     {
         if (request.IdCaseta <= 0)
         {
@@ -76,7 +76,7 @@ public class TurnoService : ITurnoService
         };
     }
 
-    public async Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+    public async Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor)
     {
         var turno = await _context.Turnos.FindAsync(idTurno);
         if (turno == null)
@@ -103,7 +103,7 @@ public class TurnoService : ITurnoService
         return MapearTurno(turno);
     }
 
-    public async Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
+    public async Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor)
     {
         var turno = await _context.Turnos.FindAsync(idTurno);
         if (turno == null)
