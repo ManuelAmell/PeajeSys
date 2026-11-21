@@ -16,12 +16,18 @@ public class JwtTokenService : IJwtTokenService
     private readonly string _audience;
     private readonly TimeSpan _expiration;
 
-    public JwtTokenService(
-        string secretKey = "ClaveSecretaSuperSeguraParaPeajeSys2026!*ClaveLargaMinimo32Bytes",
-        string issuer = "PeajeSys.Api",
-        string audience = "PeajeSys.Client",
-        int expirationHours = 8)
+    public JwtTokenService(string secretKey, string issuer, string audience, int expirationHours)
     {
+        if (string.IsNullOrWhiteSpace(secretKey))
+            throw new ArgumentException("La clave JWT es obligatoria.", nameof(secretKey));
+        if (Encoding.UTF8.GetByteCount(secretKey) < JwtSettings.LongitudMinimaClaveBytes)
+            throw new ArgumentException(
+                $"La clave JWT debe tener al menos {JwtSettings.LongitudMinimaClaveBytes} bytes en UTF-8.", nameof(secretKey));
+        if (string.IsNullOrWhiteSpace(issuer))
+            throw new ArgumentException("El issuer JWT es obligatorio.", nameof(issuer));
+        if (string.IsNullOrWhiteSpace(audience))
+            throw new ArgumentException("El audience JWT es obligatorio.", nameof(audience));
+
         _secretKey = secretKey;
         _issuer = issuer;
         _audience = audience;
