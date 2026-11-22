@@ -40,6 +40,12 @@ public static class ZonaHorariaApp
         return (TimeZoneInfo.ConvertTimeToUtc(inicio, Zona.Value), TimeZoneInfo.ConvertTimeToUtc(fin, Zona.Value));
     }
 
+    /// <summary>Dia civil (zona de la aplicacion) de un instante UTC.</summary>
+    public static DateOnly DiaCivil(DateTime instanteUtc) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(AUtcSeguro(instanteUtc), Zona.Value));
+
+    private static DateTime AUtcSeguro(DateTime dt) => DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+
     /// <summary>Dia civil actual en la zona de la aplicacion.</summary>
     public static DateOnly Hoy() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Zona.Value));
 }

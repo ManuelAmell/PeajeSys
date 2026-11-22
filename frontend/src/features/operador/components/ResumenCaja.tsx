@@ -13,6 +13,8 @@ export function ResumenCaja({
   pasos,
 }: ResumenCajaProps) {
   const esperadoEnCaja = fondoInicial + totalRecaudadoEfectivo;
+  // Las anuladas se listan marcadas, pero no cuentan como pasos del turno.
+  const pasosVigentes = pasos.filter((p) => !p.anulada).length;
 
   return (
     <aside
@@ -49,7 +51,7 @@ export function ResumenCaja({
 
         <div className="flex justify-between text-[17px]">
           <span className="text-texto-2">Pasos registrados</span>
-          <span className="font-semibold text-texto">{pasos.length}</span>
+          <span className="font-semibold text-texto">{pasosVigentes}</span>
         </div>
       </section>
 
@@ -67,16 +69,29 @@ export function ResumenCaja({
                 key={p.ticket || idx}
                 className="py-3 first:pt-0 last:pb-0 flex flex-col gap-0.5"
               >
-                <div className="flex justify-between items-center gap-3">
-                  <strong className="text-[19px] md:text-[20px] font-bold tracking-wide text-texto">
+                <div
+                  className={`flex justify-between items-center gap-3 ${p.anulada ? 'opacity-70' : ''}`}
+                >
+                  <strong
+                    className={`text-[19px] md:text-[20px] font-bold tracking-wide text-texto ${p.anulada ? 'line-through' : ''}`}
+                  >
                     {p.placa}
                   </strong>
-                  <strong className="text-[19px] md:text-[20px] font-bold text-texto">
+                  <strong
+                    className={`text-[19px] md:text-[20px] font-bold text-texto ${p.anulada ? 'line-through' : ''}`}
+                  >
                     {p.montoTexto}
                   </strong>
                 </div>
-                <span className="text-[14px] text-texto-2">
-                  {p.hora} · Cat. {p.categoriaRomano} · {p.metodoPago} · {p.ticket}
+                <span className="text-[14px] text-texto-2 flex flex-wrap items-center gap-x-2">
+                  {p.anulada && (
+                    <span className="px-2 py-0.5 rounded-[4px] border-2 border-error bg-error-fondo text-error text-[13px] font-bold">
+                      Anulada
+                    </span>
+                  )}
+                  <span>
+                    {p.hora} · Cat. {p.categoriaRomano} · {p.metodoPago} · {p.ticket}
+                  </span>
                 </span>
               </li>
             ))}
