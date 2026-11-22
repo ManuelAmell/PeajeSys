@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Exceptions;
@@ -33,8 +34,11 @@ public class ArqueoService : IArqueoService
             throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe un turno con id {idTurno}.");
         }
 
+        // Una transaccion anulada (VOID en auditoria) sigue APROBADA: no cuenta como vehiculo. El efectivo ya
+        // viene corregido en turno.total_recaudado_efectivo (la anulacion lo resta).
         long totalVehiculos = await _context.TransaccionesPeaje
-            .CountAsync(t => t.IdTurno == idTurno);
+            .CountAsync(t => t.IdTurno == idTurno
+                && !_context.AuditoriasTransaccion.Any(a => a.IdTransaccion == t.IdTransaccion && a.TipoOperacion == "VOID"));
 
         var (diferencia, estadoArqueo) = DeterminarArqueo(turno.TotalRecaudadoEfectivo, efectivoReportado);
 
@@ -89,69 +93,23 @@ public class ReporteRecaudoService : IReporteRecaudoService
 
     public async Task<RecaudoDiarioDto> ObtenerRecaudoDiarioAsync(int? idEstacion, string? fecha)
     {
-        DateTime? fechaFiltro = null;
-        if (!string.IsNullOrWhiteSpace(fecha) && DateTime.TryParse(fecha, out var f))
+        // `fecha` es un dia civil de la zona de la aplicacion; las transacciones estan en timestamptz (UTC).
+        DateOnly? fechaFiltro = null;
+        DateTime inicioUtc = default, finUtc = default;
+        if (!string.IsNullOrWhiteSpace(fecha) && DateOnly.TryParse(fecha, out var f))
         {
-            fechaFiltro = f.Date;
+            fechaFiltro = f;
+            (inicioUtc, finUtc) = ZonaHorariaApp.RangoUtcDelDia(f);
         }
+        string fechaTexto = (fechaFiltro ?? ZonaHorariaApp.Hoy()).ToString("yyyy-MM-dd");
 
-        // Intento 1: Consultar la vista de base de datos vw_resumen_diario_estacion
-        try
-        {
-            var queryVista = _context.ResumenDiarioEstaciones.AsQueryable();
-
-            if (idEstacion.HasValue)
-            {
-                queryVista = queryVista.Where(v => v.IdEstacion == idEstacion.Value);
-            }
-
-            if (fechaFiltro.HasValue)
-            {
-                queryVista = queryVista.Where(v => v.Fecha.Date == fechaFiltro.Value);
-            }
-
-            var listaVista = await queryVista.ToListAsync();
-
-            if (listaVista.Count > 0)
-            {
-                long vehTotal = listaVista.Sum(v => v.TotalVehiculos);
-                decimal efTotal = listaVista.Sum(v => v.RecaudoEfectivo);
-                decimal tagTotal = listaVista.Sum(v => v.RecaudoTelepeaje);
-                decimal genTotal = listaVista.Sum(v => v.RecaudoTotal);
-                string nombreEstacion = listaVista.First().Estacion;
-
-                var dias = listaVista.Select(v => new RecaudoDiaItemDto
-                {
-                    Fecha = v.Fecha.ToString("yyyy-MM-dd"),
-                    Veh = v.TotalVehiculos,
-                    Ef = v.RecaudoEfectivo,
-                    Tag = v.RecaudoTelepeaje,
-                    Total = v.RecaudoTotal
-                }).ToList();
-
-                return new RecaudoDiarioDto
-                {
-                    IdEstacion = idEstacion,
-                    Estacion = nombreEstacion,
-                    Fecha = fechaFiltro?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
-                    TotalVehiculos = vehTotal,
-                    TotalEfectivo = efTotal,
-                    TotalTelepeaje = tagTotal,
-                    TotalGeneral = genTotal,
-                    Dias = dias
-                };
-            }
-        }
-        catch
-        {
-            // Fallback a agregacion directa si la vista no esta presente en memoria/sqlite
-        }
-
-        // Fallback: agregacion directa sobre TRANSACCION_PEAJE
-        var transQuery = _context.TransaccionesPeaje
-            .Include(t => t.Turno)
-            .ThenInclude(tu => tu!.Caseta)
-            .ThenInclude(c => c!.Estacion)
+        // NO se usa la vista vw_resumen_diario_estacion: forma parte de la entrega de base de datos (no se modifica)
+        // y es anterior a la anulacion, asi que cuenta las transacciones anuladas (siguen APROBADAS en
+        // TRANSACCION_PEAJE; la anulacion solo agrega un VOID en AUDITORIA_TRANSACCION). La API agrega aqui con la
+        // misma formula de la vista (por estacion y dia, conteo y suma por metodo de pago) excluyendo las anuladas
+        // y agrupando por dia civil de la aplicacion (America/Bogota) en vez del dia UTC de la sesion.
+        var transQuery = _context.TransaccionesPeaje.AsNoTracking()
+            .Where(t => !_context.AuditoriasTransaccion.Any(a => a.IdTransaccion == t.IdTransaccion && a.TipoOperacion == "VOID"))
             .AsQueryable();
 
         if (idEstacion.HasValue)
@@ -161,15 +119,73 @@ public class ReporteRecaudoService : IReporteRecaudoService
 
         if (fechaFiltro.HasValue)
         {
-            transQuery = transQuery.Where(t => t.FechaHora.Date == fechaFiltro.Value);
+            transQuery = transQuery.Where(t => t.FechaHora >= inicioUtc && t.FechaHora < finUtc);
         }
 
-        var transacciones = await transQuery.ToListAsync();
+        var filas = await transQuery
+            .Select(t => new
+            {
+                IdEstacion = t.Turno!.Caseta!.IdEstacion,
+                Estacion = t.Turno!.Caseta!.Estacion!.Nombre,
+                IdCaseta = t.Turno!.Caseta!.IdCaseta,
+                t.Turno!.Caseta!.NumeroCarril,
+                t.Turno!.Caseta!.TipoCarril,
+                t.FechaHora,
+                t.MetodoPago,
+                t.MontoTarifa
+            })
+            .ToListAsync();
 
-        long totalVeh = transacciones.Count;
-        decimal totalEf = transacciones.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa);
-        decimal totalTag = transacciones.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa);
-        decimal totalGen = transacciones.Sum(t => t.MontoTarifa);
+        long totalVeh = filas.Count;
+        decimal totalEf = filas.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa);
+        decimal totalTag = filas.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa);
+        decimal totalGen = filas.Sum(t => t.MontoTarifa);
+
+        // Desglose por caseta/carril con los mismos filtros (estacion, dia civil) y sin anuladas.
+        var carriles = filas
+            .GroupBy(t => (t.IdEstacion, t.IdCaseta, t.NumeroCarril, t.TipoCarril))
+            .OrderBy(g => g.Key.IdEstacion).ThenBy(g => g.Key.NumeroCarril).ThenBy(g => g.Key.IdCaseta)
+            .Select(g => new RecaudoCarrilItemDto
+            {
+                IdCaseta = g.Key.IdCaseta,
+                NumeroCarril = g.Key.NumeroCarril,
+                TipoCarril = g.Key.TipoCarril,
+                Veh = g.LongCount(),
+                Ef = g.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa),
+                Tag = g.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa),
+                Total = g.Sum(t => t.MontoTarifa)
+            }).ToList();
+
+        // Sin filtro de fecha: una fila por estacion y dia civil (como la vista); con fecha: una sola fila del dia.
+        if (!fechaFiltro.HasValue && filas.Count > 0)
+        {
+            var grupos = filas
+                .GroupBy(t => (t.IdEstacion, t.Estacion, Dia: ZonaHorariaApp.DiaCivil(t.FechaHora)))
+                .OrderBy(g => g.Key.Dia).ThenBy(g => g.Key.Estacion, StringComparer.Ordinal)
+                .ToList();
+            var diasPorEstacion = grupos
+                .Select(g => new RecaudoDiaItemDto
+                {
+                    Fecha = g.Key.Dia.ToString("yyyy-MM-dd"),
+                    Veh = g.LongCount(),
+                    Ef = g.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa),
+                    Tag = g.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa),
+                    Total = g.Sum(t => t.MontoTarifa)
+                }).ToList();
+
+            return new RecaudoDiarioDto
+            {
+                IdEstacion = idEstacion,
+                Estacion = grupos[0].Key.Estacion,
+                Fecha = fechaTexto,
+                TotalVehiculos = totalVeh,
+                TotalEfectivo = totalEf,
+                TotalTelepeaje = totalTag,
+                TotalGeneral = totalGen,
+                Dias = diasPorEstacion,
+                Carriles = carriles
+            };
+        }
 
         string? estacionNombre = null;
         if (idEstacion.HasValue)
@@ -182,7 +198,7 @@ public class ReporteRecaudoService : IReporteRecaudoService
         {
             new()
             {
-                Fecha = fechaFiltro?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
+                Fecha = fechaTexto,
                 Veh = totalVeh,
                 Ef = totalEf,
                 Tag = totalTag,
@@ -194,12 +210,13 @@ public class ReporteRecaudoService : IReporteRecaudoService
         {
             IdEstacion = idEstacion,
             Estacion = estacionNombre,
-            Fecha = fechaFiltro?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd"),
+            Fecha = fechaTexto,
             TotalVehiculos = totalVeh,
             TotalEfectivo = totalEf,
             TotalTelepeaje = totalTag,
             TotalGeneral = totalGen,
-            Dias = diasFallback
+            Dias = diasFallback,
+            Carriles = carriles
         };
     }
 }
@@ -217,9 +234,23 @@ public class AuditoriaService : IAuditoriaService
         _context = context;
     }
 
-    public async Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
+    public Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
         DateTime? fechaInicio,
         DateTime? fechaFin,
+        string? tipoOperacion,
+        string? usuario,
+        int page = 1,
+        int limit = 50)
+    {
+        string? fiStr = fechaInicio?.ToString("o");
+        string? ffStr = fechaFin?.ToString("o");
+        return ListarAuditoriaAsync(null, fiStr, ffStr, tipoOperacion, usuario, page, limit);
+    }
+
+    public async Task<IEnumerable<AuditoriaItemDto>> ListarAuditoriaAsync(
+        string? fecha,
+        string? fechaInicio,
+        string? fechaFin,
         string? tipoOperacion,
         string? usuario,
         int page = 1,
@@ -229,16 +260,73 @@ public class AuditoriaService : IAuditoriaService
         if (limit < 1) limit = 50;
         if (limit > 500) limit = 500;
 
-        var query = _context.AuditoriasTransaccion.AsQueryable();
+        DateTime? inicioUtc = null;
+        DateTime? finUtc = null;
+        bool finExclusivo = false;
 
-        if (fechaInicio.HasValue)
+        if (!string.IsNullOrWhiteSpace(fecha))
         {
-            query = query.Where(a => a.FechaHora >= fechaInicio.Value);
+            if (!DateOnly.TryParseExact(fecha.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dia) && !DateOnly.TryParse(fecha.Trim(), out dia))
+            {
+                throw new AppException("FILTRO_INVALIDO", "La fecha proporcionada no es valida. Formato esperado: YYYY-MM-DD.", 400);
+            }
+            (inicioUtc, finUtc) = ZonaHorariaApp.RangoUtcDelDia(dia);
+            finExclusivo = true;
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(fechaInicio))
+            {
+                if (DateOnly.TryParseExact(fechaInicio.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var di))
+                {
+                    inicioUtc = ZonaHorariaApp.RangoUtcDelDia(di).InicioUtc;
+                }
+                else if (DateTime.TryParse(fechaInicio.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dtI))
+                {
+                    inicioUtc = ZonaHorariaApp.AUtc(dtI);
+                }
+                else
+                {
+                    throw new AppException("FILTRO_INVALIDO", "La fecha de inicio no es valida.", 400);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(fechaFin))
+            {
+                if (DateOnly.TryParseExact(fechaFin.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var df))
+                {
+                    finUtc = ZonaHorariaApp.RangoUtcDelDia(df).FinUtc;
+                    finExclusivo = true;
+                }
+                else if (DateTime.TryParse(fechaFin.Trim(), CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var dtF))
+                {
+                    finUtc = ZonaHorariaApp.AUtc(dtF);
+                    finExclusivo = false;
+                }
+                else
+                {
+                    throw new AppException("FILTRO_INVALIDO", "La fecha de fin no es valida.", 400);
+                }
+            }
         }
 
-        if (fechaFin.HasValue)
+        var query = _context.AuditoriasTransaccion.Include(a => a.Transaccion).AsQueryable();
+
+        if (inicioUtc.HasValue)
         {
-            query = query.Where(a => a.FechaHora <= fechaFin.Value);
+            query = query.Where(a => a.FechaHoraEvento >= inicioUtc.Value);
+        }
+
+        if (finUtc.HasValue)
+        {
+            if (finExclusivo)
+            {
+                query = query.Where(a => a.FechaHoraEvento < finUtc.Value);
+            }
+            else
+            {
+                query = query.Where(a => a.FechaHoraEvento <= finUtc.Value);
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(tipoOperacion))
@@ -250,11 +338,11 @@ public class AuditoriaService : IAuditoriaService
         if (!string.IsNullOrWhiteSpace(usuario))
         {
             string usuarioNorm = usuario.Trim().ToUpperInvariant();
-            query = query.Where(a => a.UsuarioResponsable.ToUpper().Contains(usuarioNorm));
+            query = query.Where(a => a.UsuarioSistema.ToUpper().Contains(usuarioNorm));
         }
 
         // Orden cronologico descendente
-        query = query.OrderByDescending(a => a.FechaHora);
+        query = query.OrderByDescending(a => a.FechaHoraEvento);
 
         var items = await query
             .Skip((page - 1) * limit)
@@ -266,11 +354,11 @@ public class AuditoriaService : IAuditoriaService
             IdAuditoria = a.IdAuditoria,
             IdTransaccion = a.IdTransaccion,
             TipoOperacion = a.TipoOperacion,
-            UsuarioResponsable = a.UsuarioResponsable,
-            FechaHora = a.FechaHora,
-            DatosAnteriores = a.DatosAnteriores,
-            DatosNuevos = a.DatosNuevos,
-            MotivoAnulacion = a.MotivoAnulacion
+            UsuarioSistema = a.UsuarioSistema,
+            FechaHoraEvento = a.FechaHoraEvento,
+            Motivo = a.Motivo,
+            PlacaDetectada = a.Transaccion?.PlacaDetectada,
+            MetodoPago = a.Transaccion?.MetodoPago
         });
     }
 }
@@ -282,10 +370,12 @@ public class AuditoriaService : IAuditoriaService
 public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly ILogger<TelepeajeMonitoreoService> _logger;
 
-    public TelepeajeMonitoreoService(PeajeSysDbContext context)
+    public TelepeajeMonitoreoService(PeajeSysDbContext context, ILogger<TelepeajeMonitoreoService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<MonitoreoCuentaTelepeajeDto>> ListarCuentasMonitoreoAsync(
@@ -423,19 +513,12 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
 
         var ahora = DateTime.UtcNow;
 
-        // Registrar evento en AUDITORIA_TRANSACCION
-        var auditoria = new AuditoriaTransaccion
-        {
-            IdTransaccion = null,
-            TipoOperacion = "RECARGA_TAG",
-            UsuarioResponsable = string.IsNullOrWhiteSpace(usuarioResponsable) ? "SUPERVISOR" : usuarioResponsable,
-            FechaHora = ahora,
-            DatosAnteriores = JsonSerializer.Serialize(new { saldo_disponible = saldoAnterior }),
-            DatosNuevos = JsonSerializer.Serialize(new { saldo_disponible = saldoNuevo, monto_recargado = monto }),
-            MotivoAnulacion = null
-        };
+        // AUDITORIA_TRANSACCION exige una transaccion de peaje (id_transaccion NOT NULL): la recarga se registra en el log.
+        _logger.LogInformation(
+            "RECARGA_TAG usuario={Usuario} entidad=CUENTA_TELEPEAJE id={IdCuenta} placa={Placa} saldo_anterior={SaldoAnterior} saldo_nuevo={SaldoNuevo} monto={Monto}",
+            string.IsNullOrWhiteSpace(usuarioResponsable) ? "SUPERVISOR" : usuarioResponsable,
+            cuenta.IdCuenta, cuenta.PlacaVehiculo, saldoAnterior, saldoNuevo, monto);
 
-        _context.AuditoriasTransaccion.Add(auditoria);
         await _context.SaveChangesAsync();
 
         return new RecargaTagResponseDto
@@ -448,6 +531,28 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
             MontoRecargado = monto,
             FechaHora = ahora,
             Mensaje = $"Recarga exitosa por ${monto:N0} COP. Nuevo saldo: ${saldoNuevo:N0} COP."
+        };
+    }
+
+    public async Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+    {
+        string placaNorm = (placa ?? string.Empty).Trim().ToUpperInvariant().Replace(" ", "");
+
+        var cuenta = await _context.CuentasTelepeaje
+            .FirstOrDefaultAsync(c => c.PlacaVehiculo == placaNorm);
+
+        if (cuenta == null)
+        {
+            throw new NotFoundException("CUENTA_NO_ENCONTRADA", $"No existe cuenta de telepeaje asociada a la placa {placaNorm}.");
+        }
+
+        return new CuentaTelepeajeDetalleDto
+        {
+            IdCuenta = cuenta.IdCuenta,
+            PlacaVehiculo = cuenta.PlacaVehiculo,
+            TagRfidSerial = cuenta.TagRfidSerial,
+            SaldoDisponible = cuenta.SaldoDisponible,
+            EstadoCuenta = cuenta.EstadoCuenta
         };
     }
 }

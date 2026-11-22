@@ -63,9 +63,9 @@ public class SupervisorControllersTests
                 new()
                 {
                     IdAuditoria = 1,
-                    TipoOperacion = tipoOperacion ?? "RECARGA_TAG",
-                    UsuarioResponsable = usuario ?? "EMP-003",
-                    FechaHora = DateTime.UtcNow
+                    TipoOperacion = tipoOperacion ?? "VOID",
+                    UsuarioSistema = usuario ?? "SUP-001",
+                    FechaHoraEvento = DateTime.UtcNow
                 }
             };
             return Task.FromResult<IEnumerable<AuditoriaItemDto>>(list);
@@ -88,6 +88,18 @@ public class SupervisorControllersTests
                 }
             };
             return Task.FromResult<IEnumerable<MonitoreoCuentaTelepeajeDto>>(list);
+        }
+
+        public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+        {
+            return Task.FromResult(new CuentaTelepeajeDetalleDto
+            {
+                IdCuenta = 1,
+                PlacaVehiculo = placa.ToUpperInvariant(),
+                TagRfidSerial = "TAG-COL-0001",
+                SaldoDisponible = 50000m,
+                EstadoCuenta = "ACTIVA"
+            });
         }
 
         public Task<RecargaTagResponseDto> RecargarCuentaAsync(RecargaTagRequestDto request, string usuarioResponsable)
@@ -145,7 +157,7 @@ public class SupervisorControllersTests
         var controller = new AuditoriaController(new FakeAuditoriaService());
 
         // Act
-        var result = await controller.ListarAuditoria(null, null, "RECARGA_TAG", null, null, null);
+        var result = await controller.ListarAuditoria(null, null, "VOID", null, null, null);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);

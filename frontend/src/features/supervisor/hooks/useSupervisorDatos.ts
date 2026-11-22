@@ -78,7 +78,7 @@ export function useSupervisorDatos() {
     return turnos.map((t) => {
       const txs = mapaTransaccionesPorTurno.get(t.id_turno) ?? [];
       const pasosEfectivo = txs
-        .filter((tx) => tx.metodo_pago === 'EFECTIVO')
+        .filter((tx) => tx.metodo_pago === 'EFECTIVO' && !tx.anulada)
         .reduce((sum, tx) => sum + tx.monto_tarifa, 0);
 
       const caseta = casetas.find((c) => c.id_caseta === t.id_caseta);
@@ -123,7 +123,7 @@ export function useSupervisorDatos() {
         pasosEfectivo,
         pasosTexto: formatearMoneda(pasosEfectivo),
         recaudadoTexto: formatearMoneda(t.total_recaudado_efectivo),
-        declaradoTexto: abierto || t.total_declarado_cierre === null
+        declaradoTexto: abierto || t.total_declarado_cierre == null
           ? 'Turno abierto'
           : formatearMoneda(t.total_declarado_cierre),
         diagnostico: arqueo.diagnostico,

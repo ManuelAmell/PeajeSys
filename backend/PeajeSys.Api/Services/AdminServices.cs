@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
+using PeajeSys.Core.Enums;
 using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
 using PeajeSys.Data;
@@ -19,10 +20,12 @@ namespace PeajeSys.Api.Services;
 public class TarifaService : ITarifaService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly ILogger<TarifaService> _logger;
 
-    public TarifaService(PeajeSysDbContext context)
+    public TarifaService(PeajeSysDbContext context, ILogger<TarifaService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<TarifaDto>> ListarTarifasAsync(int? idEstacion, int? idCategoria, bool? vigente)
@@ -44,7 +47,7 @@ public class TarifaService : ITarifaService
 
         if (vigente.HasValue)
         {
-            var now = DateTime.UtcNow.Date;
+            var now = ZonaHorariaApp.HoyComoFecha();
             if (vigente.Value)
             {
                 query = query.Where(t => t.Activa && t.FechaInicioVigencia <= now && (t.FechaFinVigencia == null || t.FechaFinVigencia >= now));
@@ -61,7 +64,7 @@ public class TarifaService : ITarifaService
 
     public async Task<TarifaDto> ObtenerTarifaVigenteAsync(int idEstacion, int idCategoria)
     {
-        var now = DateTime.UtcNow.Date;
+        var now = ZonaHorariaApp.HoyComoFecha();
 
         var tarifa = await _context.Tarifas
             .Include(t => t.Estacion)
@@ -86,7 +89,8 @@ public class TarifaService : ITarifaService
 
     public async Task<TarifaDto> CrearTarifaConVigenciaAsync(CrearTarifaRequestDto request, string usuarioResponsable)
     {
-        if (request.Monto <= 0)
+        decimal monto = request.MontoTarifa ?? request.Monto;
+        if (monto <= 0)
         {
             throw new AppException("ERROR_VALIDACION", "El monto de la tarifa debe ser mayor a cero.", 422);
         }
@@ -96,7 +100,12 @@ public class TarifaService : ITarifaService
             throw new AppException("ERROR_VALIDACION", "Estacion y categoria son campos requeridos.", 422);
         }
 
-        var fechaInicio = request.FechaInicioVigencia ?? DateTime.UtcNow;
+        var fechaInicio = (request.FechaInicioVigencia ?? ZonaHorariaApp.HoyComoFecha()).Date;
+        var fechaFin = request.FechaFinVigencia?.Date;
+        if (fechaFin.HasValue && fechaFin.Value < fechaInicio)
+        {
+            throw new AppException("ERROR_VALIDACION", "fecha_fin_vigencia debe ser mayor o igual a fecha_inicio_vigencia.", 422);
+        }
 
         // Regla Atomica de Vigencia: Buscar tarifa previa activa para la misma estacion y categoria
         var tarifaPrevia = await _context.Tarifas
@@ -108,7 +117,7 @@ public class TarifaService : ITarifaService
         {
             IdEstacion = request.IdEstacion,
             IdCategoria = request.IdCategoria,
-            Monto = request.Monto,
+            Monto = monto,
             ResolucionLegal = request.ResolucionLegal ?? "Res. MinTransporte Vigente",
             FechaInicioVigencia = fechaInicio,
             FechaFinVigencia = null,
@@ -117,27 +126,105 @@ public class TarifaService : ITarifaService
 
         // Actualizar vigencia previa
         ActualizarVigenciaTarifa(tarifaPrevia, nuevaTarifa);
+        nuevaTarifa.FechaFinVigencia = fechaFin;
 
         _context.Tarifas.Add(nuevaTarifa);
 
-        // Registro de auditoria inmutable
-        var auditoria = new AuditoriaTransaccion
-        {
-            IdTransaccion = null,
-            TipoOperacion = "MODIFICACION_TARIFA",
-            UsuarioResponsable = string.IsNullOrWhiteSpace(usuarioResponsable) ? "ADMINISTRADOR" : usuarioResponsable,
-            FechaHora = DateTime.UtcNow,
-            DatosAnteriores = tarifaPrevia != null
-                ? JsonSerializer.Serialize(new { id_tarifa = tarifaPrevia.IdTarifa, monto = tarifaPrevia.Monto, fecha_fin = tarifaPrevia.FechaFinVigencia })
-                : null,
-            DatosNuevos = JsonSerializer.Serialize(new { id_estacion = nuevaTarifa.IdEstacion, id_categoria = nuevaTarifa.IdCategoria, monto = nuevaTarifa.Monto, fecha_inicio = nuevaTarifa.FechaInicioVigencia }),
-            MotivoAnulacion = null
-        };
-
-        _context.AuditoriasTransaccion.Add(auditoria);
+        // AUDITORIA_TRANSACCION exige una transaccion de peaje (id_transaccion NOT NULL): la tarifa se registra en el log.
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation(
+            "MODIFICACION_TARIFA usuario={Usuario} entidad=TARIFA id={IdTarifa} estacion={IdEstacion} categoria={IdCategoria} monto_anterior={MontoAnterior} monto_nuevo={MontoNuevo} inicio_vigencia={Inicio}",
+            string.IsNullOrWhiteSpace(usuarioResponsable) ? "ADMINISTRADOR" : usuarioResponsable,
+            nuevaTarifa.IdTarifa, nuevaTarifa.IdEstacion, nuevaTarifa.IdCategoria,
+            tarifaPrevia?.Monto, nuevaTarifa.Monto, nuevaTarifa.FechaInicioVigencia);
+
         return MapearTarifa(nuevaTarifa);
+    }
+
+    public async Task<TarifaDto> ActualizarTarifaAsync(int id, ActualizarTarifaRequestDto request, string usuarioResponsable)
+    {
+        var tarifa = await _context.Tarifas
+            .Include(t => t.Estacion)
+            .Include(t => t.Categoria)
+            .FirstOrDefaultAsync(t => t.IdTarifa == id);
+
+        if (tarifa == null)
+        {
+            throw new NotFoundException("TARIFA_NO_ENCONTRADA", $"Tarifa {id} no encontrada.");
+        }
+
+        decimal? nuevoMonto = request.MontoTarifa ?? request.Monto;
+        if (nuevoMonto.HasValue && nuevoMonto.Value <= 0)
+        {
+            throw new AppException("ERROR_VALIDACION", "El monto de la tarifa debe ser mayor a cero.", 422);
+        }
+
+        if (request.ResolucionLegal != null && request.ResolucionLegal.Length > 100)
+        {
+            throw new AppException("ERROR_VALIDACION", "La resolucion legal no puede exceder 100 caracteres.", 422);
+        }
+
+        var inicio = request.FechaInicioVigencia?.Date ?? tarifa.FechaInicioVigencia;
+        var fin = request.FechaFinVigencia.HasValue ? request.FechaFinVigencia.Value.Date : tarifa.FechaFinVigencia;
+
+        if (fin.HasValue && fin.Value < inicio)
+        {
+            throw new AppException("ERROR_VALIDACION", "fecha_fin_vigencia debe ser mayor o igual a fecha_inicio_vigencia.", 422);
+        }
+
+        if (request.Activa.HasValue && request.Activa.Value && !tarifa.Activa)
+        {
+            bool existeOtraActiva = await _context.Tarifas.AnyAsync(t =>
+                t.IdTarifa != id &&
+                t.IdEstacion == tarifa.IdEstacion &&
+                t.IdCategoria == tarifa.IdCategoria &&
+                t.Activa);
+
+            if (existeOtraActiva)
+            {
+                throw new ConflictException("TARIFA_ACTIVA_DUPLICADA",
+                    $"Ya existe una tarifa activa para la estacion {tarifa.IdEstacion} y la categoria {tarifa.IdCategoria}.");
+            }
+        }
+
+        decimal montoAnterior = tarifa.Monto;
+        bool activaAnterior = tarifa.Activa;
+
+        if (nuevoMonto.HasValue)
+        {
+            tarifa.Monto = nuevoMonto.Value;
+        }
+
+        if (request.ResolucionLegal != null)
+        {
+            tarifa.ResolucionLegal = request.ResolucionLegal;
+        }
+
+        if (request.FechaInicioVigencia.HasValue)
+        {
+            tarifa.FechaInicioVigencia = request.FechaInicioVigencia.Value.Date;
+        }
+
+        if (request.FechaFinVigencia.HasValue)
+        {
+            tarifa.FechaFinVigencia = request.FechaFinVigencia.Value.Date;
+        }
+
+        if (request.Activa.HasValue)
+        {
+            tarifa.Activa = request.Activa.Value;
+        }
+
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "MODIFICACION_TARIFA usuario={Usuario} entidad=TARIFA id={IdTarifa} estacion={IdEstacion} categoria={IdCategoria} monto_anterior={MontoAnterior} monto_nuevo={MontoNuevo} activa_anterior={ActivaAnterior} activa_nuevo={ActivaNuevo}",
+            string.IsNullOrWhiteSpace(usuarioResponsable) ? "ADMINISTRADOR" : usuarioResponsable,
+            tarifa.IdTarifa, tarifa.IdEstacion, tarifa.IdCategoria,
+            montoAnterior, tarifa.Monto, activaAnterior, tarifa.Activa);
+
+        return MapearTarifa(tarifa);
     }
 
     // Metodo puro de logica de dominio de actualizacion de vigencia
@@ -146,7 +233,7 @@ public class TarifaService : ITarifaService
         if (tarifaAnterior != null)
         {
             tarifaAnterior.FechaFinVigencia = tarifaNueva.FechaInicioVigencia;
-            if (tarifaNueva.FechaInicioVigencia <= DateTime.UtcNow)
+            if (tarifaNueva.FechaInicioVigencia <= ZonaHorariaApp.HoyComoFecha())
             {
                 tarifaAnterior.Activa = false;
             }
@@ -165,8 +252,8 @@ public class TarifaService : ITarifaService
         CategoriaCodigo = t.Categoria?.Codigo,
         Monto = t.Monto,
         ResolucionLegal = t.ResolucionLegal,
-        FechaInicioVigencia = t.FechaInicioVigencia,
-        FechaFinVigencia = t.FechaFinVigencia,
+        FechaInicioVigencia = t.FechaInicioVigencia.ToString("yyyy-MM-dd"),
+        FechaFinVigencia = t.FechaFinVigencia?.ToString("yyyy-MM-dd"),
         Activa = t.Activa
     };
 }
@@ -261,6 +348,11 @@ public class OperadorAdminService : IOperadorAdminService
         string rol = (request.Rol ?? "RECAUDADOR").Trim().ToUpperInvariant();
         string estado = (request.Estado ?? "ACTIVO").Trim().ToUpperInvariant();
         string password = request.ObtenerPassword();
+        if (string.IsNullOrWhiteSpace(password))
+        {
+            throw new AppException("ERROR_VALIDACION", "La contrasena es requerida para crear un operador.", 422);
+        }
+
         string passwordHash = _passwordHasher.HashPassword(password);
 
         var nuevo = new Operador
@@ -298,6 +390,76 @@ public class OperadorAdminService : IOperadorAdminService
         await _context.SaveChangesAsync();
 
         return MapearOperador(op);
+    }
+
+    public async Task<OperadorAdminDto> ActualizarOperadorAsync(int id, ActualizarOperadorRequestDto request)
+    {
+        var op = await _context.Operadores.FindAsync(id);
+        if (op == null)
+        {
+            throw new NotFoundException("OPERADOR_NO_ENCONTRADO", $"No existe un operador con id {id}.");
+        }
+
+        // Actualizacion parcial: solo se validan los campos presentes. Se valida todo antes de aplicar nada.
+        string? nombres = request.Nombres?.Trim();
+        string? apellidos = request.Apellidos?.Trim();
+        string? documento = request.ObtenerDocumento()?.Trim();
+        string? codigo = request.ObtenerCodigo()?.Trim().ToUpperInvariant();
+        string? rol = request.Rol?.Trim().ToUpperInvariant();
+        string? estado = request.Estado?.Trim().ToUpperInvariant();
+        string? password = request.ObtenerPassword();
+
+        ValidarTexto(nombres, "nombres", 100);
+        ValidarTexto(apellidos, "apellidos", 100);
+        ValidarTexto(documento, "numero_documento", 20);
+        ValidarTexto(codigo, "codigo_empleado", 20);
+
+        if (rol != null && rol != Roles.Recaudador && rol != Roles.Supervisor && rol != Roles.Administrador)
+        {
+            throw new AppException("ROL_INVALIDO", "El rol debe ser RECAUDADOR, SUPERVISOR o ADMINISTRADOR.", 422);
+        }
+
+        if (estado != null && estado != "ACTIVO" && estado != "INACTIVO")
+        {
+            throw new AppException("ESTADO_INVALIDO", "El estado debe ser ACTIVO o INACTIVO.", 422);
+        }
+
+        if (password != null && string.IsNullOrWhiteSpace(password))
+        {
+            throw new AppException("ERROR_VALIDACION", "La contrasena no puede estar vacia.", 422);
+        }
+
+        if (codigo != null && codigo != op.CodigoEmpleado.ToUpperInvariant()
+            && await _context.Operadores.AnyAsync(o => o.IdOperador != id && o.CodigoEmpleado.ToUpper() == codigo))
+        {
+            throw new ConflictException("OPERADOR_DUPLICADO", $"Ya existe un operador con el codigo de empleado '{codigo}'.");
+        }
+
+        if (documento != null && documento != op.NumeroDocumento
+            && await _context.Operadores.AnyAsync(o => o.IdOperador != id && o.NumeroDocumento == documento))
+        {
+            throw new ConflictException("OPERADOR_DUPLICADO", $"Ya existe un operador con el numero de documento '{documento}'.");
+        }
+
+        if (nombres != null) op.Nombres = nombres;
+        if (apellidos != null) op.Apellidos = apellidos;
+        if (documento != null) op.NumeroDocumento = documento;
+        if (codigo != null) op.CodigoEmpleado = codigo;
+        if (rol != null) op.Rol = rol;
+        if (estado != null) op.Estado = estado;
+        if (password != null) op.PasswordHash = _passwordHasher.HashPassword(password);
+
+        await _context.SaveChangesAsync();
+        return MapearOperador(op);
+    }
+
+    private static void ValidarTexto(string? valor, string campo, int maximo)
+    {
+        if (valor == null) return;
+        if (valor.Length == 0 || valor.Length > maximo)
+        {
+            throw new AppException("ERROR_VALIDACION", $"El campo {campo} debe tener entre 1 y {maximo} caracteres.", 422);
+        }
     }
 
     private static OperadorAdminDto MapearOperador(Operador o) => new OperadorAdminDto
@@ -370,6 +532,10 @@ public class EstacionCasetaService : IEstacionCasetaService
         }
 
         var lista = await query.ToListAsync();
+        var ocupadas = (await _context.Turnos
+            .Where(t => t.Estado == "ABIERTO")
+            .Select(t => t.IdCaseta)
+            .ToListAsync()).ToHashSet();
         return lista.Select(c => new CasetaDto
         {
             IdCaseta = c.IdCaseta,
@@ -377,7 +543,8 @@ public class EstacionCasetaService : IEstacionCasetaService
             EstacionNombre = c.Estacion?.Nombre,
             NumeroCarril = c.NumeroCarril,
             TipoCarril = c.TipoCarril,
-            Estado = c.Estado
+            Estado = c.Estado,
+            Ocupada = ocupadas.Contains(c.IdCaseta)
         });
     }
 
@@ -396,7 +563,8 @@ public class EstacionCasetaService : IEstacionCasetaService
             EstacionNombre = c.Estacion?.Nombre,
             NumeroCarril = c.NumeroCarril,
             TipoCarril = c.TipoCarril,
-            Estado = c.Estado
+            Estado = c.Estado,
+            Ocupada = await _context.Turnos.AnyAsync(t => t.IdCaseta == c.IdCaseta && t.Estado == "ABIERTO")
         };
     }
 
@@ -449,10 +617,12 @@ public class EstacionCasetaService : IEstacionCasetaService
 public class CategoriaService : ICategoriaService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly ILogger<CategoriaService>? _logger;
 
-    public CategoriaService(PeajeSysDbContext context)
+    public CategoriaService(PeajeSysDbContext context, ILogger<CategoriaService>? logger = null)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<IEnumerable<CategoriaVehiculoDto>> ListarCategoriasAsync(bool? activo)
@@ -531,6 +701,107 @@ public class CategoriaService : ICategoriaService
             NumeroEjesMax = nueva.NumeroEjesMax,
             PesoMaximoTon = nueva.PesoMaximoTon,
             Activo = nueva.Activo
+        };
+    }
+
+    public async Task<CategoriaVehiculoDto> ActualizarCategoriaAsync(int id, ActualizarCategoriaRequestDto request, string usuarioResponsable)
+    {
+        var cat = await _context.CategoriasVehiculo.FindAsync(id);
+        if (cat == null)
+        {
+            throw new NotFoundException("CATEGORIA_NO_ENCONTRADA", $"Categoría {id} no encontrada.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Codigo))
+        {
+            string codigoNorm = request.Codigo.Trim().ToUpperInvariant();
+            if (codigoNorm.Length > 10)
+            {
+                throw new AppException("ERROR_VALIDACION", "El codigo no puede exceder 10 caracteres.", 422);
+            }
+
+            if (codigoNorm != cat.Codigo)
+            {
+                bool existe = await _context.CategoriasVehiculo.AnyAsync(c => c.IdCategoria != id && c.Codigo == codigoNorm);
+                if (existe)
+                {
+                    throw new ConflictException("CODIGO_DUPLICADO", $"Ya existe una categoría con el código {codigoNorm}.");
+                }
+                cat.Codigo = codigoNorm;
+            }
+        }
+
+        if (request.Descripcion != null)
+        {
+            string descNorm = request.Descripcion.Trim();
+            if (string.IsNullOrEmpty(descNorm) || descNorm.Length > 150)
+            {
+                throw new AppException("ERROR_VALIDACION", "La descripcion es obligatoria y no puede exceder 150 caracteres.", 422);
+            }
+        }
+
+        int ejesMin = request.NumeroEjesMin ?? cat.NumeroEjesMin;
+        int ejesMax = request.NumeroEjesMax ?? cat.NumeroEjesMax;
+
+        if (ejesMin < 1)
+        {
+            throw new AppException("ERROR_VALIDACION", "El numero minimo de ejes debe ser al menos 1.", 422);
+        }
+
+        if (ejesMax < ejesMin)
+        {
+            throw new AppException("ERROR_VALIDACION", "El numero maximo de ejes no puede ser menor al minimo.", 422);
+        }
+
+        if (request.PesoMaximoTon.HasValue && request.PesoMaximoTon.Value <= 0)
+        {
+            throw new AppException("ERROR_VALIDACION", "El peso maximo debe ser positivo.", 422);
+        }
+
+        string descAnterior = cat.Descripcion;
+        bool activoAnterior = cat.Activo;
+
+        if (request.Descripcion != null)
+        {
+            cat.Descripcion = request.Descripcion.Trim();
+        }
+
+        if (request.NumeroEjesMin.HasValue)
+        {
+            cat.NumeroEjesMin = request.NumeroEjesMin.Value;
+        }
+
+        if (request.NumeroEjesMax.HasValue)
+        {
+            cat.NumeroEjesMax = request.NumeroEjesMax.Value;
+        }
+
+        if (request.PesoMaximoTon.HasValue)
+        {
+            cat.PesoMaximoTon = request.PesoMaximoTon.Value;
+        }
+
+        if (request.Activo.HasValue)
+        {
+            cat.Activo = request.Activo.Value;
+        }
+
+        await _context.SaveChangesAsync();
+
+        _logger?.LogInformation(
+            "MODIFICACION_CATEGORIA usuario={Usuario} entidad=CATEGORIA id={IdCategoria} codigo={Codigo} descripcion_anterior={DescAnterior} descripcion_nueva={DescNueva} activo_anterior={ActivoAnterior} activo_nuevo={ActivoNuevo}",
+            string.IsNullOrWhiteSpace(usuarioResponsable) ? "ADMINISTRADOR" : usuarioResponsable,
+            cat.IdCategoria, cat.Codigo, descAnterior, cat.Descripcion, activoAnterior, cat.Activo);
+
+        return new CategoriaVehiculoDto
+        {
+            IdCategoria = cat.IdCategoria,
+            Codigo = cat.Codigo,
+            Descripcion = cat.Descripcion,
+            NumeroEjesMin = cat.NumeroEjesMin,
+            NumeroEjesMax = cat.NumeroEjesMax,
+            PesoMaximoTon = cat.PesoMaximoTon,
+            Activo = cat.Activo
         };
     }
 }

@@ -264,6 +264,24 @@ npm run dev
 
 ---
 
+## 🔑 Usuarios de prueba
+
+Los usuarios del equipo existen de verdad en la base de datos (tabla `OPERADOR`) con su contraseña cifrada con BCrypt (`BCrypt.Net-Next`, coste 12). El login valida solo contra la base de datos: no hay usuarios ni contraseñas fijos en el código.
+
+| Usuario | Nombre | Rol | Contraseña | Panel |
+|---|---|---|---|---|
+| `ADM-001` | Manuel Amell | ADMINISTRADOR | `Manuel2026*` | `/admin` |
+| `SUP-001` | Samuel Otero | SUPERVISOR | `Samuel2026*` | `/supervisor` |
+| `REC-001` | Alex Florez | RECAUDADOR | `Alex2026*` | `/operador` |
+| `REC-002` | Camilo Guzmán | RECAUDADOR | `Camilo2026*` | `/operador` |
+
+- Los cuatro se cargan con `database/02_SQL/02_DML_Datos_PeajeSys.sql` (y con el maestro `database/00_Master_PeajeSys.sql`), con su `password_hash`.
+- `EMP-001` a `EMP-010` son datos históricos (dueños de turnos y transacciones) sin contraseña: no pueden iniciar sesión.
+- En modo mocks (`pnpm dev:mocks`) el login acepta cualquier contraseña no vacía para estos usuarios.
+- **Cambiar una contraseña**: crear el operador desde el panel de administración (la contraseña es obligatoria y se guarda cifrada), o generar un hash nuevo con BCrypt (coste 12) y guardarlo con `UPDATE OPERADOR SET password_hash = '<hash>' WHERE codigo_empleado = '<usuario>';`. Con pgcrypto: `SELECT crypt('NuevaClave', gen_salt('bf', 12));`. Si cambias la contraseña de un usuario del equipo, actualiza también esta tabla y el DML: una prueba automática (`UsuariosEquipoSqlTests`) los mantiene sincronizados.
+
+---
+
 ## 🗺️ Roadmap y Entregables Académicos
 
 - [x] **Fase 0:** Definición del alcance, especificación de requisitos y estructura del repositorio.

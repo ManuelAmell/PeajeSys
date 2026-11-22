@@ -83,17 +83,24 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
     });
   });
 
-  it('EMP-001 recaudador sin turno abierto muestra el aviso del prototipo y no entra', async () => {
+  it('EMP-001 recaudador sin turno abierto entra y va a la pantalla Abrir turno', async () => {
     await escribirCredenciales('EMP-001', 'prueba');
 
-    const alerta = await screen.findByRole('alert');
-    expect(alerta).toHaveTextContent(
-      'Carlos Alberto Gómez Pérez no tiene un turno abierto. El supervisor debe asignarle una caseta antes de cobrar.',
-    );
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Código de empleado')).toHaveFocus();
-    expect(screen.getByLabelText('Código de empleado')).toBeInvalid();
-    expect(window.sessionStorage.getItem('peajesys_sesion')).toBeNull();
+    const tarjeta = await screen.findByRole('status');
+    expect(tarjeta).toHaveTextContent('Hola, Carlos Alberto');
+    expect(tarjeta).toHaveTextContent('Recaudador · EMP-001');
+    expect(
+      screen.getByRole('button', {
+        name: 'Abrir turno en caseta',
+      }),
+    ).toBeInTheDocument();
+    expect(
+      JSON.parse(window.sessionStorage.getItem('peajesys_sesion') ?? 'null'),
+    ).toMatchObject({
+      rol: 'RECAUDADOR',
+      codigo: 'EMP-001',
+      nombre: 'Carlos Alberto Gómez Pérez',
+    });
   });
 
   it('EMP-009 usuario INACTIVO muestra el error del prototipo y no entra', async () => {
@@ -123,12 +130,12 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
     ).toBeInTheDocument();
   });
 
-  it('ADMIN-01 administrador entra y va a /admin', async () => {
-    const usuario = await escribirCredenciales('ADMIN-01', 'prueba');
+  it('ADM-001 administrador entra y va a /admin', async () => {
+    const usuario = await escribirCredenciales('ADM-001', 'prueba');
 
     const tarjeta = await screen.findByRole('status');
-    expect(tarjeta).toHaveTextContent('Hola, Administración');
-    expect(tarjeta).toHaveTextContent('Administrador · ADMIN-01');
+    expect(tarjeta).toHaveTextContent('Hola, Manuel Amell');
+    expect(tarjeta).toHaveTextContent('Administrador · ADM-001');
 
     await usuario.click(
       screen.getByRole('button', { name: 'Ir a la administración' }),
@@ -227,7 +234,7 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
   });
 
   it('el error desaparece al volver a escribir', async () => {
-    const usuario = await escribirCredenciales('EMP-001', 'prueba');
+    const usuario = await escribirCredenciales('EMP-009', 'prueba');
     expect(await screen.findByRole('alert')).toBeInTheDocument();
 
     await usuario.type(screen.getByLabelText('Código de empleado'), '2');

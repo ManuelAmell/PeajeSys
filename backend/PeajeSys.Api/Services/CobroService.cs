@@ -14,12 +14,14 @@ namespace PeajeSys.Api.Services;
 public class CobroService : ICobroService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly TimeProvider _reloj;
     private static long _fallbackSequence = 100;
     private static readonly object _sequenceLock = new();
 
-    public CobroService(PeajeSysDbContext context)
+    public CobroService(PeajeSysDbContext context, TimeProvider? reloj = null)
     {
         _context = context;
+        _reloj = reloj ?? TimeProvider.System;
     }
 
     public async Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request)
@@ -47,7 +49,7 @@ public class CobroService : ICobroService
             idEstacion = caseta?.IdEstacion ?? 1;
         }
 
-        var hoy = DateTime.UtcNow.Date;
+        var hoy = ZonaHorariaApp.HoyComoFecha();
         Tarifa? tarifa = null;
 
         if (request.IdTarifa.HasValue && request.IdTarifa.Value > 0)
@@ -101,15 +103,23 @@ public class CobroService : ICobroService
             detalleTelepeajeDto = resultadoDebito.DetalleDto;
             detalleTelepeajeEntidad = resultadoDebito.DetalleEntidad;
         }
+        else if (metodoPagoNorm == "EXENTO")
+        {
+            monto = 0m;
+            cambio = null;
+            saldoPosterior = null;
+        }
         else
         {
             throw new AppException("METODO_PAGO_INVALIDO",
-                $"El metodo de pago '{request.MetodoPago}' no es valido. Use EFECTIVO o TELEPEAJE.", 422);
+                $"El metodo de pago '{request.MetodoPago}' no es valido. Use EFECTIVO, TELEPEAJE o EXENTO.", 422);
         }
 
         // 4. Regla 5: Consecutivo de tiquete fiscal
         long seqVal = await ObtenerSiguienteConsecutivoTicketAsync();
-        string numeroTicket = FormatearNumeroTicket(DateTime.UtcNow, seqVal);
+        string numeroTicket = FormatearNumeroTicket(ZonaHorariaApp.DiaCivil(_reloj.GetUtcNow()).ToDateTime(TimeOnly.MinValue), seqVal);
+
+        string estadoPaso = metodoPagoNorm == "EXENTO" ? "EXENTO" : "APROBADO";
 
         // 5. Regla 6: Persistencia y acumuladores
         var transaccion = new TransaccionPeaje
@@ -122,7 +132,7 @@ public class CobroService : ICobroService
             MetodoPago = metodoPagoNorm,
             NumeroTicket = numeroTicket,
             FechaHora = DateTime.UtcNow,
-            EstadoPaso = "APROBADO"
+            EstadoPaso = estadoPaso
         };
 
         _context.TransaccionesPeaje.Add(transaccion);

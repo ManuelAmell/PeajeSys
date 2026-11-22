@@ -7,6 +7,7 @@ using PeajeSys.Api.Services;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
+using PeajeSys.Tests.Api;
 using Xunit;
 
 namespace PeajeSys.Tests.PlpgsqlIntegration;
@@ -30,7 +31,7 @@ public class MatrizPruebasTests
 
     private class FakeTurnoService : ITurnoService
     {
-        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
+        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
         {
             // Caseta 99 simula ocupada (otro turno abierto)
             if (request.IdCaseta == 99)
@@ -52,7 +53,7 @@ public class MatrizPruebasTests
             });
         }
 
-        public Task<CerrarTurnoResponseDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor)
         {
             if (idTurno == 999)
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", "Turno no existe.");
@@ -60,7 +61,7 @@ public class MatrizPruebasTests
             decimal sistemaEfectivo = 10500m;
             decimal diferencia = request.TotalDeclaradoCierre - sistemaEfectivo;
 
-            return Task.FromResult(new CerrarTurnoResponseDto
+            return Task.FromResult(new TurnoDto
             {
                 IdTurno = idTurno,
                 IdCaseta = 1,
@@ -73,7 +74,7 @@ public class MatrizPruebasTests
             });
         }
 
-        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
+        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor)
         {
             if (idTurno == 999)
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", "Turno no existe.");
@@ -88,7 +89,7 @@ public class MatrizPruebasTests
             });
         }
 
-        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
+        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, ActorOperacion actor)
         {
             return Task.FromResult<IEnumerable<TurnoDto>>(new List<TurnoDto>
             {
@@ -137,6 +138,12 @@ public class MatrizPruebasTests
                 FechaHora = DateTime.UtcNow
             });
         }
+    }
+
+    private class FakeReporteRecaudoServiceMinimo : IReporteRecaudoService
+    {
+        public Task<RecaudoDiarioDto> ObtenerRecaudoDiarioAsync(int? idEstacion, string? fecha)
+            => throw new NotSupportedException();
     }
 
     private class FakeArqueoService : IArqueoService
@@ -239,7 +246,7 @@ public class MatrizPruebasTests
     public async Task CP03_AbrirTurno_CasetaLibreOperadorHabilitado_RetornaEstadoAbierto()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService()).ConUsuario(1, "RECAUDADOR");
         var request = new AbrirTurnoRequestDto
         {
             IdCaseta = 1,     // Caseta libre
@@ -271,7 +278,7 @@ public class MatrizPruebasTests
     public async Task CP04_AbrirTurno_CasetaConTurnoActivo_LanzaConflictException409()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService()).ConUsuario(1, "RECAUDADOR");
         var request = new AbrirTurnoRequestDto
         {
             IdCaseta = 99,    // Caseta 99 simula ya ocupada
@@ -295,7 +302,7 @@ public class MatrizPruebasTests
     public async Task CP05_CobrarEfectivo_MontoSuficiente_RetornaTicketYCambioExacto()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -333,7 +340,7 @@ public class MatrizPruebasTests
     public async Task CP06_CobrarEfectivo_MontoMenorATarifa_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -358,7 +365,7 @@ public class MatrizPruebasTests
     public async Task CP07_CobrarTelepeaje_CuentaActivaSaldoSuficiente_RetornaTicketYSaldoPosterior()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -393,7 +400,7 @@ public class MatrizPruebasTests
     public async Task CP08_CobrarTelepeaje_SaldoInsuficienteOCuentaInactiva_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -423,7 +430,7 @@ public class MatrizPruebasTests
         decimal declarado, string estadoEsperado, decimal diferenciaEsperada)
     {
         // Arrange - Sistema tiene 10.500 de efectivo registrado
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoService()).ConUsuario(1, "RECAUDADOR");
         var arqueoSvc = new FakeArqueoService();
 
         // Act - Cerrar turno y calcular arqueo
@@ -433,7 +440,7 @@ public class MatrizPruebasTests
         });
 
         var cerrarOk = Assert.IsType<OkObjectResult>(cerrarResult.Result);
-        var cierre = Assert.IsType<CerrarTurnoResponseDto>(cerrarOk.Value);
+        var cierre = Assert.IsType<TurnoDto>(cerrarOk.Value);
         Assert.Equal("CERRADO", cierre.Estado);
         Assert.Equal(diferenciaEsperada, cierre.DiferenciaDescuadre);
 
@@ -455,7 +462,7 @@ public class MatrizPruebasTests
     public async Task CP10_CobrarEnTurnoCerrado_LanzaConflictException409()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 99,   // 99 simula turno CERRADO

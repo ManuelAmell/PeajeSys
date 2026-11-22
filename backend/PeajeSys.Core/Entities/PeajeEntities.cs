@@ -135,13 +135,11 @@ public class TransaccionPeaje
 public class AuditoriaTransaccion
 {
     public long IdAuditoria { get; set; }
-    public long? IdTransaccion { get; set; }
+    public long IdTransaccion { get; set; }
     public string TipoOperacion { get; set; } = "INSERT";
-    public string UsuarioResponsable { get; set; } = string.Empty;
-    public DateTime FechaHora { get; set; } = DateTime.UtcNow;
-    public string? DatosAnteriores { get; set; }
-    public string? DatosNuevos { get; set; }
-    public string? MotivoAnulacion { get; set; }
+    public string UsuarioSistema { get; set; } = string.Empty;
+    public DateTime FechaHoraEvento { get; set; } = DateTime.UtcNow;
+    public string? Motivo { get; set; }
 
     public TransaccionPeaje? Transaccion { get; set; }
 }

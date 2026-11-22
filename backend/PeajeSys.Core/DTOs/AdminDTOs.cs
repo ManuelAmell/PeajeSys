@@ -31,11 +31,12 @@ public class TarifaDto
     [JsonPropertyName("resolucion_legal")]
     public string ResolucionLegal { get; set; } = string.Empty;
 
+    // Columnas DATE: se serializan como YYYY-MM-DD (igual que TurnoDto.fecha).
     [JsonPropertyName("fecha_inicio_vigencia")]
-    public DateTime FechaInicioVigencia { get; set; }
+    public string FechaInicioVigencia { get; set; } = string.Empty;
 
     [JsonPropertyName("fecha_fin_vigencia")]
-    public DateTime? FechaFinVigencia { get; set; }
+    public string? FechaFinVigencia { get; set; }
 
     [JsonPropertyName("activa")]
     public bool Activa { get; set; }
@@ -49,14 +50,43 @@ public class CrearTarifaRequestDto
     [JsonPropertyName("id_categoria")]
     public int IdCategoria { get; set; }
 
+    /// <summary>Alias legado de <see cref="MontoTarifa"/>.</summary>
     [JsonPropertyName("monto")]
     public decimal Monto { get; set; }
+
+    /// <summary>Nombre de la columna del DDL (monto_tarifa); tiene prioridad sobre el alias monto.</summary>
+    [JsonPropertyName("monto_tarifa")]
+    public decimal? MontoTarifa { get; set; }
 
     [JsonPropertyName("resolucion_legal")]
     public string? ResolucionLegal { get; set; }
 
     [JsonPropertyName("fecha_inicio_vigencia")]
     public DateTime? FechaInicioVigencia { get; set; }
+
+    [JsonPropertyName("fecha_fin_vigencia")]
+    public DateTime? FechaFinVigencia { get; set; }
+}
+
+public class ActualizarTarifaRequestDto
+{
+    [JsonPropertyName("monto")]
+    public decimal? Monto { get; set; }
+
+    [JsonPropertyName("monto_tarifa")]
+    public decimal? MontoTarifa { get; set; }
+
+    [JsonPropertyName("resolucion_legal")]
+    public string? ResolucionLegal { get; set; }
+
+    [JsonPropertyName("fecha_inicio_vigencia")]
+    public DateTime? FechaInicioVigencia { get; set; }
+
+    [JsonPropertyName("fecha_fin_vigencia")]
+    public DateTime? FechaFinVigencia { get; set; }
+
+    [JsonPropertyName("activa")]
+    public bool? Activa { get; set; }
 }
 
 // ============================================================
@@ -121,7 +151,48 @@ public class CrearOperadorRequestDto
 
     public string ObtenerDocumento() => (NumeroDocumento ?? DocumentoIdentidad ?? string.Empty).Trim();
     public string ObtenerCodigo() => (CodigoEmpleado ?? Codigo ?? string.Empty).Trim().ToUpperInvariant();
-    public string ObtenerPassword() => Password ?? Clave ?? "Turno123*";
+    public string ObtenerPassword() => Password ?? Clave ?? string.Empty;
+}
+
+/// <summary>
+/// Actualizacion parcial de un operador: solo se validan y aplican los campos presentes (no nulos).
+/// La contrasena se hashea al guardarla y nunca se devuelve.
+/// </summary>
+public class ActualizarOperadorRequestDto
+{
+    [JsonPropertyName("numero_documento")]
+    public string? NumeroDocumento { get; set; }
+
+    [JsonPropertyName("documento_identidad")]
+    public string? DocumentoIdentidad { get; set; }
+
+    [JsonPropertyName("nombres")]
+    public string? Nombres { get; set; }
+
+    [JsonPropertyName("apellidos")]
+    public string? Apellidos { get; set; }
+
+    [JsonPropertyName("codigo_empleado")]
+    public string? CodigoEmpleado { get; set; }
+
+    [JsonPropertyName("codigo")]
+    public string? Codigo { get; set; }
+
+    [JsonPropertyName("rol")]
+    public string? Rol { get; set; }
+
+    [JsonPropertyName("estado")]
+    public string? Estado { get; set; }
+
+    [JsonPropertyName("password")]
+    public string? Password { get; set; }
+
+    [JsonPropertyName("clave")]
+    public string? Clave { get; set; }
+
+    public string? ObtenerDocumento() => NumeroDocumento ?? DocumentoIdentidad;
+    public string? ObtenerCodigo() => CodigoEmpleado ?? Codigo;
+    public string? ObtenerPassword() => Password ?? Clave;
 }
 
 public class ActualizarEstadoRequestDto
@@ -177,6 +248,10 @@ public class CasetaDto
 
     [JsonPropertyName("estado")]
     public string Estado { get; set; } = string.Empty;
+
+    /// <summary>True si la caseta tiene un turno ABIERTO (no expone quien ni cuanto).</summary>
+    [JsonPropertyName("ocupada")]
+    public bool Ocupada { get; set; }
 }
 
 // ============================================================
@@ -226,4 +301,25 @@ public class CrearCategoriaRequestDto
 
     [JsonPropertyName("activo")]
     public bool Activo { get; set; } = true;
+}
+
+public class ActualizarCategoriaRequestDto
+{
+    [JsonPropertyName("codigo")]
+    public string? Codigo { get; set; }
+
+    [JsonPropertyName("descripcion")]
+    public string? Descripcion { get; set; }
+
+    [JsonPropertyName("numero_ejes_min")]
+    public int? NumeroEjesMin { get; set; }
+
+    [JsonPropertyName("numero_ejes_max")]
+    public int? NumeroEjesMax { get; set; }
+
+    [JsonPropertyName("peso_maximo_ton")]
+    public decimal? PesoMaximoTon { get; set; }
+
+    [JsonPropertyName("activo")]
+    public bool? Activo { get; set; }
 }

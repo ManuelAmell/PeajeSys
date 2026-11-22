@@ -6,10 +6,11 @@ namespace PeajeSys.Core.Interfaces;
 
 public interface ITurnoService
 {
-    Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request);
-    Task<CerrarTurnoResponseDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request);
-    Task<TurnoDto> ObtenerTurnoAsync(long idTurno);
-    Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado);
+    Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor);
+    Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor);
+    Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor);
+    /// <summary>Listado acotado por rol: el RECAUDADOR solo recibe sus propios turnos.</summary>
+    Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, ActorOperacion actor);
 }
 
 public interface IVehiculoService

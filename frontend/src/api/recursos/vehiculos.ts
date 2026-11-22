@@ -8,7 +8,7 @@ import { clienteHttp } from '../clienteHttp';
 
 export const esquemaDetalleVehiculo = z.object({
   vehiculo: esquemaVehiculo,
-  cuenta: esquemaCuentaTelepeaje.nullable().optional(),
+  cuenta: esquemaCuentaTelepeaje.nullish(),
 });
 
 export interface DetalleVehiculo {

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -15,14 +16,9 @@ namespace PeajeSys.Api.Controllers;
 public class TurnosController : ControllerBase
 {
     private readonly ITurnoService _turnoService;
-    private readonly IArqueoService? _arqueoService;
+    private readonly IArqueoService _arqueoService;
 
-    public TurnosController(ITurnoService turnoService)
-        : this(turnoService, null)
-    {
-    }
-
-    public TurnosController(ITurnoService turnoService, IArqueoService? arqueoService)
+    public TurnosController(ITurnoService turnoService, IArqueoService arqueoService)
     {
         _turnoService = turnoService;
         _arqueoService = arqueoService;
@@ -32,46 +28,55 @@ public class TurnosController : ControllerBase
     [ProducesResponseType(typeof(AbrirTurnoResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<AbrirTurnoResponseDto>> AbrirTurno([FromBody] AbrirTurnoRequestDto request)
     {
-        var response = await _turnoService.AbrirTurnoAsync(request);
+        var response = await _turnoService.AbrirTurnoAsync(request, ActorOperacionClaims.Desde(User));
         return StatusCode(StatusCodes.Status201Created, response);
     }
 
     [HttpPost("{id:long}/cerrar")]
     [HttpPost("{id:long}/cierre")]
-    [ProducesResponseType(typeof(CerrarTurnoResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TurnoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
-    public async Task<ActionResult<CerrarTurnoResponseDto>> CerrarTurno([FromRoute] long id, [FromBody] CerrarTurnoRequestDto request)
+    public async Task<ActionResult<TurnoDto>> CerrarTurno([FromRoute] long id, [FromBody] CerrarTurnoRequestDto request)
     {
-        var response = await _turnoService.CerrarTurnoAsync(id, request);
+        var response = await _turnoService.CerrarTurnoAsync(id, request, ActorOperacionClaims.Desde(User));
         return Ok(response);
     }
 
+    // El RECAUDADOR solo recibe sus propios turnos (aunque mande operador=); supervisor y administrador, todos.
+    // La ocupacion de casetas se consulta en GET /api/casetas (campo ocupada).
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<TurnoDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IEnumerable<TurnoDto>>> ListarTurnos(
-        [FromQuery] int? caseta,
-        [FromQuery] int? id_caseta,
-        [FromQuery] int? operador,
-        [FromQuery] int? id_operador,
-        [FromQuery] string? estado)
+        [FromQuery] int? caseta = null,
+        [FromQuery] int? id_caseta = null,
+        [FromQuery] string? operador = null,
+        [FromQuery] string? id_operador = null,
+        [FromQuery] string? estado = null,
+        [FromQuery] string? fecha = null,
+        [FromQuery] int? estacion = null,
+        [FromQuery] int? id_estacion = null)
     {
         int? casetaFiltro = id_caseta ?? caseta;
-        int? operadorFiltro = id_operador ?? operador;
+        string? operadorFiltro = !string.IsNullOrWhiteSpace(id_operador) ? id_operador : operador;
+        int? estacionFiltro = id_estacion ?? estacion;
 
-        var turnos = await _turnoService.ListarTurnosAsync(casetaFiltro, operadorFiltro, estado);
+        var turnos = await _turnoService.ListarTurnosAsync(casetaFiltro, operadorFiltro, estado, fecha, estacionFiltro, ActorOperacionClaims.Desde(User));
         return Ok(turnos);
     }
 
     [HttpGet("{id:long}")]
     [ProducesResponseType(typeof(TurnoDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<TurnoDto>> ObtenerTurnoPorId([FromRoute] long id)
     {
-        var turno = await _turnoService.ObtenerTurnoAsync(id);
+        var turno = await _turnoService.ObtenerTurnoAsync(id, ActorOperacionClaims.Desde(User));
         return Ok(turno);
     }
 
@@ -84,9 +89,6 @@ public class TurnosController : ControllerBase
         [FromQuery] decimal? efectivo_reportado,
         [FromQuery] decimal? reportado)
     {
-        if (_arqueoService == null)
-            throw new InvalidOperationException("IArqueoService no configurado.");
-
         decimal montoReportado = efectivo_reportado ?? reportado ?? 0;
         var resultado = await _arqueoService.CalcularArqueoAsync(id, montoReportado);
         return Ok(resultado);

@@ -15,7 +15,7 @@ const usuarioSupervisor = {
 };
 
 const usuarioAdmin = {
-  id: 'ADMIN-01',
+  id: 'ADM-001',
   nombre: 'Administración',
   rol: 'ADMIN',
 };

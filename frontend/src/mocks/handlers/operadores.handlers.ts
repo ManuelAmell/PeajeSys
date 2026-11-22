@@ -81,38 +81,44 @@ export const operadoresHandlers = [
     }
 
     const db = getDb();
-    const existeDoc = db.operadores.some((o) => o.numero_documento === parse.data.numero_documento);
-    if (existeDoc) {
+    // Igual que la API: primero el código, después el documento; ambos dan 409 OPERADOR_DUPLICADO.
+    const codigo = parse.data.codigo_empleado.trim().toUpperCase();
+    if (db.operadores.some((o) => o.codigo_empleado.toUpperCase() === codigo)) {
       return HttpResponse.json(
         {
           error: {
-            codigo: 'DOCUMENTO_DUPLICADO',
-            mensaje: `Ya existe un operador con el documento ${parse.data.numero_documento}.`,
+            codigo: 'OPERADOR_DUPLICADO',
+            mensaje: `Ya existe un operador con el codigo de empleado '${codigo}'.`,
+          },
+        },
+        { status: 409 },
+      );
+    }
+    if (
+      db.operadores.some(
+        (o) => o.numero_documento === parse.data.numero_documento,
+      )
+    ) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'OPERADOR_DUPLICADO',
+            mensaje: `Ya existe un operador con el numero de documento '${parse.data.numero_documento}'.`,
           },
         },
         { status: 409 },
       );
     }
 
-    const existeCod = db.operadores.some(
-      (o) => o.codigo_empleado.toUpperCase() === parse.data.codigo_empleado.toUpperCase(),
-    );
-    if (existeCod) {
-      return HttpResponse.json(
-        {
-          error: {
-            codigo: 'CODIGO_DUPLICADO',
-            mensaje: `Ya existe un operador con el código ${parse.data.codigo_empleado}.`,
-          },
-        },
-        { status: 409 },
-      );
-    }
-
-    const nuevoId = db.operadores.reduce((max, o) => Math.max(max, o.id_operador), 0) + 1;
+    // La contraseña se valida pero no se guarda ni se devuelve (la API real solo guarda el hash).
+    const { password: _clave, ...datosPublicos } = parse.data;
+    void _clave;
+    const nuevoId =
+      db.operadores.reduce((max, o) => Math.max(max, o.id_operador), 0) + 1;
     const nuevoOperador = {
+      ...datosPublicos,
       id_operador: nuevoId,
-      ...parse.data,
+      codigo_empleado: codigo,
       estado: parse.data.estado ?? 'ACTIVO',
     };
 
@@ -142,27 +148,54 @@ export const operadoresHandlers = [
       );
     }
 
-    if (body.estado !== undefined) {
-      if (body.estado !== 'ACTIVO' && body.estado !== 'INACTIVO') {
-        return HttpResponse.json(
-          { error: { codigo: 'ESTADO_INVALIDO', mensaje: 'El estado debe ser ACTIVO o INACTIVO.' } },
-          { status: 422 },
-        );
+    const error422 = (codigo: string, mensaje: string) =>
+      HttpResponse.json({ error: { codigo, mensaje } }, { status: 422 });
+    const roles = ['RECAUDADOR', 'SUPERVISOR', 'ADMINISTRADOR'];
+
+    // Actualización parcial: se valida todo lo presente antes de aplicar nada.
+    if (
+      body.estado !== undefined &&
+      body.estado !== 'ACTIVO' &&
+      body.estado !== 'INACTIVO'
+    ) {
+      return error422(
+        'ESTADO_INVALIDO',
+        'El estado debe ser ACTIVO o INACTIVO.',
+      );
+    }
+    if (body.rol !== undefined && !roles.includes(String(body.rol))) {
+      return error422(
+        'ROL_INVALIDO',
+        'El rol debe ser RECAUDADOR, SUPERVISOR o ADMINISTRADOR.',
+      );
+    }
+    for (const campo of ['nombres', 'apellidos'] as const) {
+      const valor = body[campo];
+      if (
+        valor !== undefined &&
+        (typeof valor !== 'string' || valor.trim() === '' || valor.length > 100)
+      ) {
+        return error422('ERROR_VALIDACION', `El campo ${campo} es invalido.`);
       }
-      op.estado = body.estado;
+    }
+    if (
+      body.password !== undefined &&
+      (typeof body.password !== 'string' || body.password.trim() === '')
+    ) {
+      return error422(
+        'ERROR_VALIDACION',
+        'La contrasena no puede estar vacia.',
+      );
     }
 
-    if (body.nombres !== undefined) op.nombres = String(body.nombres);
-    if (body.apellidos !== undefined) op.apellidos = String(body.apellidos);
-    if (body.rol !== undefined) {
-      if (body.rol !== 'RECAUDADOR' && body.rol !== 'SUPERVISOR') {
-        return HttpResponse.json(
-          { error: { codigo: 'ROL_INVALIDO', mensaje: 'El rol debe ser RECAUDADOR o SUPERVISOR.' } },
-          { status: 422 },
-        );
-      }
-      op.rol = body.rol;
-    }
+    if (body.estado !== undefined)
+      op.estado = body.estado as 'ACTIVO' | 'INACTIVO';
+    if (body.nombres !== undefined) op.nombres = String(body.nombres).trim();
+    if (body.apellidos !== undefined)
+      op.apellidos = String(body.apellidos).trim();
+    if (body.rol !== undefined)
+      op.rol = body.rol as 'RECAUDADOR' | 'SUPERVISOR' | 'ADMINISTRADOR';
+    // password: se acepta y se descarta; nunca se devuelve.
 
     return HttpResponse.json(op);
   }),

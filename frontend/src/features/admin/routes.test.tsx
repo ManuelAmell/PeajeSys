@@ -6,10 +6,10 @@ import { RequireRol } from '@/lib/sesion';
 import { AdminPage } from './routes';
 
 const admin = {
-  id: 'ADMIN-01',
+  id: 'ADM-001',
   nombre: 'Administración',
   rol: 'ADMIN' as const,
-  codigo: 'ADMIN-01',
+  codigo: 'ADM-001',
 };
 
 const recaudadora = {

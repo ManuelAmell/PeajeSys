@@ -77,8 +77,8 @@ Valida credenciales de acceso para recaudadores, supervisores y administradores.
 - **Cuerpo de la petición**:
 ```json
 {
-  "codigo": "EMP-001",
-  "clave": "Turno123*"
+  "codigo": "SUP-001",
+  "clave": "Samuel2026*"
 }
 ```
 - **Respuesta 200 OK (Recaudador con turno abierto)**:
@@ -602,4 +602,4 @@ Obtiene agregados consolidados de recaudo agrupados por fecha y por carril.
    El frontend gestiona la sesión en memoria y `localStorage` con los datos del usuario retornado por `POST /api/auth/login`. Para producción se requiere acordar si el backend emitirá una cookie `HttpOnly` con sesión segura o un encabezado de autorización `Bearer <token_jwt>`.
 
 4. **Entidad del Administrador**:
-   En el DDL relacional, la tabla `OPERADOR` define `chk_rol_operador CHECK (rol IN ('RECAUDADOR', 'SUPERVISOR'))`. El usuario `ADMIN-01` es una entidad puramente de interfaz según lo prescrito en los prototipos. Si se requiere persistir usuarios administradores en base de datos, se deberá coordinar la ampliación del CHECK a nivel de DDL (`'ADMIN'`) o la creación de una tabla específica de usuarios administrativos.
+   En el DDL relacional, la tabla `OPERADOR` define el CHECK `rol IN ('RECAUDADOR', 'SUPERVISOR', 'ADMINISTRADOR')` (actualizado el 2026-11-21). El administrador de prueba es `ADM-001`, una fila real de `OPERADOR` con su `password_hash` (ver README raíz).

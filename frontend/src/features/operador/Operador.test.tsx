@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse, delay } from 'msw';
+import { Route, Routes } from 'react-router-dom';
 import { server } from '@/mocks/server';
 import { renderConProveedores, screen, waitFor, within } from '@/test/render';
 import OperadorPage from './routes';
@@ -29,8 +30,12 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     });
 
     // Verificar elemento propio de la pantalla (no solo h1)
-    expect(await screen.findByRole('heading', { name: /Terminal de cobro/i })).toBeInTheDocument();
-    expect(screen.getByText(/María Fernanda López Martínez/i)).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: /Terminal de cobro/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/María Fernanda López Martínez/i),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Carril 2 · manual/i)).toBeInTheDocument();
     expect(screen.getByText(/^Turno$/i)).toBeInTheDocument();
     expect(screen.getByText(/9 ·/i)).toBeInTheDocument();
@@ -44,12 +49,18 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(botonesCat.length).toBeGreaterThanOrEqual(7);
 
     // Métodos de pago
-    expect(screen.getByRole('button', { name: /Efectivo/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Telepeaje/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Efectivo/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Telepeaje/i }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Exento/i })).toBeInTheDocument();
 
     // Resumen de caja: fondo inicial $ 100.000 y recaudado $ 10.500
-    expect(screen.getAllByText(/\$ 100\.000/i).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getAllByText(/\$ 100\.000/i).length).toBeGreaterThanOrEqual(
+      2,
+    );
     expect(screen.getAllByText(/\$ 10\.500/i).length).toBeGreaterThanOrEqual(2);
   });
 
@@ -63,7 +74,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       });
 
       // Esperar a que la terminal cargue
-      expect(await screen.findByRole('heading', { name: /Terminal de cobro/i })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: /Terminal de cobro/i }),
+      ).toBeInTheDocument();
 
       // El carril debe ser el real de la caseta (manual), sin texto "dato de prueba"
       expect(screen.getByText(/Carril 2 · manual/i)).toBeInTheDocument();
@@ -82,7 +95,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
         usuarioInicial: usuarioOperador,
       });
 
-      expect(await screen.findByRole('heading', { name: /Terminal de cobro/i })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: /Terminal de cobro/i }),
+      ).toBeInTheDocument();
       expect(
         screen.getByText(/Carril 2 · mixto \(dato de prueba\)/i),
       ).toBeInTheDocument();
@@ -112,15 +127,21 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(screen.getByText(/^\$ 9\.500$/i)).toBeInTheDocument();
 
     // El botón de cobro debe habilitarse
-    const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500/i });
+    const botonCobrar = screen.getByRole('button', {
+      name: /Cobrar \$ 10\.500/i,
+    });
     expect(botonCobrar).toBeEnabled();
 
     // Ejecutar cobro
     await user.click(botonCobrar);
 
     // Verificar aviso de confirmación emitido
-    expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/GHJ357 · Cat\. I · EFECTIVO/i)).toBeInTheDocument();
+    expect(
+      (await screen.findAllByText(/Ticket TCK-/i)).length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByText(/GHJ357 · Cat\. I · EFECTIVO/i),
+    ).toBeInTheDocument();
 
     // Verificar que los campos se limpiaron y el foco volvió a la placa
     expect(inputPlaca).toHaveValue('');
@@ -144,7 +165,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     // Tarifa 10.500 - 5.000 = Faltan 5.500
     expect(screen.getByText(/Falta por cobrar/i)).toBeInTheDocument();
     expect(screen.getByText(/^\$ 5\.500$/i)).toBeInTheDocument();
-    expect(screen.getByText(/Faltan \$ 5\.500 para cubrir la tarifa/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Faltan \$ 5\.500 para cubrir la tarifa/i),
+    ).toBeInTheDocument();
 
     const botonCobrar = screen.getByRole('button', { name: /Cobrar/i });
     expect(botonCobrar).toBeDisabled();
@@ -180,7 +203,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     // Debe mostrar la advertencia
     expect(
-      screen.getByText(/Vehículo registrado como categoría II\. Estás cobrando como categoría I\./i),
+      screen.getByText(
+        /Vehículo registrado como categoría II\. Estás cobrando como categoría I\./i,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -193,7 +218,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       usuarioInicial: usuarioOperador,
     });
 
-    expect(await screen.findByText(/mixto \(dato de prueba\)/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/mixto \(dato de prueba\)/i),
+    ).toBeInTheDocument();
 
     const inputPlaca = await screen.findByLabelText(/^Placa/i);
     // HKL123 es CAT_I (tarifa 10500), saldo 150000, ACTIVA
@@ -216,12 +243,16 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     expect(screen.getByText(/^\$ 150\.000$/i)).toBeInTheDocument();
     expect(screen.getByText(/^\$ 139\.500$/i)).toBeInTheDocument();
 
-    const botonCobrar = screen.getByRole('button', { name: /Cobrar \$ 10\.500/i });
+    const botonCobrar = screen.getByRole('button', {
+      name: /Cobrar \$ 10\.500/i,
+    });
     expect(botonCobrar).toBeEnabled();
     await user.click(botonCobrar);
 
     // Confirmación emitida
-    expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
+    expect(
+      (await screen.findAllByText(/Ticket TCK-/i)).length,
+    ).toBeGreaterThanOrEqual(1);
     expect(screen.getByText(/saldo restante \$ 139\.500/i)).toBeInTheDocument();
   });
 
@@ -243,7 +274,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     await waitFor(
       () => {
-        expect(screen.getAllByText(/Saldo insuficiente/i).length).toBeGreaterThanOrEqual(1);
+        expect(
+          screen.getAllByText(/Saldo insuficiente/i).length,
+        ).toBeGreaterThanOrEqual(1);
       },
       { timeout: 4000 },
     );
@@ -270,7 +303,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     await waitFor(
       () => {
-        expect(screen.getAllByText(/está SUSPENDIDA/i).length).toBeGreaterThanOrEqual(1);
+        expect(
+          screen.getAllByText(/está SUSPENDIDA/i).length,
+        ).toBeGreaterThanOrEqual(1);
       },
       { timeout: 4000 },
     );
@@ -292,14 +327,22 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
     const botonExento = screen.getByRole('button', { name: /Exento/i });
     await user.click(botonExento);
 
-    expect(screen.getByText(/El paso se registra con estado EXENTO y monto \$ 0/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/El paso se registra con estado EXENTO y monto \$ 0/i),
+    ).toBeInTheDocument();
 
-    const botonCobrar = screen.getByRole('button', { name: /Registrar exento \$ 0/i });
+    const botonCobrar = screen.getByRole('button', {
+      name: /Registrar exento \$ 0/i,
+    });
     expect(botonCobrar).toBeEnabled();
     await user.click(botonCobrar);
 
-    expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/OFJ123 · Cat\. I · EXENTO · \$ 0/i)).toBeInTheDocument();
+    expect(
+      (await screen.findAllByText(/Ticket TCK-/i)).length,
+    ).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getByText(/OFJ123 · Cat\. I · EXENTO · \$ 0/i),
+    ).toBeInTheDocument();
   });
 
   it('apoya atajos de teclado para selección de categoría y método de pago', async () => {
@@ -315,15 +358,24 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
 
     // Presionar tecla '3' fuera de un input selecciona CAT_III
     await user.keyboard('3');
-    expect(screen.getByRole('button', { name: /^III\b/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^III\b/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
 
     // Presionar F2 selecciona Telepeaje
     await user.keyboard('{F2}');
-    expect(screen.getByRole('button', { name: /Telepeaje/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /Telepeaje/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
 
     // Presionar F1 selecciona Efectivo
     await user.keyboard('{F1}');
-    expect(screen.getByRole('button', { name: /Efectivo/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /Efectivo/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   describe('C5: Tecla Enter para cobrar sin interferir con la escritura de la placa', () => {
@@ -357,7 +409,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       await user.keyboard('{Enter}');
 
       // Se emite el ticket
-      expect((await screen.findAllByText(/Ticket TCK-/i)).length).toBeGreaterThanOrEqual(1);
+      expect(
+        (await screen.findAllByText(/Ticket TCK-/i)).length,
+      ).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -369,14 +423,18 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
         usuarioInicial: usuarioOperador,
       });
 
-      const botonAbrirCierre = await screen.findByRole('button', { name: /Cerrar turno/i });
+      const botonAbrirCierre = await screen.findByRole('button', {
+        name: /Cerrar turno/i,
+      });
       await user.click(botonAbrirCierre);
 
       // Verificar que el diálogo se abre
       const dialogo = screen.getByRole('dialog', { name: /Cerrar turno/i });
       expect(dialogo).toBeInTheDocument();
 
-      const inputDeclarado = within(dialogo).getByLabelText(/Efectivo recaudado que entregas/i);
+      const inputDeclarado = within(dialogo).getByLabelText(
+        /Efectivo recaudado que entregas/i,
+      );
       expect(inputDeclarado).toHaveFocus();
 
       // Cerrar con Escape
@@ -392,11 +450,15 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
         usuarioInicial: usuarioOperador,
       });
 
-      const botonAbrirCierre = await screen.findByRole('button', { name: /Cerrar turno/i });
+      const botonAbrirCierre = await screen.findByRole('button', {
+        name: /Cerrar turno/i,
+      });
       await user.click(botonAbrirCierre);
 
       const dialogo = screen.getByRole('dialog', { name: /Cerrar turno/i });
-      const inputDeclarado = within(dialogo).getByLabelText(/Efectivo recaudado que entregas/i);
+      const inputDeclarado = within(dialogo).getByLabelText(
+        /Efectivo recaudado que entregas/i,
+      );
 
       // Recaudado es 10500. Probar FALTANTE: declarar 10.000 (-500)
       await user.type(inputDeclarado, '10000');
@@ -415,7 +477,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       expect(within(dialogo).getByText('CUADRADO')).toBeInTheDocument();
 
       // Confirmar cierre
-      const botonConfirmar = within(dialogo).getByRole('button', { name: /Confirmar cierre/i });
+      const botonConfirmar = within(dialogo).getByRole('button', {
+        name: /Confirmar cierre/i,
+      });
       expect(botonConfirmar).toBeEnabled();
       await user.click(botonConfirmar);
 
@@ -426,8 +490,14 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       expect(screen.getByText('CERRADO')).toBeInTheDocument();
 
       // El botón de cobro ahora debe reflejar que el turno está cerrado
-      expect(screen.getByRole('button', { name: /Turno cerrado/i })).toBeDisabled();
-      expect(screen.getByText(/Turno cerrado: no se pueden registrar transacciones/i)).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Turno cerrado/i }),
+      ).toBeDisabled();
+      expect(
+        screen.getByText(
+          /Turno cerrado: no se pueden registrar transacciones/i,
+        ),
+      ).toBeInTheDocument();
     });
 
     it('C5: bloquea nuevos cobros tras cerrar el turno y maneja 409 de concurrencia', async () => {
@@ -438,13 +508,19 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       });
 
       // Primero cerrar el turno
-      const botonAbrirCierre = await screen.findByRole('button', { name: /Cerrar turno/i });
+      const botonAbrirCierre = await screen.findByRole('button', {
+        name: /Cerrar turno/i,
+      });
       await user.click(botonAbrirCierre);
 
       const dialogo = screen.getByRole('dialog', { name: /Cerrar turno/i });
-      const inputDeclarado = within(dialogo).getByLabelText(/Efectivo recaudado que entregas/i);
+      const inputDeclarado = within(dialogo).getByLabelText(
+        /Efectivo recaudado que entregas/i,
+      );
       await user.type(inputDeclarado, '10500');
-      const botonConfirmar = within(dialogo).getByRole('button', { name: /Confirmar cierre/i });
+      const botonConfirmar = within(dialogo).getByRole('button', {
+        name: /Confirmar cierre/i,
+      });
       await user.click(botonConfirmar);
 
       await waitFor(() => {
@@ -452,7 +528,9 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       });
 
       // El botón de cobro queda deshabilitado en pantalla
-      const botonCobrar = screen.getByRole('button', { name: /Turno cerrado/i });
+      const botonCobrar = screen.getByRole('button', {
+        name: /Turno cerrado/i,
+      });
       expect(botonCobrar).toBeDisabled();
 
       // Si el backend emite error 409 por intento concurrente de transacción en turno cerrado
@@ -462,7 +540,8 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
             {
               error: {
                 codigo: 'TURNO_CERRADO',
-                mensaje: 'El turno está cerrado: no se pueden registrar transacciones.',
+                mensaje:
+                  'El turno está cerrado: no se pueden registrar transacciones.',
               },
             },
             { status: 409 },
@@ -497,7 +576,12 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
       server.use(
         http.get('/api/turnos', () => {
           return HttpResponse.json(
-            { error: { codigo: 'ERROR_SIMULADO', mensaje: 'Fallo simulado del servidor.' } },
+            {
+              error: {
+                codigo: 'ERROR_SIMULADO',
+                mensaje: 'Fallo simulado del servidor.',
+              },
+            },
             { status: 500 },
           );
         }),
@@ -508,11 +592,15 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
         usuarioInicial: usuarioOperador,
       });
 
-      expect(await screen.findByText(/No se pudo cargar el turno/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Reintentar/i })).toBeInTheDocument();
+      expect(
+        await screen.findByText(/No se pudo cargar el turno/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Reintentar/i }),
+      ).toBeInTheDocument();
     });
 
-    it('C2: muestra estado vacío cuando el operador no tiene turno abierto (caso real EMP-001 sin código incrustado)', async () => {
+    it('C2: redirige a la pantalla Abrir turno cuando el operador no tiene turno abierto', async () => {
       // Carlos Alberto Gómez Pérez (EMP-001) tiene el turno 8 CERRADO en la semilla real
       const usuarioSinTurno = {
         id: '1',
@@ -521,13 +609,23 @@ describe('Feature Operador (Terminal de cobro y cierre de turno)', () => {
         rol: 'RECAUDADOR' as const,
       };
 
-      renderConProveedores(<OperadorPage />, {
-        initialEntries: ['/operador'],
-        usuarioInicial: usuarioSinTurno,
-      });
+      // Se monta como en el router real (/operador/*), donde abrir-turno es una ruta relativa.
+      renderConProveedores(
+        <Routes>
+          <Route path="/operador/*" element={<OperadorPage />} />
+        </Routes>,
+        {
+          initialEntries: ['/operador'],
+          usuarioInicial: usuarioSinTurno,
+        },
+      );
 
-      expect(await screen.findByText(/No tienes un turno abierto asignado/i)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /Ir al inicio de sesión/i })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: /Abrir turno/i }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /Abrir turno/i }),
+      ).toBeInTheDocument();
     });
   });
 });

@@ -149,7 +149,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
     it('login autentica credenciales válidas y retorna usuario con turno abierto', async () => {
       const respuesta = await login({
         codigo: 'EMP-002',
-        clave: 'Turno123*',
+        clave: 'Samuel2026*',
       });
 
       expect(respuesta.usuario.codigo).toBe('EMP-002');
@@ -183,6 +183,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
         codigo_empleado: 'OP-TEST',
         rol: 'RECAUDADOR',
         estado: 'ACTIVO',
+        password: 'Clave-prueba-1',
       });
       expect(nuevoOp.id_operador).toBeGreaterThan(0);
       expect(nuevoOp.codigo_empleado).toBe('OP-TEST');
@@ -296,7 +297,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
     });
 
     it('transacciones anula transacción y genera registro inmutable en auditoría', async () => {
-      const txs = await obtenerTransaccionesTurno(8);
+      const txs = await obtenerTransaccionesTurno(9);
       expect(txs.length).toBeGreaterThan(0);
       const idTx = txs[0]?.id_transaccion ?? 1;
 
@@ -340,7 +341,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
       result.current.mutate({
         codigo: 'EMP-002',
-        clave: 'Turno123*',
+        clave: 'Samuel2026*',
       });
 
       await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -429,6 +430,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
         codigo_empleado: 'EMP-HOOK',
         rol: 'RECAUDADOR',
         estado: 'ACTIVO',
+        password: 'Clave-hook-123',
       });
       await waitFor(() => expect(crear.current.isSuccess).toBe(true));
       expect(spyInvalidate).toHaveBeenCalledWith(
@@ -548,7 +550,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
       const { result } = renderHook(() => useAnularTransaccion(), { wrapper });
       result.current.mutate({
-        idTransaccion: 1,
+        idTransaccion: 11,
         motivo: 'Anulación de prueba en hook',
         usuario_sistema: 'SUPERVISOR-HOOK',
       });

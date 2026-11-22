@@ -87,16 +87,17 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 ## 🎯 4. Próximos pasos finales / Sustentación
 
 - [x] **Revisión de Seguridad y JWT**:
-  - [x] Clave JWT fuera del repositorio (user-secrets / `JwtSettings__SecretKey`) y validación de configuración al arrancar.
+  - [x] Clave JWT de producción fuera del repositorio (se exige por `JwtSettings__SecretKey`; en desarrollo se usa una clave versionada en `appsettings.Development.json`) y validación de configuración al arrancar.
   - [x] Validación estricta del token (`exp` obligatorio, `nbf`, `iss`, `aud`, `alg`).
   - [x] Retirar la sobrecarga sin uso de `GenerateToken`.
   - [x] Una sola validación del token por petición (handler de autenticación).
   - [x] Los errores de arranque de la API ya no se silencian (código de salida distinto de 0).
-  - [x] Usuarios semilla solo en entorno Development.
+  - [x] Usuarios del equipo en la base de datos con contraseña BCrypt; sin usuarios ni contraseñas fijos en el código.
+- [ ] Regenerar `Diccionario_Datos_PeajeSys.pdf` (en `database/01_Modelado` y `docs/entregas`) con la columna `OPERADOR.password_hash` y el rol `ADMINISTRADOR`.
 - [ ] **Prueba de integración End-to-End**:
-  - Levantar la base de datos con `docker compose up -d` desde la raíz (carga `00_Master_PeajeSys.sql` automáticamente) o con `psql` según `database/README.md`.
-  - Configurar la clave JWT (ver `backend/README.md`, sección 4.3) e iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api && dotnet run`, entorno Development y puerto 5080).
-  - Cambiar `VITE_USAR_MOCKS=false` en `frontend/.env` para validar la comunicación real Frontend $\leftrightarrow$ Backend $\leftrightarrow$ PostgreSQL.
+  - Levantar la base de datos con `docker compose up -d` (o `pnpm db`) desde la raíz (carga `00_Master_PeajeSys.sql` automáticamente) o ejecutando `00_Master_PeajeSys.sql` con `psql` según `database/README.md`.
+  - Iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api` y `dotnet run`; entorno Development, puerto 5080; no requiere configuración).
+  - Desde la raíz: `pnpm install` y `pnpm dev` (API + frontend contra la BD real; `pnpm dev:mocks` para usar solo los mocks).
 - [ ] **Preparación de la sustentación final**:
   - Revisar diapositivas de presentación basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.
   - Demostración en vivo de los 3 roles en el frontend y la ejecución de los triggers / funciones en PostgreSQL.
