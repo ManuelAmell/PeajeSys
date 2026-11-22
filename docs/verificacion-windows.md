@@ -59,7 +59,7 @@ pnpm --dir frontend capturar -- --ruta /login --rol ninguno --espera h1 --salida
 Get-NetTCPConnection -LocalPort 5180 -State Listen -ErrorAction SilentlyContinue
 ```
 
-- **Esperado**: el script inicia solo su servidor de vista previa, genera 4 PNG (claro y oscuro, escritorio y móvil) en `frontend\capturas\verif`, imprime la tabla resumen y termina. El último comando **no muestra nada**: el servidor que lanzó el script se cerró.
+- **Esperado**: puede mostrar una advertencia sobre el selector `h1` genérico: es normal. El script inicia solo su servidor de vista previa, genera 4 PNG (claro y oscuro, escritorio y móvil) en `frontend\capturas\verif`, imprime la tabla resumen y termina. El último comando **no muestra nada**: el servidor que lanzó el script se cerró.
 - **Si falla**: la salida completa del comando `capturar` y la del último comando (si muestra un proceso, anota su `OwningProcess`).
 
 ---
