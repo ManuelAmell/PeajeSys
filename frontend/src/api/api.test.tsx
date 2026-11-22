@@ -430,6 +430,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
         codigo_empleado: 'EMP-HOOK',
         rol: 'RECAUDADOR',
         estado: 'ACTIVO',
+        password: 'Clave-hook-123',
       });
       await waitFor(() => expect(crear.current.isSuccess).toBe(true));
       expect(spyInvalidate).toHaveBeenCalledWith(

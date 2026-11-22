@@ -21,7 +21,9 @@ describe('MSW /api/operadores imita a la API real', () => {
     expect(creado.codigo_empleado).toBe('REC-010');
     expect(JSON.stringify(creado)).not.toContain('Clave-segura1');
     expect(creado).not.toHaveProperty('password');
-    expect(await obtenerOperador(creado.id_operador)).not.toHaveProperty('password');
+    expect(await obtenerOperador(creado.id_operador)).not.toHaveProperty(
+      'password',
+    );
   });
 
   it('exige la contraseña al crear (422)', async () => {
@@ -36,7 +38,10 @@ describe('MSW /api/operadores imita a la API real', () => {
     await crearOperador(base);
     const porCodigo = crearOperador({ ...base, numero_documento: '5555' });
     await expect(porCodigo).rejects.toBeInstanceOf(ErrorApi);
-    await expect(porCodigo).rejects.toMatchObject({ estado: 409, codigo: 'OPERADOR_DUPLICADO' });
+    await expect(porCodigo).rejects.toMatchObject({
+      estado: 409,
+      codigo: 'OPERADOR_DUPLICADO',
+    });
     await expect(
       crearOperador({ ...base, codigo_empleado: 'REC-011' }),
     ).rejects.toMatchObject({ estado: 409, codigo: 'OPERADOR_DUPLICADO' });

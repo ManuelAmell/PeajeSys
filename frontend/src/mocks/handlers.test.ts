@@ -227,6 +227,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
           apellidos: 'Operador',
           codigo_empleado: 'EMP-099',
           rol: 'RECAUDADOR',
+          password: 'Clave-prueba-1',
         }),
       });
       expect(res.status).toBe(201);
@@ -243,6 +244,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
           apellidos: 'Operador',
           codigo_empleado: 'EMP-100',
           rol: 'RECAUDADOR',
+          password: 'Clave-prueba-1',
         }),
       });
       expect(resDup.status).toBe(409);
@@ -561,6 +563,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
           apellidos: 'Doc',
           codigo_empleado: 'EMP-NEW',
           rol: 'RECAUDADOR',
+          password: 'Clave-prueba-1',
           estado: 'ACTIVO',
         }),
       });
@@ -576,6 +579,7 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
           apellidos: 'Cod',
           codigo_empleado: 'EMP-001',
           rol: 'RECAUDADOR',
+          password: 'Clave-prueba-1',
           estado: 'ACTIVO',
         }),
       });
