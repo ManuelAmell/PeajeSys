@@ -13,6 +13,10 @@ namespace PeajeSys.Api.Services;
 
 public class AuthService : IAuthService
 {
+    // Hash BCrypt de coste 12 generado una sola vez (de la cadena "peajesys-relleno-no-es-una-clave");
+    // no corresponde a ninguna cuenta. Sirve solo para igualar el tiempo de respuesta del login.
+    private const string HashDeRelleno = "$2a$12$sJKq/GMvS/cqwJfJkHY25./9oJNhgB9wSl7hMFHLJ57J8TAnur2Dm";
+
     private readonly PeajeSysDbContext _dbContext;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
@@ -46,25 +50,28 @@ public class AuthService : IAuthService
         var operador = await _dbContext.Operadores
             .FirstOrDefaultAsync(o => o.CodigoEmpleado.ToUpper() == codigo.ToUpper());
 
-        if (operador == null)
+        // Codigo inexistente, operador sin hash y clave incorrecta responden IGUAL (401) y tardan lo mismo:
+        // en los dos primeros casos se verifica igualmente contra un hash de relleno para no filtrar
+        // por tiempo de respuesta si la cuenta existe. Solo quien conoce la clave llega a ver el 403.
+        bool esValido;
+        if (operador != null && !string.IsNullOrEmpty(operador.PasswordHash))
         {
-            throw new NotFoundException("EMPLEADO_NO_ENCONTRADO", "Empleado no registrado en el sistema.");
+            esValido = _passwordHasher.VerifyPassword(password, operador.PasswordHash);
+        }
+        else
+        {
+            _passwordHasher.VerifyPassword(password, HashDeRelleno);
+            esValido = false;
         }
 
-        // Validar estado del operador
+        if (!esValido || operador == null)
+        {
+            throw new UnauthorizedException("CREDENCIALES_INVALIDAS", "Codigo de empleado o clave incorrectos.");
+        }
+
         if (operador.Estado.Equals(EstadosOperador.Inactivo, StringComparison.OrdinalIgnoreCase))
         {
             throw new ForbiddenException("USUARIO_INACTIVO", "El operador se encuentra inactivo en el sistema.");
-        }
-
-        // Validar credenciales solo contra el hash BCrypt guardado en la base de datos.
-        // Hash NULL (operador sin acceso) y clave incorrecta responden igual para no revelar nada.
-        bool esValido = !string.IsNullOrEmpty(operador.PasswordHash)
-            && _passwordHasher.VerifyPassword(password, operador.PasswordHash);
-
-        if (!esValido)
-        {
-            throw new UnauthorizedException("CREDENCIALES_INVALIDAS", "Codigo de empleado o clave incorrectos.");
         }
 
         // Generar JWT

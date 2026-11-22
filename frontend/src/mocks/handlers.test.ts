@@ -69,7 +69,9 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       expect(res.status).toBe(401);
       const data = await res.json();
       expect(data.error.codigo).toBe('CREDENCIALES_INVALIDAS');
-      expect(data.error.mensaje).toBe('Código de empleado o clave incorrectos.');
+      expect(data.error.mensaje).toBe(
+        'Código de empleado o clave incorrectos.',
+      );
     });
 
     it('rechaza empleado inactivo (EMP-009) con HTTP 403', async () => {
@@ -176,7 +178,9 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
     };
 
     it('GET /api/casetas devuelve ocupada según haya turno ABIERTO', async () => {
-      const casetas = (await (await fetch(`http://localhost:3000/api/casetas`)).json()) as {
+      const casetas = (await (
+        await fetch(`http://localhost:3000/api/casetas`)
+      ).json()) as {
         id_caseta: number;
         ocupada: boolean;
       }[];
@@ -197,7 +201,9 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
     it('GET /api/turnos de un supervisor devuelve todos', async () => {
       // sub 3 = EMP-003 (SUPERVISOR).
       const abiertos = await pedirTurnos('?estado=ABIERTO', '3');
-      expect(abiertos.map((t) => t.id_turno).sort((a, b) => a - b)).toEqual([9, 10]);
+      expect(abiertos.map((t) => t.id_turno).sort((a, b) => a - b)).toEqual([
+        9, 10,
+      ]);
     });
   });
 

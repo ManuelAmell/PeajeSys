@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using PeajeSys.Api.Security;
 using PeajeSys.Tests.Auth;
 
 namespace PeajeSys.Tests.Api;
@@ -15,6 +17,12 @@ namespace PeajeSys.Tests.Api;
 public class PeajeSysApiFactory : WebApplicationFactory<Program>
 {
     protected virtual bool DefinirClave => true;
+
+    /// <summary>
+    /// Por defecto el servidor de pruebas no tiene BD de operadores: la sesion se acepta tal como la dice
+    /// el token (rol incluido). Las fabricas con BD real que prueban la revocacion lo ponen en false.
+    /// </summary>
+    protected virtual bool SesionPermisiva => true;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -31,6 +39,11 @@ public class PeajeSysApiFactory : WebApplicationFactory<Program>
         builder.ConfigureServices(services =>
         {
             services.AddTransient<IStartupFilter, BufferResponseBodyStartupFilter>();
+            if (SesionPermisiva)
+            {
+                services.RemoveAll<IVerificadorSesionOperador>();
+                services.AddScoped<IVerificadorSesionOperador, SesionPermisivaDePruebas>();
+            }
         });
     }
 
@@ -60,6 +73,15 @@ public class PeajeSysApiFactory : WebApplicationFactory<Program>
             };
         }
     }
+}
+
+/// <summary>Acepta el token tal cual (sin consultar la BD): conserva el comportamiento previo para las pruebas que no siembran operadores.</summary>
+internal sealed class SesionPermisivaDePruebas : IVerificadorSesionOperador
+{
+    public System.Threading.Tasks.Task<System.Security.Claims.ClaimsPrincipal?> VerificarAsync(System.Security.Claims.ClaimsPrincipal desdeToken)
+        => System.Threading.Tasks.Task.FromResult<System.Security.Claims.ClaimsPrincipal?>(desdeToken);
+
+    public void Invalidar(int idOperador) { }
 }
 
 /// <summary>Variante sin JwtSettings:SecretKey para comprobar que el arranque falla.</summary>

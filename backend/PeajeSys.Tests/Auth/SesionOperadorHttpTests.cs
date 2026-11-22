@@ -26,6 +26,8 @@ public sealed class PeajeSysApiSesionRealFactory : PeajeSysApiFactory
 {
     private readonly string _nombreBd = Guid.NewGuid().ToString();
 
+    protected override bool SesionPermisiva => false;
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);

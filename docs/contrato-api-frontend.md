@@ -125,8 +125,9 @@ Valida credenciales de acceso para recaudadores, supervisores y administradores.
 ```
 - **Errores posibles**:
   - `400 Bad Request` (`CODIGO_REQUERIDO`, `CLAVE_REQUERIDA`).
-  - `404 Not Found` (`EMPLEADO_NO_ENCONTRADO`): Código no registrado en el sistema.
-  - `403 Forbidden` (`EMPLEADO_INACTIVO`): Operador con estado `INACTIVO`.
+  - `401 Unauthorized` (`CREDENCIALES_INVALIDAS`): código inexistente, operador sin clave o clave incorrecta. Los tres casos devuelven el mismo mensaje y tardan parecido, para no revelar qué cuentas existen.
+  - `403 Forbidden` (`USUARIO_INACTIVO`): clave correcta pero el operador está `INACTIVO` (solo lo ve quien conoce la clave).
+  - Cualquier ruta protegida responde `401` (`SESION_REVOCADA`) si el operador del token fue desactivado o ya no existe, y usa el rol actual de la BD, no el del token.
   - `409 Conflict` (`SIN_TURNO_ABIERTO`): Recaudador activo sin turno asignado.
 
 ---
