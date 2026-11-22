@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using PeajeSys.Core.DTOs;
+using PeajeSys.Core.Entities;
 
 namespace PeajeSys.Core.Interfaces;
 
@@ -37,6 +38,15 @@ public interface IAuditoriaService
             DateTime.TryParse(fechaInicio, out var fi) ? fi : null,
             DateTime.TryParse(fechaFin, out var ff) ? ff : null,
             tipoOperacion, usuario, page, limit);
+}
+
+/// <summary>
+/// Acceso a la vista de base de datos vw_estado_cuentas_telepeaje.
+/// En produccion consulta la vista mediante EF Core; permite fakes para pruebas unitarias.
+/// </summary>
+public interface IVistaCuentasTelepeaje
+{
+    Task<IEnumerable<EstadoCuentaTelepeaje>> ConsultarAsync(string? condicionSaldo, string? estado, string? q);
 }
 
 public interface ITelepeajeMonitoreoService
