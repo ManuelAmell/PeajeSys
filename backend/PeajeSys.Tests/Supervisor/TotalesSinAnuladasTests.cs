@@ -29,6 +29,9 @@ public class TotalesSinAnuladasTests
         db.Casetas.AddRange(
             new Caseta { IdCaseta = 1, IdEstacion = 1, NumeroCarril = 1 },
             new Caseta { IdCaseta = 2, IdEstacion = 2, NumeroCarril = 1 });
+        db.Operadores.AddRange(
+            new Operador { IdOperador = 1, NumeroDocumento = "1", Nombres = "Alex", Apellidos = "R", CodigoEmpleado = "REC-001" },
+            new Operador { IdOperador = 2, NumeroDocumento = "2", Nombres = "Camilo", Apellidos = "R", CodigoEmpleado = "REC-002" });
         db.Turnos.AddRange(
             new Turno { IdTurno = 1, IdCaseta = 1, IdOperador = 1, TotalRecaudadoEfectivo = 20000, Estado = "ABIERTO" },
             new Turno { IdTurno = 2, IdCaseta = 2, IdOperador = 2, TotalRecaudadoEfectivo = 7000, Estado = "ABIERTO" });
