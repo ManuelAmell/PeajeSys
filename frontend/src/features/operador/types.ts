@@ -35,6 +35,8 @@ export interface PasoRegistrado {
   metodoPago: MetodoPagoOperador;
   monto: number;
   montoTexto: string;
+  /** Transacción anulada (VOID): se muestra marcada y no cuenta en los totales. */
+  anulada: boolean;
 }
 
 export interface AvisoExitoPaso {

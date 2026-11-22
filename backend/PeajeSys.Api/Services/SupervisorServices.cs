@@ -34,8 +34,11 @@ public class ArqueoService : IArqueoService
             throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe un turno con id {idTurno}.");
         }
 
+        // Una transaccion anulada (VOID en auditoria) sigue APROBADA: no cuenta como vehiculo. El efectivo ya
+        // viene corregido en turno.total_recaudado_efectivo (la anulacion lo resta).
         long totalVehiculos = await _context.TransaccionesPeaje
-            .CountAsync(t => t.IdTurno == idTurno);
+            .CountAsync(t => t.IdTurno == idTurno
+                && !_context.AuditoriasTransaccion.Any(a => a.IdTransaccion == t.IdTransaccion && a.TipoOperacion == "VOID"));
 
         var (diferencia, estadoArqueo) = DeterminarArqueo(turno.TotalRecaudadoEfectivo, efectivoReportado);
 
@@ -100,62 +103,13 @@ public class ReporteRecaudoService : IReporteRecaudoService
         }
         string fechaTexto = (fechaFiltro ?? ZonaHorariaApp.Hoy()).ToString("yyyy-MM-dd");
 
-        // Intento 1: vista vw_resumen_diario_estacion (agrupa por dia UTC de la sesion). Solo se usa sin filtro de
-        // fecha; con fecha se agrega directamente para respetar el dia civil de la aplicacion.
-        if (!fechaFiltro.HasValue)
-        {
-            try
-            {
-                var queryVista = _context.ResumenDiarioEstaciones.AsQueryable();
-
-                if (idEstacion.HasValue)
-                {
-                    queryVista = queryVista.Where(v => v.IdEstacion == idEstacion.Value);
-                }
-
-                var listaVista = await queryVista.ToListAsync();
-
-                if (listaVista.Count > 0)
-                {
-                    long vehTotal = listaVista.Sum(v => v.TotalVehiculos);
-                    decimal efTotal = listaVista.Sum(v => v.RecaudoEfectivo);
-                    decimal tagTotal = listaVista.Sum(v => v.RecaudoTelepeaje);
-                    decimal genTotal = listaVista.Sum(v => v.RecaudoTotal);
-                    string nombreEstacion = listaVista.First().Estacion;
-
-                    var dias = listaVista.Select(v => new RecaudoDiaItemDto
-                    {
-                        Fecha = v.Fecha.ToString("yyyy-MM-dd"),
-                        Veh = v.TotalVehiculos,
-                        Ef = v.RecaudoEfectivo,
-                        Tag = v.RecaudoTelepeaje,
-                        Total = v.RecaudoTotal
-                    }).ToList();
-
-                    return new RecaudoDiarioDto
-                    {
-                        IdEstacion = idEstacion,
-                        Estacion = nombreEstacion,
-                        Fecha = fechaTexto,
-                        TotalVehiculos = vehTotal,
-                        TotalEfectivo = efTotal,
-                        TotalTelepeaje = tagTotal,
-                        TotalGeneral = genTotal,
-                        Dias = dias
-                    };
-                }
-            }
-            catch
-            {
-                // Fallback a agregacion directa si la vista no esta presente en memoria/sqlite
-            }
-        }
-
-        // Fallback: agregacion directa sobre TRANSACCION_PEAJE
-        var transQuery = _context.TransaccionesPeaje
-            .Include(t => t.Turno)
-            .ThenInclude(tu => tu!.Caseta)
-            .ThenInclude(c => c!.Estacion)
+        // NO se usa la vista vw_resumen_diario_estacion: forma parte de la entrega de base de datos (no se modifica)
+        // y es anterior a la anulacion, asi que cuenta las transacciones anuladas (siguen APROBADAS en
+        // TRANSACCION_PEAJE; la anulacion solo agrega un VOID en AUDITORIA_TRANSACCION). La API agrega aqui con la
+        // misma formula de la vista (por estacion y dia, conteo y suma por metodo de pago) excluyendo las anuladas
+        // y agrupando por dia civil de la aplicacion (America/Bogota) en vez del dia UTC de la sesion.
+        var transQuery = _context.TransaccionesPeaje.AsNoTracking()
+            .Where(t => !_context.AuditoriasTransaccion.Any(a => a.IdTransaccion == t.IdTransaccion && a.TipoOperacion == "VOID"))
             .AsQueryable();
 
         if (idEstacion.HasValue)
@@ -168,12 +122,51 @@ public class ReporteRecaudoService : IReporteRecaudoService
             transQuery = transQuery.Where(t => t.FechaHora >= inicioUtc && t.FechaHora < finUtc);
         }
 
-        var transacciones = await transQuery.ToListAsync();
+        var filas = await transQuery
+            .Select(t => new
+            {
+                IdEstacion = t.Turno!.Caseta!.IdEstacion,
+                Estacion = t.Turno!.Caseta!.Estacion!.Nombre,
+                t.FechaHora,
+                t.MetodoPago,
+                t.MontoTarifa
+            })
+            .ToListAsync();
 
-        long totalVeh = transacciones.Count;
-        decimal totalEf = transacciones.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa);
-        decimal totalTag = transacciones.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa);
-        decimal totalGen = transacciones.Sum(t => t.MontoTarifa);
+        long totalVeh = filas.Count;
+        decimal totalEf = filas.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa);
+        decimal totalTag = filas.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa);
+        decimal totalGen = filas.Sum(t => t.MontoTarifa);
+
+        // Sin filtro de fecha: una fila por estacion y dia civil (como la vista); con fecha: una sola fila del dia.
+        if (!fechaFiltro.HasValue && filas.Count > 0)
+        {
+            var grupos = filas
+                .GroupBy(t => (t.IdEstacion, t.Estacion, Dia: ZonaHorariaApp.DiaCivil(t.FechaHora)))
+                .OrderBy(g => g.Key.Dia).ThenBy(g => g.Key.Estacion, StringComparer.Ordinal)
+                .ToList();
+            var diasPorEstacion = grupos
+                .Select(g => new RecaudoDiaItemDto
+                {
+                    Fecha = g.Key.Dia.ToString("yyyy-MM-dd"),
+                    Veh = g.LongCount(),
+                    Ef = g.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa),
+                    Tag = g.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa),
+                    Total = g.Sum(t => t.MontoTarifa)
+                }).ToList();
+
+            return new RecaudoDiarioDto
+            {
+                IdEstacion = idEstacion,
+                Estacion = grupos[0].Key.Estacion,
+                Fecha = fechaTexto,
+                TotalVehiculos = totalVeh,
+                TotalEfectivo = totalEf,
+                TotalTelepeaje = totalTag,
+                TotalGeneral = totalGen,
+                Dias = diasPorEstacion
+            };
+        }
 
         string? estacionNombre = null;
         if (idEstacion.HasValue)
