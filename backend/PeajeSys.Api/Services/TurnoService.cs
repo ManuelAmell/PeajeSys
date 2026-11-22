@@ -16,10 +16,12 @@ namespace PeajeSys.Api.Services;
 public class TurnoService : ITurnoService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public TurnoService(PeajeSysDbContext context)
+    public TurnoService(PeajeSysDbContext context, TimeProvider? reloj = null)
     {
         _context = context;
+        _reloj = reloj ?? TimeProvider.System;
     }
 
     public async Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
