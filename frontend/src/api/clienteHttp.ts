@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { borrarToken, obtenerToken } from './sesionToken';
 
 export interface DetalleErrorApi {
   codigo: string;
@@ -54,9 +55,10 @@ export async function clienteHttp<T>(
 
   // Base URL configurable vía VITE_API_BASE_URL (por defecto '/api')
   const baseUrl = (
-    typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL
-      ? import.meta.env.VITE_API_BASE_URL
-      : '/api'
+    (typeof import.meta !== 'undefined' &&
+      import.meta.env?.VITE_API_BASE_URL) ||
+    (typeof process !== 'undefined' && process.env?.VITE_API_BASE_URL) ||
+    '/api'
   ).replace(/\/$/, '');
 
   // Normalizar ruta para evitar dobles barras
@@ -64,7 +66,11 @@ export async function clienteHttp<T>(
   let url = `${baseUrl}${rutaNormalizada}`;
 
   // En entornos JSDOM/Node con window.location, anteponer el origen para URLs relativas
-  if (url.startsWith('/') && typeof window !== 'undefined' && window.location?.origin) {
+  if (
+    url.startsWith('/') &&
+    typeof window !== 'undefined' &&
+    window.location?.origin
+  ) {
     url = `${window.location.origin}${url}`;
   }
 
@@ -89,10 +95,19 @@ export async function clienteHttp<T>(
     defaultHeaders['Content-Type'] = 'application/json';
   }
 
-  const finalHeaders = {
+  const finalHeaders: Record<string, string> = {
     ...defaultHeaders,
     ...((headers as Record<string, string>) || {}),
   };
+
+  // Token de sesión, salvo que el llamador ya pase su propia cabecera Authorization
+  const token = obtenerToken();
+  const traeAuthorization = Object.keys(finalHeaders).some(
+    (k) => k.toLowerCase() === 'authorization',
+  );
+  if (token && !traeAuthorization) {
+    finalHeaders.Authorization = `Bearer ${token}`;
+  }
 
   let response: Response;
   try {
@@ -110,6 +125,10 @@ export async function clienteHttp<T>(
 
   // Manejo de respuestas no exitosas (4xx / 5xx)
   if (!response.ok) {
+    // Un 401 con token enviado significa sesión caducada o inválida
+    if (response.status === 401 && token && !traeAuthorization) {
+      borrarToken();
+    }
     let errorData: RespuestaErrorApi | null = null;
     try {
       errorData = (await response.json()) as RespuestaErrorApi;
@@ -155,7 +174,8 @@ export async function clienteHttp<T>(
       throw new ErrorApi({
         estado: response.status,
         codigo: 'ERROR_VALIDACION_RESPUESTA',
-        mensaje: 'La respuesta del servidor no cumple el esquema de datos esperado.',
+        mensaje:
+          'La respuesta del servidor no cumple el esquema de datos esperado.',
         campos: Object.fromEntries(
           parseResult.error.issues.map((i) => [i.path.join('.'), i.message]),
         ),
@@ -170,14 +190,22 @@ export async function clienteHttp<T>(
 clienteHttp.get = <T>(ruta: string, opciones?: OpcionesClienteHttp<T>) =>
   clienteHttp<T>(ruta, { ...opciones, method: 'GET' });
 
-clienteHttp.post = <T>(ruta: string, body?: unknown, opciones?: OpcionesClienteHttp<T>) =>
+clienteHttp.post = <T>(
+  ruta: string,
+  body?: unknown,
+  opciones?: OpcionesClienteHttp<T>,
+) =>
   clienteHttp<T>(ruta, {
     ...opciones,
     method: 'POST',
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-clienteHttp.patch = <T>(ruta: string, body?: unknown, opciones?: OpcionesClienteHttp<T>) =>
+clienteHttp.patch = <T>(
+  ruta: string,
+  body?: unknown,
+  opciones?: OpcionesClienteHttp<T>,
+) =>
   clienteHttp<T>(ruta, {
     ...opciones,
     method: 'PATCH',

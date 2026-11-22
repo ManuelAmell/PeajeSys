@@ -8,7 +8,7 @@ Especificación del stack tecnológico oficial para la Web API en C# y .NET de P
 
 | Componente | Tecnología Seleccionada | Justificación Técnica |
 |---|---|---|
-| Plataforma y Lenguaje | C# 12 / .NET 8.0 LTS (o .NET 9.0) | Alto rendimiento, soporte oficial a largo plazo, tipado estricto y ejecución multiplataforma (Linux / Windows). |
+| Plataforma y Lenguaje | C# 12 / .NET 8.0 LTS (target `net8.0`; compila con cualquier SDK 8 o superior) | Alto rendimiento, soporte oficial a largo plazo, tipado estricto y ejecución multiplataforma (Linux / Windows). |
 | Tipo de Aplicación | ASP.NET Core Web API | Framework HTTP asíncrono, liviano y con excelente rendimiento para APIs RESTful. |
 | ORM Principal | Entity Framework Core 8 / 9 | Mapeo objeto-relacional tipado con Fluent API, seguimiento de cambios y soporte completo para migraciones. |
 | Micro-ORM Auxiliar | Dapper | Ejecución de consultas analíticas directas y reportes complejos de alta velocidad (ej. vista `vw_resumen_diario_estacion`). |

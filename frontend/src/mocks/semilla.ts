@@ -6,7 +6,6 @@
 // - Turnos con total_recaudado_efectivo distinto de la suma de sus transacciones en efectivo: turno 1 (315000 frente a 32500 en efectivo); turno 2 (250000 frente a 10500 en efectivo); turno 4 (180000 frente a 42000 en efectivo); turno 5 (420000 frente a 48500 en efectivo); turno 6 (190000 frente a 0 en efectivo).
 // - Cuenta de telepeaje 1 (HKL123): saldo_disponible 150000, pero el ultimo detalle (transaccion 12) deja saldo_posterior 139500.
 // - Estación 2 (Estación La Ceballos): solo tiene 3 tarifas para 7 categorías (CAT_I, CAT_II, CAT_III).
-// - No existe rol administrador en OPERADOR: ADMIN-01 solo existe en el frontend (dato de prueba).
 
 import type { Semilla } from './semilla.tipos';
 
@@ -163,6 +162,42 @@ export const SEMILLA: Semilla = {
       nombres: 'Claudia Patricia',
       apellidos: 'Gutiérrez Polo',
       codigo_empleado: 'EMP-010',
+      rol: 'RECAUDADOR',
+      estado: 'ACTIVO',
+    },
+    {
+      id_operador: 11,
+      numero_documento: '1000000001',
+      nombres: 'Manuel',
+      apellidos: 'Amell',
+      codigo_empleado: 'ADM-001',
+      rol: 'ADMINISTRADOR',
+      estado: 'ACTIVO',
+    },
+    {
+      id_operador: 12,
+      numero_documento: '1000000002',
+      nombres: 'Samuel',
+      apellidos: 'Otero',
+      codigo_empleado: 'SUP-001',
+      rol: 'SUPERVISOR',
+      estado: 'ACTIVO',
+    },
+    {
+      id_operador: 13,
+      numero_documento: '1000000003',
+      nombres: 'Alex',
+      apellidos: 'Florez',
+      codigo_empleado: 'REC-001',
+      rol: 'RECAUDADOR',
+      estado: 'ACTIVO',
+    },
+    {
+      id_operador: 14,
+      numero_documento: '1000000004',
+      nombres: 'Camilo',
+      apellidos: 'Guzmán',
+      codigo_empleado: 'REC-002',
       rol: 'RECAUDADOR',
       estado: 'ACTIVO',
     },

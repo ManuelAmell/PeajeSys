@@ -38,11 +38,13 @@ test.describe('Caso 9: Estados de simulación (?mock=error, ?mock=vacio y ?mock=
     const alerta = page.getByRole('alert').first();
     await expect(alerta).toBeVisible();
     await expect(alerta).toContainText('No se pudo cargar el turno');
-    await expect(alerta.locator('button', { hasText: /Reintentar/i })).toBeVisible();
+    await expect(
+      alerta.locator('button', { hasText: /Reintentar/i }),
+    ).toBeVisible();
     expect(errores).toEqual([]);
   });
 
-  test('9.3 Operador: ?mock=vacio muestra estado sin turno abierto asignado', async ({
+  test('9.3 Operador: ?mock=vacio redirige a la pantalla Abrir turno', async ({
     page,
   }) => {
     const errores = escucharConsola(page);
@@ -50,7 +52,8 @@ test.describe('Caso 9: Estados de simulación (?mock=error, ?mock=vacio y ?mock=
 
     await page.goto('/operador?mock=vacio');
 
-    await expect(page.getByText('No tienes un turno abierto asignado')).toBeVisible();
+    await expect(page).toHaveURL(/\/operador\/abrir-turno/);
+    await expect(page.locator('h1')).toHaveText(/Abrir turno/i);
     expect(errores).toEqual([]);
   });
 
@@ -64,8 +67,12 @@ test.describe('Caso 9: Estados de simulación (?mock=error, ?mock=vacio y ?mock=
 
     const alerta = page.locator('div[role="alert"]');
     await expect(alerta).toBeVisible();
-    await expect(alerta).toContainText('No se pudieron cargar los datos de la estación');
-    await expect(alerta.locator('button', { hasText: /Reintentar/i })).toBeVisible();
+    await expect(alerta).toContainText(
+      'No se pudieron cargar los datos de la estación',
+    );
+    await expect(
+      alerta.locator('button', { hasText: /Reintentar/i }),
+    ).toBeVisible();
     expect(errores).toEqual([]);
   });
 
@@ -78,7 +85,9 @@ test.describe('Caso 9: Estados de simulación (?mock=error, ?mock=vacio y ?mock=
     await page.goto('/supervisor?mock=lento');
 
     // Muestra estado de carga
-    await expect(page.locator('text=Cargando turnos, recaudo y auditoría…')).toBeVisible();
+    await expect(
+      page.locator('text=Cargando turnos, recaudo y auditoría…'),
+    ).toBeVisible();
 
     // Eventualmente los datos cargan
     await expect(page.locator('#panel-arqueo')).toBeVisible({ timeout: 15000 });
@@ -95,7 +104,9 @@ test.describe('Caso 9: Estados de simulación (?mock=error, ?mock=vacio y ?mock=
 
     const alerta = page.locator('div[role="alert"]');
     await expect(alerta).toBeVisible();
-    await expect(alerta.locator('button', { hasText: /Reintentar/i })).toBeVisible();
+    await expect(
+      alerta.locator('button', { hasText: /Reintentar/i }),
+    ).toBeVisible();
     expect(errores).toEqual([]);
   });
 });

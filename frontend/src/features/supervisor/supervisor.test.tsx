@@ -200,7 +200,8 @@ describe('Panel de Supervisión (B4)', () => {
       await user.click(tabRecaudo);
 
       expect(await screen.findByRole('heading', { level: 2, name: /Recaudo diario/i })).toBeInTheDocument();
-      expect(screen.getByText(/Vista vw_resumen_diario_estacion/i)).toBeInTheDocument();
+      expect(screen.getByText(/Calculado por la API excluyendo anulaciones/i)).toBeInTheDocument();
+      expect(screen.queryByText(/vw_resumen_diario_estacion/i)).not.toBeInTheDocument();
 
       // Gráficos y leyendas
       expect(screen.getAllByText('Efectivo').length).toBeGreaterThanOrEqual(1);

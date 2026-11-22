@@ -283,10 +283,10 @@ export function useCobroOperador({
       });
 
       let textoAviso = `${placaNormalizada} · Cat. ${categoriaActiva.romano} · ${metodoPago} · ${formatearMoneda(metodoPago === 'EXENTO' ? 0 : tarifaActual)}`;
-      if (metodoPago === 'EFECTIVO' && respuesta.cambio !== null) {
+      if (metodoPago === 'EFECTIVO' && respuesta.cambio != null) {
         textoAviso += ` · cambio ${formatearMoneda(respuesta.cambio)}`;
       }
-      if (metodoPago === 'TELEPEAJE' && respuesta.saldo_posterior !== null) {
+      if (metodoPago === 'TELEPEAJE' && respuesta.saldo_posterior != null) {
         textoAviso += ` · saldo restante ${formatearMoneda(respuesta.saldo_posterior)}`;
       }
 

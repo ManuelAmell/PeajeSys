@@ -124,10 +124,11 @@ describe('Esquemas Zod y restricciones DDL (CHECKs y límites)', () => {
       estado: 'ACTIVO' as const,
     };
 
-    it('CHECK rol IN (RECAUDADOR, SUPERVISOR)', () => {
+    it('CHECK rol IN (RECAUDADOR, SUPERVISOR, ADMINISTRADOR)', () => {
       expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'RECAUDADOR' }).success).toBe(true);
       expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'SUPERVISOR' }).success).toBe(true);
-      expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'ADMINISTRADOR' }).success).toBe(false);
+      expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'ADMINISTRADOR' }).success).toBe(true);
+      expect(esquemaOperador.safeParse({ ...baseOperador, rol: 'GERENTE' }).success).toBe(false);
     });
 
     it('CHECK estado IN (ACTIVO, INACTIVO)', () => {
@@ -150,11 +151,23 @@ describe('Esquemas Zod y restricciones DDL (CHECKs y límites)', () => {
         apellidos: 'López Martínez',
         codigo_empleado: 'EMP-002',
         rol: 'RECAUDADOR',
+        password: 'Clave-prueba-1',
       });
       expect(res.success).toBe(true);
       if (res.success) {
         expect(res.data.estado).toBe('ACTIVO');
       }
+    });
+
+    it('esquemaOperadorNuevo exige la contraseña (POST /api/operadores)', () => {
+      const res = esquemaOperadorNuevo.safeParse({
+        numero_documento: '1047654321',
+        nombres: 'María Fernanda',
+        apellidos: 'López Martínez',
+        codigo_empleado: 'EMP-002',
+        rol: 'RECAUDADOR',
+      });
+      expect(res.success).toBe(false);
     });
   });
 

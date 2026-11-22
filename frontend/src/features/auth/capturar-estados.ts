@@ -3,8 +3,13 @@ import path from 'path';
 import http from 'http';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { spawn, ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
 import { chromium } from '@playwright/test';
+import {
+  lanzarPnpm,
+  rutaChromium,
+  terminarProceso,
+} from '../../../scripts/plataforma';
 
 /**
  * Capturas de los estados de error del inicio de sesión (B2):
@@ -19,8 +24,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const PUERTO = 5183;
-const SALIDA = '/home/amell/orca/reportes/capturas/B2';
-const CHROMIUM = process.env.PLAYWRIGHT_CHROMIUM_PATH || '/usr/bin/chromium';
+// Salida relativa a la raiz del frontend; sobreescribible con CAPTURAS_SALIDA.
+const SALIDA =
+  process.env.CAPTURAS_SALIDA ||
+  path.resolve(__dirname, '..', '..', '..', 'capturas', 'B2');
+// Chromium del sistema solo si existe; si no, Playwright usa su navegador propio.
+const CHROMIUM = rutaChromium();
 
 interface Escenario {
   nombre: string;
@@ -227,14 +236,13 @@ async function ejecutar() {
   let procesoServidor: ChildProcess | null = null;
   if (!(await servidorActivo())) {
     console.log(`Iniciando servidor de vista previa en puerto ${PUERTO}...`);
-    procesoServidor = spawn(
-      'pnpm',
+    procesoServidor = lanzarPnpm(
       ['preview', '--port', String(PUERTO), '--strictPort'],
       { cwd: path.resolve(__dirname, '..', '..'), stdio: 'pipe' },
     );
     if (!(await esperarServidor())) {
       console.error(`No se pudo conectar al servidor en puerto ${PUERTO}`);
-      procesoServidor.kill('SIGTERM');
+      terminarProceso(procesoServidor);
       process.exit(1);
     }
   }
@@ -266,7 +274,7 @@ async function ejecutar() {
     }
   } finally {
     await browser.close();
-    if (procesoServidor) procesoServidor.kill('SIGTERM');
+    if (procesoServidor) terminarProceso(procesoServidor);
   }
 
   console.log('\n### Resultados de capturas de estados de error (B2)');

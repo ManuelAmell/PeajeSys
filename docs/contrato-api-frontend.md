@@ -77,8 +77,8 @@ Valida credenciales de acceso para recaudadores, supervisores y administradores.
 - **Cuerpo de la petición**:
 ```json
 {
-  "codigo": "EMP-001",
-  "clave": "Turno123*"
+  "codigo": "SUP-001",
+  "clave": "Samuel2026*"
 }
 ```
 - **Respuesta 200 OK (Recaudador con turno abierto)**:
@@ -125,8 +125,9 @@ Valida credenciales de acceso para recaudadores, supervisores y administradores.
 ```
 - **Errores posibles**:
   - `400 Bad Request` (`CODIGO_REQUERIDO`, `CLAVE_REQUERIDA`).
-  - `404 Not Found` (`EMPLEADO_NO_ENCONTRADO`): Código no registrado en el sistema.
-  - `403 Forbidden` (`EMPLEADO_INACTIVO`): Operador con estado `INACTIVO`.
+  - `401 Unauthorized` (`CREDENCIALES_INVALIDAS`): código inexistente, operador sin clave o clave incorrecta. Los tres casos devuelven el mismo mensaje y tardan parecido, para no revelar qué cuentas existen.
+  - `403 Forbidden` (`USUARIO_INACTIVO`): clave correcta pero el operador está `INACTIVO` (solo lo ve quien conoce la clave).
+  - Cualquier ruta protegida responde `401` (`SESION_REVOCADA`) si el operador del token fue desactivado o ya no existe, y usa el rol actual de la BD, no el del token.
   - `409 Conflict` (`SIN_TURNO_ABIERTO`): Recaudador activo sin turno asignado.
 
 ---
@@ -602,4 +603,4 @@ Obtiene agregados consolidados de recaudo agrupados por fecha y por carril.
    El frontend gestiona la sesión en memoria y `localStorage` con los datos del usuario retornado por `POST /api/auth/login`. Para producción se requiere acordar si el backend emitirá una cookie `HttpOnly` con sesión segura o un encabezado de autorización `Bearer <token_jwt>`.
 
 4. **Entidad del Administrador**:
-   En el DDL relacional, la tabla `OPERADOR` define `chk_rol_operador CHECK (rol IN ('RECAUDADOR', 'SUPERVISOR'))`. El usuario `ADMIN-01` es una entidad puramente de interfaz según lo prescrito en los prototipos. Si se requiere persistir usuarios administradores en base de datos, se deberá coordinar la ampliación del CHECK a nivel de DDL (`'ADMIN'`) o la creación de una tabla específica de usuarios administrativos.
+   En el DDL relacional, la tabla `OPERADOR` define el CHECK `rol IN ('RECAUDADOR', 'SUPERVISOR', 'ADMINISTRADOR')` (actualizado el 2026-11-21). El administrador de prueba es `ADM-001`, una fila real de `OPERADOR` con su `password_hash` (ver README raíz).

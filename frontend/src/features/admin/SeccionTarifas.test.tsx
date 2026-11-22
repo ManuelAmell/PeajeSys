@@ -7,10 +7,10 @@ import { renderConProveedores, screen, waitFor } from '@/test/render';
 import { SeccionTarifas } from './SeccionTarifas';
 
 const admin = {
-  id: 'ADMIN-01',
+  id: 'ADM-001',
   nombre: 'Administración',
   rol: 'ADMIN' as const,
-  codigo: 'ADMIN-01',
+  codigo: 'ADM-001',
 };
 
 function renderSeccion() {
@@ -134,7 +134,7 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('$ 10.500 -> $ 11.200')).toBeInTheDocument();
     expect(
-      screen.getByText(/ADMIN-01 · Res. MinTransporte 0045\/2026/),
+      screen.getByText(/ADM-001 · Res. MinTransporte 0045\/2026/),
     ).toBeInTheDocument();
 
     await waitFor(async () => {
@@ -148,6 +148,59 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     expect(cerrada?.monto).toBe(10500);
     expect(cerrada?.fecha_fin_vigencia).toBe('2026-03-01');
     expect(await screen.findByText('$ 11.200')).toBeInTheDocument();
+  });
+
+  it('reeditar con el mismo monto avisa "Sin cambios" y no registra historial ni guarda', async () => {
+    const usuario = userEvent.setup();
+    renderSeccion();
+
+    await usuario.click(
+      await screen.findByRole('button', {
+        name: 'Editar tarifa de la categoría I',
+      }),
+    );
+    await screen.findByLabelText('Monto en pesos');
+    await usuario.click(screen.getByRole('button', { name: 'Guardar tarifa' }));
+
+    expect(await screen.findByText(/Sin cambios/)).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.queryByText('$ 10.500 -> $ 10.500')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Estación Gambote · categoría I'),
+    ).not.toBeInTheDocument();
+    const tarifas = await obtenerTarifas({ estacion: 1, categoria: 1 });
+    expect(tarifas).toHaveLength(1);
+  });
+
+  it('mismo monto pero otra resolución guarda la tarifa sin entrada de historial', async () => {
+    const usuario = userEvent.setup();
+    renderSeccion();
+
+    await usuario.click(
+      await screen.findByRole('button', {
+        name: 'Editar tarifa de la categoría I',
+      }),
+    );
+    await usuario.clear(
+      await screen.findByLabelText('Resolución que la autoriza'),
+    );
+    await usuario.type(
+      screen.getByLabelText('Resolución que la autoriza'),
+      'Res. nueva 0099/2026',
+    );
+    await usuario.clear(screen.getByLabelText('Vigente desde'));
+    await usuario.type(screen.getByLabelText('Vigente desde'), '2026-03-01');
+    await usuario.click(screen.getByRole('button', { name: 'Guardar tarifa' }));
+
+    expect(
+      await screen.findByText(/Sin cambios en el monto/),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('$ 10.500 -> $ 10.500')).not.toBeInTheDocument();
+    await waitFor(async () => {
+      expect(await obtenerTarifas({ estacion: 1, categoria: 1 })).toHaveLength(
+        2,
+      );
+    });
   });
 
   it('rechaza fechas incoherentes: fin anterior al inicio', async () => {
@@ -299,5 +352,28 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
         'En la base de datos lo guardará el trigger trg_auditoria_tarifas, pendiente del Avance 3.',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('una categoría sin imagen muestra el marcador y no un <img> roto', async () => {
+    server.use(
+      http.get('*/api/categorias', () =>
+        HttpResponse.json([
+          {
+            id_categoria: 9,
+            codigo: 'VIII',
+            descripcion: 'Categoría nueva sin imagen',
+            numero_ejes_min: 2,
+            numero_ejes_max: 2,
+            peso_maximo_ton: 5,
+            activo: true,
+          },
+        ]),
+      ),
+    );
+    const { container } = renderSeccion();
+
+    await screen.findByText('Categoría nueva sin imagen');
+    expect(screen.getByTestId('silueta-por-defecto')).toBeInTheDocument();
+    expect(container.querySelector('img.ps-silueta')).toBeNull();
   });
 });

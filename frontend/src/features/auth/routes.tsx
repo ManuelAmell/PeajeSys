@@ -36,7 +36,7 @@ export default function AuthPage() {
           alt="Estación de peaje al atardecer, con casetas bajo una cubierta, barreras amarillas y negras y conos naranjas"
           width={1280}
           height={1589}
-          fetchPriority="high"
+          {...{ fetchpriority: 'high' }}
           className="absolute inset-0 h-full w-full object-cover object-[center_70%]"
         />
         <div className="relative z-10 m-[32px] flex max-w-[460px] flex-col gap-[14px] rounded-[8px] bg-[#1f1d19]/90 p-[24px] text-white md:px-[28px]">
