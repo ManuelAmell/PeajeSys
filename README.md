@@ -359,6 +359,7 @@ Los usuarios del equipo existen de verdad en la base de datos (tabla `OPERADOR`)
 - `EMP-001` a `EMP-010` son datos históricos (dueños de turnos y transacciones) sin contraseña: no pueden iniciar sesión.
 - En modo mocks (`pnpm dev:mocks`) el login acepta cualquier contraseña no vacía para estos usuarios.
 - **Cambiar una contraseña**: crear el operador desde el panel de administración (la contraseña es obligatoria y se guarda cifrada), o generar un hash nuevo con BCrypt (coste 12) y guardarlo con `UPDATE OPERADOR SET password_hash = '<hash>' WHERE codigo_empleado = '<usuario>';`. Con pgcrypto: `SELECT crypt('NuevaClave', gen_salt('bf', 12));`. Si cambias la contraseña de un usuario del equipo, actualiza también esta tabla y el DML: una prueba automática (`UsuariosEquipoSqlTests`) los mantiene sincronizados.
+- **Pruebas manuales del equipo**: la guía paso a paso por rol, con los resultados esperados y cómo reportar fallos, está en [docs/pruebas-manuales.md](docs/pruebas-manuales.md).
 
 ---
 
