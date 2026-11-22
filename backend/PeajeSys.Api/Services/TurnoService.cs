@@ -65,7 +65,8 @@ public class TurnoService : ITurnoService
         {
             IdCaseta = request.IdCaseta,
             IdOperador = idOperador,
-            Fecha = DateTime.UtcNow.Date,
+            // Dia civil de la aplicacion (Bogota), el mismo con el que /api/recaudo agrupa; no el dia UTC.
+            Fecha = ZonaHorariaApp.DiaCivil(_reloj.GetUtcNow()).ToDateTime(TimeOnly.MinValue),
             Diurno = request.Diurno,
             FondoInicialCaja = request.FondoInicialCaja,
             TotalRecaudadoEfectivo = 0,

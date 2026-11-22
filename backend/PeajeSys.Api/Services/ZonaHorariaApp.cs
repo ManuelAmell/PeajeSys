@@ -46,6 +46,12 @@ public static class ZonaHorariaApp
 
     private static DateTime AUtcSeguro(DateTime dt) => DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 
+    /// <summary>Dia civil (zona de la aplicacion) de un instante cualquiera (se normaliza a UTC).</summary>
+    public static DateOnly DiaCivil(DateTimeOffset instante) => DiaCivil(instante.UtcDateTime);
+
+    /// <summary>Dia civil actual como fecha sin hora (para columnas DATE de negocio).</summary>
+    public static DateTime HoyComoFecha() => Hoy().ToDateTime(TimeOnly.MinValue);
+
     /// <summary>Dia civil actual en la zona de la aplicacion.</summary>
     public static DateOnly Hoy() => DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Zona.Value));
 }
