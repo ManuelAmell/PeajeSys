@@ -82,6 +82,8 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITurnoService, TurnoService>();
 builder.Services.AddScoped<ITransaccionService, TransaccionService>();
 builder.Services.AddScoped<IVehiculoService, VehiculoService>();
+builder.Services.AddScoped<IAjustesAtomicos, AjustesAtomicosNpgsql>();
+builder.Services.AddScoped<IGeneradorNumeroTicket, GeneradorNumeroTicketNpgsql>();
 builder.Services.AddScoped<ICobroService, CobroService>();
 
 // Servicios de Supervision, Arqueo, Auditoria y Monitoreo (BK-04)
