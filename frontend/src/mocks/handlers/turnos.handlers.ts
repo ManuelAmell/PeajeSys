@@ -5,6 +5,53 @@ import { getDb } from '../db';
 import { idOperadorDelToken } from '../token';
 
 export const turnosHandlers = [
+  http.get('/api/turnos/:id/arqueo', ({ params, request }) => {
+    const id = parseInt(String(params.id), 10);
+    const db = getDb();
+    const turno = db.turnos.find((t) => t.id_turno === id);
+    if (!turno) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'TURNO_NO_ENCONTRADO',
+            mensaje: `No existe un turno con id ${id}.`,
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    const url = new URL(request.url);
+    const reportado = Number(
+      url.searchParams.get('efectivo_reportado') ??
+        url.searchParams.get('reportado') ??
+        0,
+    );
+    const diferencia = reportado - turno.total_recaudado_efectivo;
+    const anuladas = new Set(
+      db.auditorias
+        .filter((a) => a.tipo_operacion === 'VOID')
+        .map((a) => a.id_transaccion),
+    );
+    return HttpResponse.json({
+      id_turno: turno.id_turno,
+      id_operador: turno.id_operador,
+      id_caseta: turno.id_caseta,
+      efectivo_sistema: turno.total_recaudado_efectivo,
+      efectivo_reportado: reportado,
+      diferencia,
+      estado_arqueo:
+        diferencia === 0
+          ? 'CUADRADO'
+          : diferencia < 0
+            ? 'FALTANTE'
+            : 'SOBRANTE',
+      total_vehiculos: db.transacciones.filter(
+        (t) => t.id_turno === id && !anuladas.has(t.id_transaccion),
+      ).length,
+    });
+  }),
+
   http.get('/api/turnos', async ({ request }) => {
     const { errorResponse, esVacio } = await procesarControlLectura(request);
     if (errorResponse) return errorResponse;
