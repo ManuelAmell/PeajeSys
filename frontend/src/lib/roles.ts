@@ -4,9 +4,8 @@
  * NOTA DE ARQUITECTURA:
  * - 'RECAUDADOR': Operador de caseta en el turno (registrado en BD).
  * - 'SUPERVISOR': Supervisor de estación a cargo de arqueos y turnos (registrado en BD).
- * - 'ADMIN': Rol exclusivo del frontend para administración de estaciones, casetas y tarifas.
- *   En la base de datos física no existe tabla de administradores en este avance; se maneja
- *   como usuario de prueba de frontend (e.g. ADMIN-01).
+ * - 'ADMIN': Administrador de estaciones, casetas y tarifas. En la BD es el rol ADMINISTRADOR
+ *   de la tabla OPERADOR (e.g. ADM-001); la sesión del frontend lo nombra ADMIN.
  */
 export type Rol = 'RECAUDADOR' | 'SUPERVISOR' | 'ADMIN';
 

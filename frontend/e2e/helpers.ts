@@ -17,8 +17,8 @@ export const usuarioSupervisor = {
 };
 
 export const usuarioAdmin = {
-  id: 'ADMIN-01',
-  codigo: 'ADMIN-01',
+  id: 'ADM-001',
+  codigo: 'ADM-001',
   nombre: 'Administración',
   rol: 'ADMIN' as const,
 };

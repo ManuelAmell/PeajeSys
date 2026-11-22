@@ -7,7 +7,7 @@ import { z } from 'zod';
 export const esquemaEstadoEstacion = z.enum(['ACTIVA', 'INACTIVA', 'MANTENIMIENTO']);
 export const esquemaTipoCarril = z.enum(['MANUAL', 'TELEPEAJE_EXCLUSIVO', 'MIXTO']);
 export const esquemaEstadoCaseta = z.enum(['OPERATIVA', 'CERRADA', 'MANTENIMIENTO']);
-export const esquemaRolOperador = z.enum(['RECAUDADOR', 'SUPERVISOR']);
+export const esquemaRolOperador = z.enum(['RECAUDADOR', 'SUPERVISOR', 'ADMINISTRADOR']);
 export const esquemaEstadoOperador = z.enum(['ACTIVO', 'INACTIVO']);
 export const esquemaEstadoTurno = z.enum(['ABIERTO', 'CERRADO']);
 export const esquemaEstadoCuentaTelepeaje = z.enum(['ACTIVA', 'SUSPENDIDA']);
@@ -51,6 +51,8 @@ export const esquemaCaseta = z.object({
   numero_carril: z.number().int().gt(0, 'El número de carril debe ser mayor que 0'),
   tipo_carril: esquemaTipoCarril,
   estado: esquemaEstadoCaseta,
+  /** Calculado por la API: true si la caseta tiene un turno ABIERTO. */
+  ocupada: z.boolean().optional(),
 });
 
 export const esquemaCasetaNueva = z.object({
@@ -83,6 +85,8 @@ export const esquemaOperadorNuevo = z.object({
   codigo_empleado: z.string().min(1).max(20),
   rol: esquemaRolOperador,
   estado: esquemaEstadoOperador.default('ACTIVO'),
+  /** La API la exige al crear (la guarda hasheada y nunca la devuelve). */
+  password: z.string().min(1, 'La contraseña es obligatoria'),
 });
 
 // =============================================================================
@@ -97,8 +101,8 @@ export const esquemaTurno = z.object({
   diurno: z.boolean(),
   fondo_inicial_caja: z.number().gte(0, 'El fondo inicial no puede ser negativo'),
   total_recaudado_efectivo: z.number().gte(0, 'El total recaudado no puede ser negativo'),
-  total_declarado_cierre: z.number().gte(0, 'El total declarado no puede ser negativo').nullable(),
-  diferencia_descuadre: z.number().nullable(),
+  total_declarado_cierre: z.number().gte(0, 'El total declarado no puede ser negativo').nullish(),
+  diferencia_descuadre: z.number().nullish(),
   estado: esquemaEstadoTurno,
 });
 
@@ -129,7 +133,7 @@ const baseCategoriaVehiculo = z.object({
   descripcion: z.string().min(1).max(150),
   numero_ejes_min: z.number().int().gte(1, 'El número mínimo de ejes debe ser al menos 1'),
   numero_ejes_max: z.number().int(),
-  peso_maximo_ton: z.number().gt(0, 'El peso máximo en toneladas debe ser mayor que 0').nullable(),
+  peso_maximo_ton: z.number().gt(0, 'El peso máximo en toneladas debe ser mayor que 0').nullish(),
   activo: z.boolean(),
 });
 
@@ -168,14 +172,14 @@ const baseTarifa = z.object({
   id_estacion: z.number().int().positive(),
   id_categoria: z.number().int().positive(),
   monto: z.number().gt(0, 'El monto debe ser mayor que 0'),
-  resolucion_legal: z.string().max(100).nullable(),
+  resolucion_legal: z.string().max(100).nullish(),
   fecha_inicio_vigencia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Formato fecha YYYY-MM-DD'),
-  fecha_fin_vigencia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
+  fecha_fin_vigencia: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(),
   activa: z.boolean(),
 });
 
 export const esquemaTarifa = baseTarifa.refine(
-  (data) => data.fecha_fin_vigencia === null || data.fecha_fin_vigencia >= data.fecha_inicio_vigencia,
+  (data) => data.fecha_fin_vigencia == null || data.fecha_fin_vigencia >= data.fecha_inicio_vigencia,
   {
     message: 'fecha_fin_vigencia debe ser mayor o igual a fecha_inicio_vigencia (chk_fechas_vigencia)',
     path: ['fecha_fin_vigencia'],
@@ -208,9 +212,9 @@ export const esquemaTarifaNueva = baseTarifaNueva.refine(
 export const esquemaVehiculo = z.object({
   placa: z.string().min(1).max(10),
   id_categoria: z.number().int().positive(),
-  marca: z.string().max(50).nullable(),
-  modelo: z.string().max(50).nullable(),
-  color: z.string().max(30).nullable(),
+  marca: z.string().max(50).nullish(),
+  modelo: z.string().max(50).nullish(),
+  color: z.string().max(30).nullish(),
 });
 
 export const esquemaVehiculoNuevo = z.object({
@@ -250,12 +254,14 @@ export const esquemaTransaccionPeaje = z.object({
   id_turno: z.number().int().positive(),
   id_tarifa: z.number().int().positive(),
   id_categoria: z.number().int().positive(),
-  placa_detectada: z.string().max(10).nullable(),
+  placa_detectada: z.string().max(10).nullish(),
   monto_tarifa: z.number().gte(0, 'El monto de la tarifa no puede ser negativo'),
   metodo_pago: esquemaMetodoPago,
   numero_ticket: z.string().min(1).max(40),
   fecha_hora: z.string(),
   estado_paso: esquemaEstadoPaso,
+  /** Solo lo trae el listado de un turno: true si hay un VOID en la auditoría. */
+  anulada: z.boolean().optional(),
 });
 
 export const esquemaTransaccionPeajeNueva = z.object({
@@ -276,12 +282,12 @@ export const esquemaTransaccionPeajeNueva = z.object({
 // =============================================================================
 
 export const esquemaDetallePagoTelepeaje = z.object({
-  id_detalle_telepeaje: z.number().int().positive(),
-  id_transaccion: z.number().int().positive(),
+  id_detalle_telepeaje: z.number().int().positive().optional(),
+  id_transaccion: z.number().int().positive().optional(),
   id_cuenta: z.number().int().positive(),
   saldo_anterior: z.number().gte(0, 'El saldo anterior no puede ser negativo'),
   saldo_posterior: z.number().gte(0, 'El saldo posterior no puede ser negativo'),
-  antena_lectora_id: z.string().max(30).nullable(),
+  antena_lectora_id: z.string().max(30).nullish(),
 });
 
 export const esquemaDetallePagoTelepeajeNuevo = z.object({
@@ -303,7 +309,7 @@ export const esquemaAuditoriaTransaccion = z.object({
   tipo_operacion: esquemaTipoOperacionAuditoria,
   usuario_sistema: z.string().min(1).max(50),
   fecha_hora_evento: z.string(),
-  motivo: z.string().max(255).nullable(),
+  motivo: z.string().max(255).nullish(),
 });
 
 export const esquemaAuditoriaTransaccionNueva = z.object({

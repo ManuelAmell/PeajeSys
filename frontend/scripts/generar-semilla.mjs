@@ -305,6 +305,13 @@ function valorTipado(meta, campo, bruto) {
   return normalizarValor(convertir(bruto, meta.tabla, campo), columna[1], meta.tabla, campo);
 }
 
+/**
+ * Columnas del DML que la semilla de MSW nunca incluye. password_hash guarda el
+ * hash BCrypt de los usuarios del equipo: en el modo mocks el login acepta
+ * cualquier contrasena no vacia y el hash no debe viajar al navegador.
+ */
+const COLUMNAS_EXCLUIDAS = { OPERADOR: new Set(['password_hash']) };
+
 function extraerInserts(texto) {
   const patron =
     /INSERT\s+INTO\s+([A-Z_]+)\s*\(([\s\S]*?)\)\s*VALUES\s*([\s\S]*?);/g;
@@ -312,14 +319,24 @@ function extraerInserts(texto) {
 
   for (const coincidencia of texto.matchAll(patron)) {
     const tabla = coincidencia[1];
-    const columnas = coincidencia[2]
+    const todas = coincidencia[2]
       .split(',')
       .map((columna) => columna.trim())
       .filter((columna) => columna.length > 0);
-    const filas = analizarValores(coincidencia[3]);
+    const excluidas = COLUMNAS_EXCLUIDAS[tabla] ?? new Set();
+    const columnas = todas.filter((columna) => !excluidas.has(columna));
+    const filas = analizarValores(coincidencia[3]).map((campos) =>
+      campos.filter((_, posicion) => !excluidas.has(todas[posicion])),
+    );
 
-    if (inserts.has(tabla)) {
-      throw new Error(`El DML trae mas de un INSERT para ${tabla}.`);
+    const previo = inserts.get(tabla);
+    if (previo) {
+      // Un segundo INSERT de la misma tabla (usuarios del equipo) se anade a continuacion.
+      if (previo.columnas.join(',') !== columnas.join(',')) {
+        throw new Error(`El DML trae INSERT de ${tabla} con columnas distintas.`);
+      }
+      previo.filas.push(...filas);
+      continue;
     }
     inserts.set(tabla, { tabla, columnas, filas });
   }
@@ -601,12 +618,6 @@ function calcularInconsistencias(semilla) {
         `- Estación ${estacion.id_estacion} (${estacion.nombre}): solo tiene ${tarifas.length} tarifas para ${semilla.categorias.length} categorías (${codigos}).`,
       );
     }
-  }
-
-  if (!semilla.operadores.some((fila) => fila.rol === 'ADMIN')) {
-    lineas.push(
-      '- No existe rol administrador en OPERADOR: ADMIN-01 solo existe en el frontend (dato de prueba).',
-    );
   }
 
   return lineas;

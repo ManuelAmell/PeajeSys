@@ -1,7 +1,7 @@
 import { defineConfig } from '@playwright/test';
+import { rutaChromium } from './scripts/plataforma';
 
-const chromiumExecutable =
-  process.env.PLAYWRIGHT_CHROMIUM_PATH || '/usr/bin/chromium';
+const chromiumExecutable = rutaChromium();
 
 export default defineConfig({
   testDir: './e2e',
@@ -35,9 +35,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm preview --port 5180 --strictPort',
+    command: 'pnpm build:mocks && pnpm preview --port 5180 --strictPort',
     port: 5180,
-    reuseExistingServer: false,
-    timeout: 60000,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180000,
   },
 });

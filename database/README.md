@@ -44,16 +44,36 @@ PeajeSys/database
 
 ---
 
+> **Usuarios de prueba (tabla `OPERADOR`)**: `OPERADOR` incluye la columna `password_hash VARCHAR(100) NULL` (hash BCrypt; NULL = el operador no puede iniciar sesión) y el rol `ADMINISTRADOR`. El DML carga los usuarios del equipo (ADM-001, SUP-001, REC-001, REC-002) con su hash; las contraseñas están en el README raíz. El diccionario de datos en PDF aún no refleja estos cambios (ver `pendientes.md`).
+
 ## 2. Instrucciones y Orden Exacto de Ejecución
+
+### Opción 0 (recomendada): Docker
+Requiere Docker (Docker Desktop en Windows). Desde la raíz del repo, sin configurar nada:
+
+```bash
+docker compose up -d
+```
+- La primera vez crea la base `peajesys_db` y carga `00_Master_PeajeSys.sql` automáticamente (tarda un rato).
+- Para saber que terminó: `docker compose ps` debe mostrar el servicio `db` como `healthy`; el progreso se sigue con `docker compose logs -f db`.
+- Si `docker compose ps` muestra el servicio `exited`, revisa `docker compose logs db`, corrige y recarga con `docker compose down -v`.
+- Para entrar a la base: `docker compose exec db psql -U postgres -d peajesys_db`
+- Para reiniciar desde cero (borra los datos y vuelve a cargar el script): `docker compose down -v && docker compose up -d`
+- Atajos desde la raíz: `pnpm db` (equivale a `docker compose up -d`) y `pnpm db:reset` (equivale a `docker compose down -v && docker compose up -d`).
+- Si el puerto 5432 está ocupado por otro PostgreSQL, usa otro con `PEAJESYS_DB_PORT` (p. ej. `PEAJESYS_DB_PORT=5433 docker compose up -d` o `PEAJESYS_DB_PORT=5433 pnpm db`) y ajusta el puerto en la cadena de conexión de la API.
+
+> **Windows:** en PowerShell 5 no existe `&&`; ejecuta los comandos por separado o sepáralos con `;` (por ejemplo `docker compose down -v; docker compose up -d`).
+
+---
 
 ### Opción A: Reconstrucción Completa con Script Maestro (Recomendada)
 Para levantar todo el sistema desde cero (tablas, datos, vistas, funciones, triggers, procedimientos, cursor, consultas y matriz de pruebas) en una sola operación:
 
 ```bash
 # En consola psql (PostgreSQL 14+)
-psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS peajesys;"
-psql -U postgres -d postgres -c "CREATE DATABASE peajesys;"
-psql -U postgres -d peajesys -f 00_Master_PeajeSys.sql
+psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS peajesys_db;"
+psql -U postgres -d postgres -c "CREATE DATABASE peajesys_db;"
+psql -U postgres -d peajesys_db -f 00_Master_PeajeSys.sql
 ```
 *O bien, en **pgAdmin 4**, abrir `00_Master_PeajeSys.sql` y presionar **F5**.*
 
@@ -67,7 +87,7 @@ Si se desea ejecutar componente por componente en orden de dependencias referenc
 2. **`02_SQL/02_DML_Datos_PeajeSys.sql`**  
    Carga los datos iniciales de prueba (más de 10 registros útiles por tabla principal) y ejecuta casos transaccionales DML con `COMMIT` y `ROLLBACK`.
 3. **`02_SQL/04_Objetos_PeajeSys.sql`**  
-   Instala las vistas de negocio (`vw_resumen_diario_estacion`, `vw_estado_cuentas_telepeaje`), la secuencia (`seq_numero_ticket`) y el índice B-Tree compuesto (`idx_transaccion_fecha_turno`).
+   Instala las vistas de negocio (`vw_resumen_diario_estacion`, `vw_estado_cuentas_telepeaje`), la secuencia (`seq_numero_ticket`), el índice B-Tree compuesto (`idx_transaccion_fecha_turno`) y los índices únicos parciales de control de turnos abiertos (`uq_turno_caseta_abierto` y `uq_turno_operador_abierto`).
 4. **`03_PLSQL/01_Funciones_PeajeSys.sql`**  
    Compila las funciones almacenadas de liquidación tarifaria, validación RFID y cálculo de descuadres.
 5. **`03_PLSQL/03_Triggers_PeajeSys.sql`**  

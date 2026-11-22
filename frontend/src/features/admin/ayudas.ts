@@ -45,14 +45,21 @@ export function textoEjes(min: number, max: number): string {
 }
 
 /** Peso máximo en toneladas con coma decimal; null cuando el DML no lo define. */
-export function textoPeso(peso: number | null): string {
-  if (peso === null) {
+export function textoPeso(peso: number | null | undefined): string {
+  if (peso == null) {
     return 'No definida';
   }
   return `${String(peso).replace('.', ',')} t`;
 }
 
 /** Siluetas procesadas copiadas por B0 en public/img. */
+export const CATEGORIAS_CON_SILUETA = [1, 2, 3, 4, 5, 6, 7] as const;
+
+/** Las categorías posteriores a las siete del DML aún no tienen imagen. */
+export function tieneSilueta(idCategoria: number): boolean {
+  return (CATEGORIAS_CON_SILUETA as readonly number[]).includes(idCategoria);
+}
+
 export function rutaSilueta(idCategoria: number): string {
   return `/img/cat-${idCategoria}.png`;
 }

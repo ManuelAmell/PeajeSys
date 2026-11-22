@@ -50,23 +50,39 @@ export class BaseDatosMemoria {
     this.categorias = JSON.parse(JSON.stringify(semilla.categorias));
     this.tarifas = JSON.parse(JSON.stringify(semilla.tarifas));
     this.vehiculos = JSON.parse(JSON.stringify(semilla.vehiculos));
-    this.cuentas_telepeaje = JSON.parse(JSON.stringify(semilla.cuentas_telepeaje));
+    this.cuentas_telepeaje = JSON.parse(
+      JSON.stringify(semilla.cuentas_telepeaje),
+    );
     this.transacciones = JSON.parse(JSON.stringify(semilla.transacciones));
-    this.detalles_telepeaje = JSON.parse(JSON.stringify(semilla.detalles_telepeaje));
+    this.detalles_telepeaje = JSON.parse(
+      JSON.stringify(semilla.detalles_telepeaje),
+    );
     this.auditorias = JSON.parse(JSON.stringify(semilla.auditorias));
 
     // Inicializar contadores de secuencias
-    const maxTx = this.transacciones.reduce((max, t) => Math.max(max, t.id_transaccion), 0);
+    const maxTx = this.transacciones.reduce(
+      (max, t) => Math.max(max, t.id_transaccion),
+      0,
+    );
     this.seqTransaccion = maxTx + 1;
     this.seqTicket = maxTx + 1;
 
-    const maxAud = this.auditorias.reduce((max, a) => Math.max(max, a.id_auditoria), 0);
+    const maxAud = this.auditorias.reduce(
+      (max, a) => Math.max(max, a.id_auditoria),
+      0,
+    );
     this.seqAuditoria = maxAud + 1;
 
-    const maxDet = this.detalles_telepeaje.reduce((max, d) => Math.max(max, d.id_detalle_telepeaje), 0);
+    const maxDet = this.detalles_telepeaje.reduce(
+      (max, d) => Math.max(max, d.id_detalle_telepeaje),
+      0,
+    );
     this.seqDetalle = maxDet + 1;
 
-    const maxTarifa = this.tarifas.reduce((max, t) => Math.max(max, t.id_tarifa), 0);
+    const maxTarifa = this.tarifas.reduce(
+      (max, t) => Math.max(max, t.id_tarifa),
+      0,
+    );
     this.seqTarifa = maxTarifa + 1;
   }
 
@@ -100,7 +116,9 @@ export class BaseDatosMemoria {
       throw new Error(`Turno ${datos.id_turno} no encontrado.`);
     }
     if (turno.estado === 'CERRADO') {
-      throw new Error('El turno está cerrado: no se pueden registrar nuevos pasos.');
+      throw new Error(
+        'El turno está cerrado: no se pueden registrar nuevos pasos.',
+      );
     }
 
     const id_transaccion = this.seqTransaccion++;
@@ -118,7 +136,9 @@ export class BaseDatosMemoria {
       metodo_pago: datos.metodo_pago,
       numero_ticket,
       fecha_hora: fechaHora,
-      estado_paso: datos.estado_paso ?? (datos.metodo_pago === 'EXENTO' ? 'EXENTO' : 'APROBADO'),
+      estado_paso:
+        datos.estado_paso ??
+        (datos.metodo_pago === 'EXENTO' ? 'EXENTO' : 'APROBADO'),
     };
 
     let detalleTelepeaje: DetallePagoTelepeaje | undefined;
@@ -132,10 +152,14 @@ export class BaseDatosMemoria {
     // Telepeaje: descontar cuenta y crear detalle
     if (datos.metodo_pago === 'TELEPEAJE') {
       const placa = datos.placa_detectada?.toUpperCase();
-      const cuenta = this.cuentas_telepeaje.find((c) => c.placa_vehiculo.toUpperCase() === placa);
+      const cuenta = this.cuentas_telepeaje.find(
+        (c) => c.placa_vehiculo.toUpperCase() === placa,
+      );
 
       if (!cuenta) {
-        throw new Error(`No se encontró cuenta de telepeaje para la placa ${placa}.`);
+        throw new Error(
+          `No se encontró cuenta de telepeaje para la placa ${placa}.`,
+        );
       }
       if (cuenta.estado_cuenta !== 'ACTIVA') {
         throw new Error(`La cuenta ${cuenta.tag_rfid_serial} está SUSPENDIDA.`);
@@ -180,10 +204,7 @@ export class BaseDatosMemoria {
   /**
    * Cierra un turno operativo fijando el valor declarado y calculando el descuadre.
    */
-  public cerrarTurno(
-    id_turno: number,
-    total_declarado_cierre: number,
-  ): Turno {
+  public cerrarTurno(id_turno: number, total_declarado_cierre: number): Turno {
     const turno = this.turnos.find((t) => t.id_turno === id_turno);
     if (!turno) {
       throw new Error(`Turno ${id_turno} no encontrado.`);
@@ -193,10 +214,57 @@ export class BaseDatosMemoria {
     }
 
     turno.total_declarado_cierre = total_declarado_cierre;
-    turno.diferencia_descuadre = Math.round(total_declarado_cierre - turno.total_recaudado_efectivo);
+    turno.diferencia_descuadre = Math.round(
+      total_declarado_cierre - turno.total_recaudado_efectivo,
+    );
     turno.estado = 'CERRADO';
 
     return { ...turno };
+  }
+
+  /**
+   * Abre un turno operativo para una caseta y un operador.
+   */
+  public abrirTurno(datos: {
+    id_caseta: number;
+    id_operador: number;
+    fondo_inicial_caja: number;
+    diurno: boolean;
+    fecha?: string;
+  }): Turno {
+    const casetaOcupada = this.turnos.some(
+      (t) => t.id_caseta === datos.id_caseta && t.estado === 'ABIERTO',
+    );
+    if (casetaOcupada) {
+      throw new Error('CASETA_OCUPADA');
+    }
+
+    const operadorActivo = this.turnos.some(
+      (t) => t.id_operador === datos.id_operador && t.estado === 'ABIERTO',
+    );
+    if (operadorActivo) {
+      throw new Error('OPERADOR_CON_TURNO_ACTIVO');
+    }
+
+    const maxId = this.turnos.reduce((max, t) => Math.max(max, t.id_turno), 0);
+    const id_turno = maxId + 1;
+    const fecha = datos.fecha || new Date().toISOString().slice(0, 10);
+
+    const nuevoTurno: Turno = {
+      id_turno,
+      id_caseta: datos.id_caseta,
+      id_operador: datos.id_operador,
+      fecha,
+      diurno: datos.diurno,
+      fondo_inicial_caja: datos.fondo_inicial_caja,
+      total_recaudado_efectivo: 0,
+      total_declarado_cierre: null,
+      diferencia_descuadre: null,
+      estado: 'ABIERTO',
+    };
+
+    this.turnos.unshift(nuevoTurno);
+    return { ...nuevoTurno };
   }
 
   /**
@@ -207,7 +275,9 @@ export class BaseDatosMemoria {
     usuario_sistema: string,
     motivo: string,
   ): { transaccion: TransaccionPeaje; auditoria: AuditoriaTransaccion } {
-    const tx = this.transacciones.find((t) => t.id_transaccion === id_transaccion);
+    const tx = this.transacciones.find(
+      (t) => t.id_transaccion === id_transaccion,
+    );
     if (!tx) {
       throw new Error(`Transacción ${id_transaccion} no encontrada.`);
     }
@@ -224,7 +294,24 @@ export class BaseDatosMemoria {
     };
     this.auditorias.unshift(audVoid);
 
-    return { transaccion: { ...tx }, auditoria: audVoid };
+    // Reversión del dinero, como la API: efectivo resta del recaudo del turno; telepeaje devuelve el saldo.
+    if (tx.metodo_pago === 'EFECTIVO' && tx.estado_paso === 'APROBADO') {
+      const turno = this.turnos.find((t) => t.id_turno === tx.id_turno);
+      if (turno) turno.total_recaudado_efectivo -= tx.monto_tarifa;
+    } else if (tx.metodo_pago === 'TELEPEAJE') {
+      const detalle = this.detalles_telepeaje.find(
+        (d) => d.id_transaccion === id_transaccion,
+      );
+      const cuenta =
+        detalle &&
+        this.cuentas_telepeaje.find((c) => c.id_cuenta === detalle.id_cuenta);
+      if (cuenta) cuenta.saldo_disponible += tx.monto_tarifa;
+    }
+
+    return {
+      transaccion: { ...tx, anulada: true } as TransaccionPeaje,
+      auditoria: audVoid,
+    };
   }
 
   /**
@@ -241,7 +328,10 @@ export class BaseDatosMemoria {
   }): Tarifa {
     // Cerrar tarifa previa activa para la misma estación y categoría
     const tarifaPrevia = this.tarifas.find(
-      (t) => t.id_estacion === datos.id_estacion && t.id_categoria === datos.id_categoria && t.activa,
+      (t) =>
+        t.id_estacion === datos.id_estacion &&
+        t.id_categoria === datos.id_categoria &&
+        t.activa,
     );
 
     if (tarifaPrevia) {

@@ -6,7 +6,8 @@ import { useTarifas } from '@/api/recursos/tarifas';
 import type { EntradaHistorialTarifa } from '@/api/dominio/tarifa';
 import { formatearMoneda } from '@/lib/formato';
 import type { Tarifa } from '@/types';
-import { fechaLarga, romanDeCategoria, rutaSilueta } from './ayudas';
+import { fechaLarga, romanDeCategoria } from './ayudas';
+import { SiluetaCategoria } from './SiluetaCategoria';
 import { DialogoTarifa, type TarifaEnEdicion } from './DialogoTarifa';
 
 export interface SeccionTarifasProps {
@@ -184,12 +185,10 @@ export function SeccionTarifas({ onAviso }: SeccionTarifasProps = {}) {
                           <tr key={categoria.id_categoria}>
                             <td className="border-b border-superficie-2 p-2.5">
                               <span className="flex items-center gap-3">
-                                <img
-                                  className="ps-silueta"
-                                  src={rutaSilueta(categoria.id_categoria)}
-                                  alt=""
-                                  width={72}
-                                  height={28}
+                                <SiluetaCategoria
+                                  idCategoria={categoria.id_categoria}
+                                  ancho={72}
+                                  alto={28}
                                 />
                                 <span className="flex flex-col">
                                   <strong>{roman}</strong>
@@ -285,7 +284,9 @@ export function SeccionTarifas({ onAviso }: SeccionTarifasProps = {}) {
           tarifa={seleccion}
           onCerrar={() => setSeleccion(null)}
           onGuardada={(entrada, mensajeAviso) => {
-            setHistorial((previa) => [entrada, ...previa]);
+            if (entrada) {
+              setHistorial((previa) => [entrada, ...previa]);
+            }
             setSeleccion(null);
             setAviso(mensajeAviso);
             onAviso?.(mensajeAviso);

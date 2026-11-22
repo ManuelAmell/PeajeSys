@@ -1,6 +1,7 @@
 import { EstadoDatos } from '@/components/feedback/EstadoDatos';
 import { useCategorias } from '@/api/recursos/categorias';
-import { romanDeCategoria, rutaSilueta, textoEjes, textoPeso } from './ayudas';
+import { romanDeCategoria, textoEjes, textoPeso } from './ayudas';
+import { SiluetaCategoria } from './SiluetaCategoria';
 
 /**
  * Sección Categorías vehiculares de Admin.dc.html: las 7 categorías del DML
@@ -71,12 +72,10 @@ export function SeccionCategorias() {
                 <tr key={categoria.id_categoria}>
                   <td className="border-b border-superficie-2 p-2.5">
                     <span className="flex items-center gap-3">
-                      <img
-                        className="ps-silueta"
-                        src={rutaSilueta(categoria.id_categoria)}
-                        alt=""
-                        width={96}
-                        height={36}
+                      <SiluetaCategoria
+                        idCategoria={categoria.id_categoria}
+                        ancho={96}
+                        alto={36}
                       />
                       <span className="flex flex-col">
                         <strong>{romanDeCategoria(categoria.codigo)}</strong>

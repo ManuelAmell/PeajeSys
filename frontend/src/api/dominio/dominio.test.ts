@@ -300,19 +300,19 @@ describe('Funciones de Dominio Compartidas (portadas de prototipos Claude Design
     it('generarHistorialTarifa: genera entrada de auditoría para historial de Admin.dc.html:377-381', () => {
       const entrada = generarHistorialTarifa(
         { monto: 10500 },
-        { monto: 11000, resolucion: 'Res. 0050/2026', admin: 'ADMIN-01' },
+        { monto: 11000, resolucion: 'Res. 0050/2026', admin: 'ADM-001' },
         'Gambote',
         'I',
       );
       expect(entrada.titulo).toBe('Gambote · categoría I');
       expect(entrada.cambio).toBe('$ 10.500 -> $ 11.000');
-      expect(entrada.meta).toContain('ADMIN-01 · Res. 0050/2026');
+      expect(entrada.meta).toContain('ADM-001 · Res. 0050/2026');
     });
 
     it('generarHistorialTarifa: registra correctamente una tarifa inicial sin tarifa anterior', () => {
       const entrada = generarHistorialTarifa(
         null,
-        { monto: 10500, resolucion: 'Res. 0045/2026', admin: 'ADMIN-01' },
+        { monto: 10500, resolucion: 'Res. 0045/2026', admin: 'ADM-001' },
         'La Ceballos',
         'IV',
       );

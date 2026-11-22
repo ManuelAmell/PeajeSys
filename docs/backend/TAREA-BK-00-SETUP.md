@@ -1,5 +1,8 @@
 # TAREA BK-00: CONFIGURACION BASE, ARQUITECTURA Y PIPELINE HTTP
 
+> **Nota de actualización (2026-11-21):** este documento es histórico. El estado vigente es: todos los proyectos apuntan a `net8.0` y se compilan con cualquier SDK 8 o superior (`RollForward=Major` en `backend/Directory.Build.props`). Las menciones a `net9.0` de abajo ya no aplican. Ver [backend/README.md](../../backend/README.md).
+
+
 - **Responsable**: Alex Florez
 - **Revisor**: Samuel Otero
 - **Proyecto Principal**: `PeajeSys.Api`, `PeajeSys.sln`
