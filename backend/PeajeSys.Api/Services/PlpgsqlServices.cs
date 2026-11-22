@@ -50,7 +50,7 @@ public class FnTarifaVigenteService : IFnTarifaVigenteService
         //
         // Para el entorno offline o de test, resolvemos por LINQ sobre TARIFA directamente.
         string placaNorm = placa.Trim().ToUpperInvariant();
-        var hoy = DateTime.UtcNow.Date;
+        var hoy = ZonaHorariaApp.HoyComoFecha();
 
         // Replicar logica de fn_obtener_tarifa_vigente: buscar categoria del vehiculo,
         // validar estacion activa y obtener tarifa vigente.

@@ -73,6 +73,9 @@ public class OperadorAdminTests
             return Task.FromResult(nuevo);
         }
 
+        public Task<OperadorAdminDto> ActualizarOperadorAsync(int id, ActualizarOperadorRequestDto request) =>
+            throw new NotSupportedException();
+
         public Task<OperadorAdminDto> ActualizarEstadoAsync(int id, string nuevoEstado)
         {
             if (!_operadores.TryGetValue(id, out var op))

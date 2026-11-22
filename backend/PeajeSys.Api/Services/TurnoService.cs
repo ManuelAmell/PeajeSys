@@ -16,10 +16,12 @@ namespace PeajeSys.Api.Services;
 public class TurnoService : ITurnoService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly TimeProvider _reloj;
 
-    public TurnoService(PeajeSysDbContext context)
+    public TurnoService(PeajeSysDbContext context, TimeProvider? reloj = null)
     {
         _context = context;
+        _reloj = reloj ?? TimeProvider.System;
     }
 
     public async Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
@@ -63,7 +65,8 @@ public class TurnoService : ITurnoService
         {
             IdCaseta = request.IdCaseta,
             IdOperador = idOperador,
-            Fecha = DateTime.UtcNow.Date,
+            // Dia civil de la aplicacion (Bogota), el mismo con el que /api/recaudo agrupa; no el dia UTC.
+            Fecha = ZonaHorariaApp.DiaCivil(_reloj.GetUtcNow()).ToDateTime(TimeOnly.MinValue),
             Diurno = request.Diurno,
             FondoInicialCaja = request.FondoInicialCaja,
             TotalRecaudadoEfectivo = 0,

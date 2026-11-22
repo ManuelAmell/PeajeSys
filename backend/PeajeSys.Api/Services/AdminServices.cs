@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
+using PeajeSys.Core.Enums;
 using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
 using PeajeSys.Data;
@@ -46,7 +47,7 @@ public class TarifaService : ITarifaService
 
         if (vigente.HasValue)
         {
-            var now = DateTime.UtcNow.Date;
+            var now = ZonaHorariaApp.HoyComoFecha();
             if (vigente.Value)
             {
                 query = query.Where(t => t.Activa && t.FechaInicioVigencia <= now && (t.FechaFinVigencia == null || t.FechaFinVigencia >= now));
@@ -63,7 +64,7 @@ public class TarifaService : ITarifaService
 
     public async Task<TarifaDto> ObtenerTarifaVigenteAsync(int idEstacion, int idCategoria)
     {
-        var now = DateTime.UtcNow.Date;
+        var now = ZonaHorariaApp.HoyComoFecha();
 
         var tarifa = await _context.Tarifas
             .Include(t => t.Estacion)
@@ -99,7 +100,7 @@ public class TarifaService : ITarifaService
             throw new AppException("ERROR_VALIDACION", "Estacion y categoria son campos requeridos.", 422);
         }
 
-        var fechaInicio = (request.FechaInicioVigencia ?? DateTime.UtcNow).Date;
+        var fechaInicio = (request.FechaInicioVigencia ?? ZonaHorariaApp.HoyComoFecha()).Date;
         var fechaFin = request.FechaFinVigencia?.Date;
         if (fechaFin.HasValue && fechaFin.Value < fechaInicio)
         {
@@ -232,7 +233,7 @@ public class TarifaService : ITarifaService
         if (tarifaAnterior != null)
         {
             tarifaAnterior.FechaFinVigencia = tarifaNueva.FechaInicioVigencia;
-            if (tarifaNueva.FechaInicioVigencia <= DateTime.UtcNow)
+            if (tarifaNueva.FechaInicioVigencia <= ZonaHorariaApp.HoyComoFecha())
             {
                 tarifaAnterior.Activa = false;
             }
@@ -389,6 +390,76 @@ public class OperadorAdminService : IOperadorAdminService
         await _context.SaveChangesAsync();
 
         return MapearOperador(op);
+    }
+
+    public async Task<OperadorAdminDto> ActualizarOperadorAsync(int id, ActualizarOperadorRequestDto request)
+    {
+        var op = await _context.Operadores.FindAsync(id);
+        if (op == null)
+        {
+            throw new NotFoundException("OPERADOR_NO_ENCONTRADO", $"No existe un operador con id {id}.");
+        }
+
+        // Actualizacion parcial: solo se validan los campos presentes. Se valida todo antes de aplicar nada.
+        string? nombres = request.Nombres?.Trim();
+        string? apellidos = request.Apellidos?.Trim();
+        string? documento = request.ObtenerDocumento()?.Trim();
+        string? codigo = request.ObtenerCodigo()?.Trim().ToUpperInvariant();
+        string? rol = request.Rol?.Trim().ToUpperInvariant();
+        string? estado = request.Estado?.Trim().ToUpperInvariant();
+        string? password = request.ObtenerPassword();
+
+        ValidarTexto(nombres, "nombres", 100);
+        ValidarTexto(apellidos, "apellidos", 100);
+        ValidarTexto(documento, "numero_documento", 20);
+        ValidarTexto(codigo, "codigo_empleado", 20);
+
+        if (rol != null && rol != Roles.Recaudador && rol != Roles.Supervisor && rol != Roles.Administrador)
+        {
+            throw new AppException("ROL_INVALIDO", "El rol debe ser RECAUDADOR, SUPERVISOR o ADMINISTRADOR.", 422);
+        }
+
+        if (estado != null && estado != "ACTIVO" && estado != "INACTIVO")
+        {
+            throw new AppException("ESTADO_INVALIDO", "El estado debe ser ACTIVO o INACTIVO.", 422);
+        }
+
+        if (password != null && string.IsNullOrWhiteSpace(password))
+        {
+            throw new AppException("ERROR_VALIDACION", "La contrasena no puede estar vacia.", 422);
+        }
+
+        if (codigo != null && codigo != op.CodigoEmpleado.ToUpperInvariant()
+            && await _context.Operadores.AnyAsync(o => o.IdOperador != id && o.CodigoEmpleado.ToUpper() == codigo))
+        {
+            throw new ConflictException("OPERADOR_DUPLICADO", $"Ya existe un operador con el codigo de empleado '{codigo}'.");
+        }
+
+        if (documento != null && documento != op.NumeroDocumento
+            && await _context.Operadores.AnyAsync(o => o.IdOperador != id && o.NumeroDocumento == documento))
+        {
+            throw new ConflictException("OPERADOR_DUPLICADO", $"Ya existe un operador con el numero de documento '{documento}'.");
+        }
+
+        if (nombres != null) op.Nombres = nombres;
+        if (apellidos != null) op.Apellidos = apellidos;
+        if (documento != null) op.NumeroDocumento = documento;
+        if (codigo != null) op.CodigoEmpleado = codigo;
+        if (rol != null) op.Rol = rol;
+        if (estado != null) op.Estado = estado;
+        if (password != null) op.PasswordHash = _passwordHasher.HashPassword(password);
+
+        await _context.SaveChangesAsync();
+        return MapearOperador(op);
+    }
+
+    private static void ValidarTexto(string? valor, string campo, int maximo)
+    {
+        if (valor == null) return;
+        if (valor.Length == 0 || valor.Length > maximo)
+        {
+            throw new AppException("ERROR_VALIDACION", $"El campo {campo} debe tener entre 1 y {maximo} caracteres.", 422);
+        }
     }
 
     private static OperadorAdminDto MapearOperador(Operador o) => new OperadorAdminDto

@@ -127,6 +127,9 @@ public class ReporteRecaudoService : IReporteRecaudoService
             {
                 IdEstacion = t.Turno!.Caseta!.IdEstacion,
                 Estacion = t.Turno!.Caseta!.Estacion!.Nombre,
+                IdCaseta = t.Turno!.Caseta!.IdCaseta,
+                t.Turno!.Caseta!.NumeroCarril,
+                t.Turno!.Caseta!.TipoCarril,
                 t.FechaHora,
                 t.MetodoPago,
                 t.MontoTarifa
@@ -137,6 +140,21 @@ public class ReporteRecaudoService : IReporteRecaudoService
         decimal totalEf = filas.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa);
         decimal totalTag = filas.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa);
         decimal totalGen = filas.Sum(t => t.MontoTarifa);
+
+        // Desglose por caseta/carril con los mismos filtros (estacion, dia civil) y sin anuladas.
+        var carriles = filas
+            .GroupBy(t => (t.IdEstacion, t.IdCaseta, t.NumeroCarril, t.TipoCarril))
+            .OrderBy(g => g.Key.IdEstacion).ThenBy(g => g.Key.NumeroCarril).ThenBy(g => g.Key.IdCaseta)
+            .Select(g => new RecaudoCarrilItemDto
+            {
+                IdCaseta = g.Key.IdCaseta,
+                NumeroCarril = g.Key.NumeroCarril,
+                TipoCarril = g.Key.TipoCarril,
+                Veh = g.LongCount(),
+                Ef = g.Where(t => t.MetodoPago == "EFECTIVO").Sum(t => t.MontoTarifa),
+                Tag = g.Where(t => t.MetodoPago == "TELEPEAJE").Sum(t => t.MontoTarifa),
+                Total = g.Sum(t => t.MontoTarifa)
+            }).ToList();
 
         // Sin filtro de fecha: una fila por estacion y dia civil (como la vista); con fecha: una sola fila del dia.
         if (!fechaFiltro.HasValue && filas.Count > 0)
@@ -164,7 +182,8 @@ public class ReporteRecaudoService : IReporteRecaudoService
                 TotalEfectivo = totalEf,
                 TotalTelepeaje = totalTag,
                 TotalGeneral = totalGen,
-                Dias = diasPorEstacion
+                Dias = diasPorEstacion,
+                Carriles = carriles
             };
         }
 
@@ -196,7 +215,8 @@ public class ReporteRecaudoService : IReporteRecaudoService
             TotalEfectivo = totalEf,
             TotalTelepeaje = totalTag,
             TotalGeneral = totalGen,
-            Dias = diasFallback
+            Dias = diasFallback,
+            Carriles = carriles
         };
     }
 }
