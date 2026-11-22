@@ -20,19 +20,35 @@ function renderSeccion() {
 }
 
 async function abrirNuevo(usuario: ReturnType<typeof userEvent.setup>) {
-  await usuario.click(await screen.findByRole('button', { name: 'Nuevo operador' }));
+  await usuario.click(
+    await screen.findByRole('button', { name: 'Nuevo operador' }),
+  );
   return screen.findByRole('dialog', { name: 'Nuevo operador' });
 }
 
 async function llenarNuevo(
   usuario: ReturnType<typeof userEvent.setup>,
-  extra: { clave?: string; confirmacion?: string; codigo?: string; documento?: string } = {},
+  extra: {
+    clave?: string;
+    confirmacion?: string;
+    codigo?: string;
+    documento?: string;
+  } = {},
 ) {
-  await usuario.type(screen.getByLabelText('Documento'), extra.documento ?? '1099000111');
+  await usuario.type(
+    screen.getByLabelText('Documento'),
+    extra.documento ?? '1099000111',
+  );
   await usuario.type(screen.getByLabelText('Nombres'), 'Ana María');
   await usuario.type(screen.getByLabelText('Apellidos'), 'Pérez Ruiz');
-  await usuario.type(screen.getByLabelText('Código de empleado'), extra.codigo ?? 'REC-010');
-  await usuario.type(screen.getByLabelText('Contraseña'), extra.clave ?? 'Clave-segura1');
+  await usuario.type(
+    screen.getByLabelText('Código de empleado'),
+    extra.codigo ?? 'REC-010',
+  );
+  await usuario.type(
+    screen.getByLabelText('Contraseña'),
+    extra.clave ?? 'Clave-segura1',
+  );
   await usuario.type(
     screen.getByLabelText('Confirmar contraseña'),
     extra.confirmacion ?? extra.clave ?? 'Clave-segura1',
@@ -59,11 +75,11 @@ describe('Personal: nuevo operador con contraseña', () => {
     }
     expect(dialogo.contains(document.activeElement)).toBe(true);
     const rol = within(dialogo).getByLabelText('Rol');
-    expect(within(rol).getAllByRole('option').map((o) => o.textContent)).toEqual([
-      'Recaudador',
-      'Supervisor',
-      'Administrador',
-    ]);
+    expect(
+      within(rol)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Recaudador', 'Supervisor', 'Administrador']);
   });
 
   it('la contraseña no se ve en claro y el botón la muestra', async () => {
@@ -73,9 +89,13 @@ describe('Personal: nuevo operador con contraseña', () => {
 
     const clave = screen.getByLabelText('Contraseña');
     expect(clave).toHaveAttribute('type', 'password');
-    await usuario.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    await usuario.click(
+      screen.getByRole('button', { name: 'Mostrar contraseña' }),
+    );
     expect(clave).toHaveAttribute('type', 'text');
-    await usuario.click(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    await usuario.click(
+      screen.getByRole('button', { name: 'Ocultar contraseña' }),
+    );
     expect(clave).toHaveAttribute('type', 'password');
   });
 
@@ -88,21 +108,34 @@ describe('Personal: nuevo operador con contraseña', () => {
 
     await usuario.keyboard('{Escape}');
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
     expect(boton).toHaveFocus();
   });
 
   it('valida campos vacíos con role=alert y no envía', async () => {
     const usuario = userEvent.setup();
     const envio = vi.fn();
-    server.use(http.post('*/api/operadores', () => { envio(); return HttpResponse.json({}, { status: 500 }); }));
+    server.use(
+      http.post('*/api/operadores', () => {
+        envio();
+        return HttpResponse.json({}, { status: 500 });
+      }),
+    );
     renderSeccion();
     const dialogo = await abrirNuevo(usuario);
 
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Crear operador' }));
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Crear operador' }),
+    );
 
-    expect(await within(dialogo).findByText('Escribe el número de documento.')).toBeInTheDocument();
-    expect(within(dialogo).getAllByRole('alert').length).toBeGreaterThanOrEqual(4);
+    expect(
+      await within(dialogo).findByText('Escribe el número de documento.'),
+    ).toBeInTheDocument();
+    expect(within(dialogo).getAllByRole('alert').length).toBeGreaterThanOrEqual(
+      4,
+    );
     expect(envio).not.toHaveBeenCalled();
   });
 
@@ -111,17 +144,28 @@ describe('Personal: nuevo operador con contraseña', () => {
     renderSeccion();
     const dialogo = await abrirNuevo(usuario);
     await llenarNuevo(usuario, { clave: 'corta1', confirmacion: 'corta1' });
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Crear operador' }));
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Crear operador' }),
+    );
     expect(
-      await within(dialogo).findByText('La contraseña debe tener al menos 8 caracteres.'),
+      await within(dialogo).findByText(
+        'La contraseña debe tener al menos 8 caracteres.',
+      ),
     ).toBeInTheDocument();
 
     await usuario.clear(screen.getByLabelText('Contraseña'));
     await usuario.clear(screen.getByLabelText('Confirmar contraseña'));
     await usuario.type(screen.getByLabelText('Contraseña'), 'Clave-segura1');
-    await usuario.type(screen.getByLabelText('Confirmar contraseña'), 'Clave-segura2');
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Crear operador' }));
-    expect(await within(dialogo).findByText('Las contraseñas no coinciden.')).toBeInTheDocument();
+    await usuario.type(
+      screen.getByLabelText('Confirmar contraseña'),
+      'Clave-segura2',
+    );
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Crear operador' }),
+    );
+    expect(
+      await within(dialogo).findByText('Las contraseñas no coinciden.'),
+    ).toBeInTheDocument();
   });
 
   it('envía el cuerpo correcto (ADMINISTRADOR, password, sin confirmación) y lista al nuevo', async () => {
@@ -136,8 +180,13 @@ describe('Personal: nuevo operador con contraseña', () => {
     renderSeccion();
     const dialogo = await abrirNuevo(usuario);
     await llenarNuevo(usuario);
-    await usuario.selectOptions(within(dialogo).getByLabelText('Rol'), 'Administrador');
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Crear operador' }));
+    await usuario.selectOptions(
+      within(dialogo).getByLabelText('Rol'),
+      'Administrador',
+    );
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Crear operador' }),
+    );
 
     expect(await screen.findByText('REC-010')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -150,7 +199,9 @@ describe('Personal: nuevo operador con contraseña', () => {
       password: 'Clave-segura1',
     });
     const lista = await obtenerOperadores();
-    expect(lista.find((o) => o.codigo_empleado === 'REC-010')?.rol).toBe('ADMINISTRADOR');
+    expect(lista.find((o) => o.codigo_empleado === 'REC-010')?.rol).toBe(
+      'ADMINISTRADOR',
+    );
   });
 
   it('muestra el 409 OPERADOR_DUPLICADO con su mensaje dentro del diálogo', async () => {
@@ -158,18 +209,27 @@ describe('Personal: nuevo operador con contraseña', () => {
     renderSeccion();
     const dialogo = await abrirNuevo(usuario);
     await llenarNuevo(usuario, { codigo: 'EMP-001', documento: '777000111' });
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Crear operador' }));
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Crear operador' }),
+    );
 
     const alerta = await within(dialogo).findByRole('alert');
     expect(alerta).toHaveTextContent(/Ya existe un operador/);
-    expect(screen.getByRole('dialog', { name: 'Nuevo operador' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('dialog', { name: 'Nuevo operador' }),
+    ).toBeInTheDocument();
   });
 
   it('muestra el mensaje del 422 de la API dentro del diálogo', async () => {
     server.use(
       http.post('*/api/operadores', () =>
         HttpResponse.json(
-          { error: { codigo: 'ERROR_VALIDACION', mensaje: 'La contrasena es requerida para crear un operador.' } },
+          {
+            error: {
+              codigo: 'ERROR_VALIDACION',
+              mensaje: 'La contrasena es requerida para crear un operador.',
+            },
+          },
           { status: 422 },
         ),
       ),
@@ -178,20 +238,28 @@ describe('Personal: nuevo operador con contraseña', () => {
     renderSeccion();
     const dialogo = await abrirNuevo(usuario);
     await llenarNuevo(usuario);
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Crear operador' }));
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Crear operador' }),
+    );
 
-    expect(await within(dialogo).findByText('La contrasena es requerida para crear un operador.')).toBeInTheDocument();
+    expect(
+      await within(dialogo).findByText(
+        'La contrasena es requerida para crear un operador.',
+      ),
+    ).toBeInTheDocument();
   });
 
   it('la contraseña no sale en consola ni queda en el DOM tras cerrar', async () => {
-    const espias = (['log', 'info', 'warn', 'error', 'debug'] as const).map((m) =>
-      vi.spyOn(console, m).mockImplementation(() => {}),
+    const espias = (['log', 'info', 'warn', 'error', 'debug'] as const).map(
+      (m) => vi.spyOn(console, m).mockImplementation(() => {}),
     );
     const usuario = userEvent.setup();
     renderSeccion();
     const dialogo = await abrirNuevo(usuario);
     await llenarNuevo(usuario, { clave: 'Secreta-9876' });
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Crear operador' }));
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Crear operador' }),
+    );
     await screen.findByText('REC-010');
 
     for (const e of espias) {
@@ -215,19 +283,38 @@ describe('Personal: editar y cambiar contraseña', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Editar a Carlos Alberto Gómez Pérez' }),
+      await screen.findByRole('button', {
+        name: 'Editar a Carlos Alberto Gómez Pérez',
+      }),
     );
-    const dialogo = await screen.findByRole('dialog', { name: 'Editar operador' });
-    expect(within(dialogo).getByLabelText('Nombres')).toHaveValue('Carlos Alberto');
-    expect(within(dialogo).queryByLabelText('Contraseña')).not.toBeInTheDocument();
+    const dialogo = await screen.findByRole('dialog', {
+      name: 'Editar operador',
+    });
+    expect(within(dialogo).getByLabelText('Nombres')).toHaveValue(
+      'Carlos Alberto',
+    );
+    expect(
+      within(dialogo).queryByLabelText('Contraseña'),
+    ).not.toBeInTheDocument();
     await usuario.clear(within(dialogo).getByLabelText('Nombres'));
     await usuario.type(within(dialogo).getByLabelText('Nombres'), 'Carlos A.');
-    await usuario.selectOptions(within(dialogo).getByLabelText('Rol'), 'Supervisor');
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Guardar cambios' }));
+    await usuario.selectOptions(
+      within(dialogo).getByLabelText('Rol'),
+      'Supervisor',
+    );
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Guardar cambios' }),
+    );
 
-    expect(await screen.findByText('Carlos A. Gómez Pérez')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Carlos A. Gómez Pérez'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(cuerpo).toEqual({ nombres: 'Carlos A.', apellidos: 'Gómez Pérez', rol: 'SUPERVISOR' });
+    expect(cuerpo).toEqual({
+      nombres: 'Carlos A.',
+      apellidos: 'Gómez Pérez',
+      rol: 'SUPERVISOR',
+    });
   });
 
   it('Cambiar contraseña pide dos veces la clave y envía solo password', async () => {
@@ -242,20 +329,41 @@ describe('Personal: editar y cambiar contraseña', () => {
     renderSeccion();
 
     await usuario.click(
-      await screen.findByRole('button', { name: 'Cambiar contraseña de Carlos Alberto Gómez Pérez' }),
+      await screen.findByRole('button', {
+        name: 'Cambiar contraseña de Carlos Alberto Gómez Pérez',
+      }),
     );
-    const dialogo = await screen.findByRole('dialog', { name: 'Cambiar contraseña' });
-    await usuario.type(within(dialogo).getByLabelText('Nueva contraseña'), 'Nueva-clave-1');
-    await usuario.type(within(dialogo).getByLabelText('Confirmar contraseña'), 'Nueva-clave-2');
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Guardar contraseña' }));
-    expect(await within(dialogo).findByText('Las contraseñas no coinciden.')).toBeInTheDocument();
+    const dialogo = await screen.findByRole('dialog', {
+      name: 'Cambiar contraseña',
+    });
+    await usuario.type(
+      within(dialogo).getByLabelText('Nueva contraseña'),
+      'Nueva-clave-1',
+    );
+    await usuario.type(
+      within(dialogo).getByLabelText('Confirmar contraseña'),
+      'Nueva-clave-2',
+    );
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Guardar contraseña' }),
+    );
+    expect(
+      await within(dialogo).findByText('Las contraseñas no coinciden.'),
+    ).toBeInTheDocument();
     expect(cuerpo).toEqual({});
 
     await usuario.clear(within(dialogo).getByLabelText('Confirmar contraseña'));
-    await usuario.type(within(dialogo).getByLabelText('Confirmar contraseña'), 'Nueva-clave-1');
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Guardar contraseña' }));
+    await usuario.type(
+      within(dialogo).getByLabelText('Confirmar contraseña'),
+      'Nueva-clave-1',
+    );
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Guardar contraseña' }),
+    );
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    );
     expect(cuerpo).toEqual({ password: 'Nueva-clave-1' });
     expect(await screen.findByRole('status')).toHaveTextContent(/contraseña/i);
   });
@@ -264,7 +372,12 @@ describe('Personal: editar y cambiar contraseña', () => {
     server.use(
       http.patch('*/api/operadores/:id', () =>
         HttpResponse.json(
-          { error: { codigo: 'ERROR_VALIDACION', mensaje: 'La contrasena no puede estar vacia.' } },
+          {
+            error: {
+              codigo: 'ERROR_VALIDACION',
+              mensaje: 'La contrasena no puede estar vacia.',
+            },
+          },
           { status: 422 },
         ),
       ),
@@ -272,13 +385,27 @@ describe('Personal: editar y cambiar contraseña', () => {
     const usuario = userEvent.setup();
     renderSeccion();
     await usuario.click(
-      await screen.findByRole('button', { name: 'Cambiar contraseña de Carlos Alberto Gómez Pérez' }),
+      await screen.findByRole('button', {
+        name: 'Cambiar contraseña de Carlos Alberto Gómez Pérez',
+      }),
     );
-    const dialogo = await screen.findByRole('dialog', { name: 'Cambiar contraseña' });
-    await usuario.type(within(dialogo).getByLabelText('Nueva contraseña'), 'Nueva-clave-1');
-    await usuario.type(within(dialogo).getByLabelText('Confirmar contraseña'), 'Nueva-clave-1');
-    await usuario.click(within(dialogo).getByRole('button', { name: 'Guardar contraseña' }));
+    const dialogo = await screen.findByRole('dialog', {
+      name: 'Cambiar contraseña',
+    });
+    await usuario.type(
+      within(dialogo).getByLabelText('Nueva contraseña'),
+      'Nueva-clave-1',
+    );
+    await usuario.type(
+      within(dialogo).getByLabelText('Confirmar contraseña'),
+      'Nueva-clave-1',
+    );
+    await usuario.click(
+      within(dialogo).getByRole('button', { name: 'Guardar contraseña' }),
+    );
 
-    expect(await within(dialogo).findByRole('alert')).toHaveTextContent('La contrasena no puede estar vacia.');
+    expect(await within(dialogo).findByRole('alert')).toHaveTextContent(
+      'La contrasena no puede estar vacia.',
+    );
   });
 });

@@ -15,7 +15,10 @@ const valido = {
   confirmacion: 'Clave-segura1',
 };
 
-function mensajes(resultado: { success: boolean; error?: { issues: { path: PropertyKey[]; message: string }[] } }) {
+function mensajes(resultado: {
+  success: boolean;
+  error?: { issues: { path: PropertyKey[]; message: string }[] };
+}) {
   return Object.fromEntries(
     (resultado.error?.issues ?? []).map((i) => [i.path.join('.'), i.message]),
   );
@@ -55,28 +58,50 @@ describe('esquemaFormularioOperadorNuevo', () => {
       confirmacion: 'corta1',
     });
     expect(r.success).toBe(false);
-    expect(mensajes(r).password).toBe('La contraseña debe tener al menos 8 caracteres.');
+    expect(mensajes(r).password).toBe(
+      'La contraseña debe tener al menos 8 caracteres.',
+    );
   });
 
   it('rechaza contraseñas distintas y marca la confirmación', () => {
-    const r = esquemaFormularioOperadorNuevo.safeParse({ ...valido, confirmacion: 'otra-clave-9' });
+    const r = esquemaFormularioOperadorNuevo.safeParse({
+      ...valido,
+      confirmacion: 'otra-clave-9',
+    });
     expect(r.success).toBe(false);
     expect(mensajes(r).confirmacion).toBe('Las contraseñas no coinciden.');
   });
 
   it('solo admite los tres roles de la aplicación', () => {
-    expect(esquemaFormularioOperadorNuevo.safeParse({ ...valido, rol: 'ADMIN' }).success).toBe(true);
-    expect(esquemaFormularioOperadorNuevo.safeParse({ ...valido, rol: 'SUPERVISOR' }).success).toBe(true);
-    expect(esquemaFormularioOperadorNuevo.safeParse({ ...valido, rol: 'JEFE' }).success).toBe(false);
+    expect(
+      esquemaFormularioOperadorNuevo.safeParse({ ...valido, rol: 'ADMIN' })
+        .success,
+    ).toBe(true);
+    expect(
+      esquemaFormularioOperadorNuevo.safeParse({ ...valido, rol: 'SUPERVISOR' })
+        .success,
+    ).toBe(true);
+    expect(
+      esquemaFormularioOperadorNuevo.safeParse({ ...valido, rol: 'JEFE' })
+        .success,
+    ).toBe(false);
   });
 });
 
 describe('esquemaFormularioOperadorEdicion', () => {
   it('valida nombres, apellidos y rol', () => {
     expect(
-      esquemaFormularioOperadorEdicion.safeParse({ nombres: 'A', apellidos: 'B', rol: 'SUPERVISOR' }).success,
+      esquemaFormularioOperadorEdicion.safeParse({
+        nombres: 'A',
+        apellidos: 'B',
+        rol: 'SUPERVISOR',
+      }).success,
     ).toBe(true);
-    const r = esquemaFormularioOperadorEdicion.safeParse({ nombres: '', apellidos: ' ', rol: 'SUPERVISOR' });
+    const r = esquemaFormularioOperadorEdicion.safeParse({
+      nombres: '',
+      apellidos: ' ',
+      rol: 'SUPERVISOR',
+    });
     expect(r.success).toBe(false);
     expect(mensajes(r).nombres).toBe('Escribe los nombres.');
     expect(mensajes(r).apellidos).toBe('Escribe los apellidos.');
@@ -86,13 +111,26 @@ describe('esquemaFormularioOperadorEdicion', () => {
 describe('esquemaFormularioPassword', () => {
   it('exige 8 caracteres y que coincidan', () => {
     expect(
-      esquemaFormularioPassword.safeParse({ password: 'Nueva-clave-1', confirmacion: 'Nueva-clave-1' }).success,
+      esquemaFormularioPassword.safeParse({
+        password: 'Nueva-clave-1',
+        confirmacion: 'Nueva-clave-1',
+      }).success,
     ).toBe(true);
     expect(
-      mensajes(esquemaFormularioPassword.safeParse({ password: '1234567', confirmacion: '1234567' })).password,
+      mensajes(
+        esquemaFormularioPassword.safeParse({
+          password: '1234567',
+          confirmacion: '1234567',
+        }),
+      ).password,
     ).toBe('La contraseña debe tener al menos 8 caracteres.');
     expect(
-      mensajes(esquemaFormularioPassword.safeParse({ password: 'Nueva-clave-1', confirmacion: 'x' })).confirmacion,
+      mensajes(
+        esquemaFormularioPassword.safeParse({
+          password: 'Nueva-clave-1',
+          confirmacion: 'x',
+        }),
+      ).confirmacion,
     ).toBe('Las contraseñas no coinciden.');
   });
 });
