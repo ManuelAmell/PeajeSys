@@ -138,4 +138,25 @@ describe('MSW: anulación de transacciones (imita a la API real)', () => {
       (await anular(transaccion.id_transaccion, 'Motivo', '3')).status,
     ).toBe(200);
   });
+  it('el recaudo (dias y carriles) no cuenta las anuladas, como la API', async () => {
+    type Rec = {
+      total_efectivo: number;
+      total_general: number;
+      dias: { veh: number; ef: number; total: number }[];
+      carriles: { veh: number; ef: number }[];
+    };
+    const leer = async () => (await (await fetch(`${BASE}/recaudo`)).json()) as Rec;
+    const antes = await leer();
+
+    expect((await anular(11, 'Cobro duplicado')).status).toBe(200);
+
+    const despues = await leer();
+    const sum = (r: Rec, k: 'veh') => r.dias.reduce((a, d) => a + d[k], 0);
+    expect(sum(despues, 'veh')).toBe(sum(antes, 'veh') - 1);
+    expect(despues.total_efectivo).toBe(antes.total_efectivo - 10500);
+    expect(despues.total_general).toBe(antes.total_general - 10500);
+    expect(despues.carriles.reduce((a, c) => a + c.veh, 0)).toBe(
+      antes.carriles.reduce((a, c) => a + c.veh, 0) - 1,
+    );
+  });
 });
