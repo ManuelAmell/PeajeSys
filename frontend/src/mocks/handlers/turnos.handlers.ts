@@ -2,23 +2,7 @@ import { http, HttpResponse } from 'msw';
 import { esquemaTurnoCierre } from '@/types';
 import { procesarControlLectura } from '../control';
 import { getDb } from '../db';
-
-/** Id del operador (claim sub) del token Bearer de la petición, o null si falta o no es válido. */
-function idOperadorDelToken(request: Request): number | null {
-  const cabecera = request.headers.get('authorization');
-  const token = cabecera?.replace(/^Bearer\s+/i, '');
-  const partes = token?.split('.');
-  if (!partes || partes.length < 2 || !partes[1]) return null;
-  try {
-    const payload = JSON.parse(
-      atob(partes[1].replace(/-/g, '+').replace(/_/g, '/')),
-    ) as { sub?: string; nameid?: string };
-    const id = parseInt(String(payload.sub ?? payload.nameid ?? ''), 10);
-    return Number.isInteger(id) && id > 0 ? id : null;
-  } catch {
-    return null;
-  }
-}
+import { idOperadorDelToken } from '../token';
 
 export const turnosHandlers = [
   http.get('/api/turnos', async ({ request }) => {
@@ -104,7 +88,15 @@ export const turnosHandlers = [
 
     const id = parseInt(String(params.id), 10);
     const db = getDb();
-    const transacciones = db.transacciones.filter((t) => t.id_turno === id);
+    const anuladas = new Set(
+      db.auditorias
+        .filter((a) => a.tipo_operacion === 'VOID')
+        .map((a) => a.id_transaccion),
+    );
+    // Igual que la API: `anulada` viaja siempre en el listado de un turno.
+    const transacciones = db.transacciones
+      .filter((t) => t.id_turno === id)
+      .map((t) => ({ ...t, anulada: anuladas.has(t.id_transaccion) }));
 
     return HttpResponse.json(transacciones);
   }),

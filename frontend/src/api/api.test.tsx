@@ -296,7 +296,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
     });
 
     it('transacciones anula transacción y genera registro inmutable en auditoría', async () => {
-      const txs = await obtenerTransaccionesTurno(8);
+      const txs = await obtenerTransaccionesTurno(9);
       expect(txs.length).toBeGreaterThan(0);
       const idTx = txs[0]?.id_transaccion ?? 1;
 
@@ -548,7 +548,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
 
       const { result } = renderHook(() => useAnularTransaccion(), { wrapper });
       result.current.mutate({
-        idTransaccion: 1,
+        idTransaccion: 11,
         motivo: 'Anulación de prueba en hook',
         usuario_sistema: 'SUPERVISOR-HOOK',
       });

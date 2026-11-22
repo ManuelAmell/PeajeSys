@@ -294,7 +294,24 @@ export class BaseDatosMemoria {
     };
     this.auditorias.unshift(audVoid);
 
-    return { transaccion: { ...tx }, auditoria: audVoid };
+    // Reversión del dinero, como la API: efectivo resta del recaudo del turno; telepeaje devuelve el saldo.
+    if (tx.metodo_pago === 'EFECTIVO' && tx.estado_paso === 'APROBADO') {
+      const turno = this.turnos.find((t) => t.id_turno === tx.id_turno);
+      if (turno) turno.total_recaudado_efectivo -= tx.monto_tarifa;
+    } else if (tx.metodo_pago === 'TELEPEAJE') {
+      const detalle = this.detalles_telepeaje.find(
+        (d) => d.id_transaccion === id_transaccion,
+      );
+      const cuenta =
+        detalle &&
+        this.cuentas_telepeaje.find((c) => c.id_cuenta === detalle.id_cuenta);
+      if (cuenta) cuenta.saldo_disponible += tx.monto_tarifa;
+    }
+
+    return {
+      transaccion: { ...tx, anulada: true } as TransaccionPeaje,
+      auditoria: audVoid,
+    };
   }
 
   /**
