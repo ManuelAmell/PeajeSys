@@ -183,6 +183,7 @@ describe('Módulo de Cliente HTTP y Recursos API', () => {
         codigo_empleado: 'OP-TEST',
         rol: 'RECAUDADOR',
         estado: 'ACTIVO',
+        password: 'Clave-prueba-1',
       });
       expect(nuevoOp.id_operador).toBeGreaterThan(0);
       expect(nuevoOp.codigo_empleado).toBe('OP-TEST');
