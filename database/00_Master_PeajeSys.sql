@@ -639,6 +639,22 @@ EXPLAIN SELECT id_transaccion, numero_ticket, monto_tarifa
 FROM TRANSACCION_PEAJE 
 WHERE fecha_hora >= '2026-10-01' AND id_turno = 1;
 
+-- =============================================================================
+-- 5. ÍNDICES ÚNICOS PARCIALES: Restricción de concurrencia sobre turnos abiertos
+-- =============================================================================
+-- JUSTIFICACIÓN DE NEGOCIO Y TÉCNICA:
+-- Evitan condiciones de carrera donde dos peticiones simultáneas intenten abrir
+-- un turno sobre la misma caseta física o donde un mismo operador intente abrir
+-- más de un turno activo en el sistema a la vez. Al ser parciales (WHERE estado = 'ABIERTO'),
+-- no penalizan el histórico de turnos cerrados ni requieren bloqueos de tabla.
+-- -----------------------------------------------------------------------------
+CREATE UNIQUE INDEX IF NOT EXISTS uq_turno_caseta_abierto 
+ON TURNO (id_caseta) WHERE estado = 'ABIERTO';
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_turno_operador_abierto 
+ON TURNO (id_operador) WHERE estado = 'ABIERTO';
+
+
 
 -- #############################################################################
 -- FASE 4: CAPA PROCEDIMENTAL PL/pgSQL (FUNCIONES, TRIGGERS, PROCEDIMIENTOS, CURSOR)
@@ -2140,7 +2156,7 @@ BEGIN
 
     -- Crear turno temporal
     INSERT INTO TURNO (id_caseta, id_operador, fecha, diurno, fondo_inicial_caja, estado)
-    VALUES (2, 6, CURRENT_DATE, TRUE, 50000.00, 'ABIERTO')
+    VALUES (4, 6, CURRENT_DATE, TRUE, 50000.00, 'ABIERTO')
     RETURNING id_turno INTO v_id_turno;
 
     -- Transacción en efectivo por $22.000 COP
