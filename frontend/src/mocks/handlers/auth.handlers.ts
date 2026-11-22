@@ -70,23 +70,22 @@ export const authHandlers = [
       (o) => o.codigo_empleado.toUpperCase() === codigo,
     );
 
-    // Validación 3: Empleado no existe (Login.dc.html:126)
+    // Validación 3: Empleado no existe. La API real responde igual que con una clave incorrecta
+    // (401 CREDENCIALES_INVALIDAS) para no revelar qué cuentas existen.
     if (!emp) {
       return HttpResponse.json(
         {
           error: {
-            codigo: 'EMPLEADO_NO_ENCONTRADO',
-            mensaje: `No existe un empleado con el código ${codigo}.`,
-            campos: {
-              codigo: `No existe un empleado con el código ${codigo}.`,
-            },
+            codigo: 'CREDENCIALES_INVALIDAS',
+            mensaje: 'Código de empleado o clave incorrectos.',
           },
         },
-        { status: 404 },
+        { status: 401 },
       );
     }
 
-    // Validación 4: Empleado inactivo (Login.dc.html:127)
+    // Validación 4: Empleado inactivo. Solo se llega aquí con una contraseña no vacía (en la API real,
+    // con la correcta), por eso el 403 no revela nada a quien no conoce la clave (Login.dc.html:127)
     if (emp.estado !== 'ACTIVO') {
       return HttpResponse.json(
         {

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PeajeSys.Api.Security;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Enums;
@@ -266,11 +267,14 @@ public class OperadorAdminService : IOperadorAdminService
 {
     private readonly PeajeSysDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IVerificadorSesionOperador? _sesiones;
 
-    public OperadorAdminService(PeajeSysDbContext context, IPasswordHasher passwordHasher)
+    public OperadorAdminService(PeajeSysDbContext context, IPasswordHasher passwordHasher,
+        IVerificadorSesionOperador? sesiones = null)
     {
         _context = context;
         _passwordHasher = passwordHasher;
+        _sesiones = sesiones;
     }
 
     public async Task<IEnumerable<OperadorAdminDto>> ListarOperadoresAsync(string? rol, string? estado, string? q)
@@ -390,6 +394,8 @@ public class OperadorAdminService : IOperadorAdminService
 
         op.Estado = estadoNorm;
         await _context.SaveChangesAsync();
+        // La sesion en cache de este operador ya no es valida: el cambio debe verse en la siguiente peticion.
+        _sesiones?.Invalidar(op.IdOperador);
 
         return MapearOperador(op);
     }
@@ -461,6 +467,8 @@ public class OperadorAdminService : IOperadorAdminService
         if (password != null) op.PasswordHash = _passwordHasher.HashPassword(password);
 
         await _context.SaveChangesAsync();
+        // Cambiar rol o estado debe verse en la siguiente peticion, no cuando caduque la cache.
+        _sesiones?.Invalidar(op.IdOperador);
         return MapearOperador(op);
     }
 

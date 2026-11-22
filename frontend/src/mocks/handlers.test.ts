@@ -60,17 +60,17 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       },
     );
 
-    it('rechaza empleado inexistente con HTTP 404', async () => {
+    it('rechaza empleado inexistente con HTTP 401 CREDENCIALES_INVALIDAS (no revela que la cuenta no existe)', async () => {
       const res = await fetch(`http://localhost:3000/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codigo: 'EMP-999', clave: 'prueba' }),
       });
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(401);
       const data = await res.json();
-      expect(data.error.codigo).toBe('EMPLEADO_NO_ENCONTRADO');
+      expect(data.error.codigo).toBe('CREDENCIALES_INVALIDAS');
       expect(data.error.mensaje).toBe(
-        'No existe un empleado con el código EMP-999.',
+        'Código de empleado o clave incorrectos.',
       );
     });
 
@@ -178,7 +178,9 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
     };
 
     it('GET /api/casetas devuelve ocupada según haya turno ABIERTO', async () => {
-      const casetas = (await (await fetch(`http://localhost:3000/api/casetas`)).json()) as {
+      const casetas = (await (
+        await fetch(`http://localhost:3000/api/casetas`)
+      ).json()) as {
         id_caseta: number;
         ocupada: boolean;
       }[];
@@ -199,7 +201,9 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
     it('GET /api/turnos de un supervisor devuelve todos', async () => {
       // sub 3 = EMP-003 (SUPERVISOR).
       const abiertos = await pedirTurnos('?estado=ABIERTO', '3');
-      expect(abiertos.map((t) => t.id_turno).sort((a, b) => a - b)).toEqual([9, 10]);
+      expect(abiertos.map((t) => t.id_turno).sort((a, b) => a - b)).toEqual([
+        9, 10,
+      ]);
     });
   });
 

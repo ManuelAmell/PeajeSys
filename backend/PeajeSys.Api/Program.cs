@@ -77,6 +77,8 @@ builder.Services.AddSingleton<IJwtTokenService>(sp =>
     return new JwtTokenService(jwt.SecretKey, jwt.Issuer, jwt.Audience, jwt.ExpirationHours);
 });
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<IVerificadorSesionOperador, VerificadorSesionOperador>();
 
 // Servicios de Negocio: Recaudo, Turnos y Vehiculos (BK-03)
 builder.Services.AddScoped<ITurnoService, TurnoService>();

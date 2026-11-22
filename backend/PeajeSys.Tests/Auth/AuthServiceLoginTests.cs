@@ -85,14 +85,73 @@ public class AuthServiceLoginTests
     }
 
     [Fact]
-    public async Task Login_Adm001InexistenteEnLaTabla_LanzaEmpleadoNoEncontrado()
+    public async Task Login_Adm001InexistenteEnLaTabla_LanzaCredencialesInvalidas()
     {
         var servicio = CrearServicio(out var db);
         using var _ = db;
 
-        var ex = await Assert.ThrowsAsync<NotFoundException>(() => servicio.LoginAsync(Peticion("ADM-001")));
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(() => servicio.LoginAsync(Peticion("ADM-001")));
 
-        Assert.Equal("EMPLEADO_NO_ENCONTRADO", ex.Codigo);
+        Assert.Equal("CREDENCIALES_INVALIDAS", ex.Codigo);
+    }
+
+    [Fact]
+    public async Task Login_InexistenteSinHashYClaveMala_DanElMismoCodigoYMensaje()
+    {
+        var servicio = CrearServicio(out var db,
+            Crear("EMP-001", "RECAUDADOR", null),
+            Crear("REC-001", "RECAUDADOR", Hasher.HashPassword(Clave)));
+        using var _ = db;
+
+        var inexistente = await Assert.ThrowsAsync<UnauthorizedException>(() => servicio.LoginAsync(Peticion("NOEXISTE-1")));
+        var sinHash = await Assert.ThrowsAsync<UnauthorizedException>(() => servicio.LoginAsync(Peticion("EMP-001")));
+        var claveMala = await Assert.ThrowsAsync<UnauthorizedException>(() => servicio.LoginAsync(Peticion("REC-001", "otra")));
+
+        Assert.Equal("CREDENCIALES_INVALIDAS", inexistente.Codigo);
+        Assert.Equal(claveMala.Codigo, inexistente.Codigo);
+        Assert.Equal(claveMala.Codigo, sinHash.Codigo);
+        Assert.Equal(claveMala.Message, inexistente.Message);
+        Assert.Equal(claveMala.Message, sinHash.Message);
+    }
+
+    [Fact]
+    public async Task Login_InactivoConClaveMala_Da401NoRevelaQueEstaInactivo()
+    {
+        var servicio = CrearServicio(out var db, Crear("REC-009", "RECAUDADOR", Hasher.HashPassword(Clave), "INACTIVO"));
+        using var _ = db;
+
+        var ex = await Assert.ThrowsAsync<UnauthorizedException>(() => servicio.LoginAsync(Peticion("REC-009", "otra")));
+
+        Assert.Equal("CREDENCIALES_INVALIDAS", ex.Codigo);
+    }
+
+    [Fact]
+    public async Task Login_InexistenteGastaUnVerifyPasswordContraElHashDeRelleno()
+    {
+        var hasher = new ContadorHasher();
+        var options = new DbContextOptionsBuilder<PeajeSysDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
+        using var db = new PeajeSysDbContext(options);
+        var jwt = new JwtTokenService(JwtPruebas.Clave, JwtPruebas.Issuer, JwtPruebas.Audience, JwtPruebas.ExpirationHours);
+        var servicio = new AuthService(db, hasher, jwt);
+
+        await Assert.ThrowsAsync<UnauthorizedException>(() => servicio.LoginAsync(Peticion("NOEXISTE-1")));
+
+        Assert.Equal(1, hasher.Verificaciones);
+        Assert.StartsWith("$2", hasher.UltimoHash);
+        Assert.Contains("$12$", hasher.UltimoHash);
+    }
+
+    private sealed class ContadorHasher : PeajeSys.Core.Interfaces.IPasswordHasher
+    {
+        public int Verificaciones { get; private set; }
+        public string? UltimoHash { get; private set; }
+        public string HashPassword(string password) => throw new NotSupportedException();
+        public bool VerifyPassword(string password, string hash)
+        {
+            Verificaciones++;
+            UltimoHash = hash;
+            return false;
+        }
     }
 
     [Fact]
