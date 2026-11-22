@@ -16,15 +16,16 @@ using PeajeSys.Core.Security;
 using PeajeSys.Data;
 using PeajeSys.Tests.Api;
 using PeajeSys.Tests.Auth;
+using PeajeSys.Tests.Turnos;
 using Xunit;
 
 namespace PeajeSys.Tests.Supervisor;
 
-public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiFactory>
+public class FiltrosTurnosYAuditoriaTests : IClassFixture<PeajeSysApiMemoriaFactory>
 {
     private readonly HttpClient _clienteHttp;
 
-    public FiltrosTurnosYAuditoriaTests(PeajeSysApiFactory fabrica)
+    public FiltrosTurnosYAuditoriaTests(PeajeSysApiMemoriaFactory fabrica)
     {
         _clienteHttp = fabrica.CreateClient();
     }
