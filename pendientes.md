@@ -1,6 +1,6 @@
 # Pendientes: PeajeSys (Avance 3, corte 3 - Entrega Final)
 
-Actualizado el 2026-11-21 con el estado real del proyecto (secciones 1 a 3: histórico de la revisión del 2026-11-20, commits `dac755e` de Base de Datos y `35afb5c` de Web API .NET; las cifras de pruebas de esas secciones están superadas, los totales actuales están en la sección 4).
+Actualizado el 2026-11-22: todo está integrado en `develop` (PR #1 y #2), con CI en GitHub Actions para Windows y Linux, y `develop` está protegida. **Lo siguiente son las pruebas manuales del equipo (sección 5).** Estado anterior, del 2026-11-21 (secciones 1 a 3: histórico de la revisión del 2026-11-20, commits `dac755e` de Base de Datos y `35afb5c` de Web API .NET; las cifras de pruebas de esas secciones están superadas, los totales actuales están en la sección 4).
 
 ---
 
@@ -95,10 +95,18 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
   - [x] Políticas por rol, propiedad del turno (`403 TURNO_AJENO`) y sobre de error estándar.
 - [x] **Integración de punta a punta**: frontend, API y PostgreSQL funcionan juntos con los 3 roles (login a través del proxy de Vite, cobro, turnos, supervisión y administración).
 - [x] **Ejecución desde el repo** (clonar y correr): `docker-compose.yml` con PostgreSQL 16 que carga el script maestro, comandos de la raíz (`pnpm install`, `pnpm db`, `pnpm dev`, `pnpm dev:mocks`, `pnpm test`), `.env.development` y `.env.mocks` versionados, y README con "Inicio rápido" para PowerShell y bash.
-- [x] **Totales de pruebas** (medidos el 2026-11-21 en un clon limpio de la rama de documentación):
-  - Backend (`dotnet test`): **405** pruebas, 0 fallos.
-  - Frontend (Vitest): **465** pruebas en 44 archivos, 0 fallos.
-  - E2E (Playwright, modo mocks): **70** pruebas, 0 fallos.
+- [x] **Correcciones del code-review** de la PR #1:
+  - cobro atómico y seguro (turno ajeno, tarifa validada, doble gasto, ticket);
+  - login sin enumeración de cuentas y acceso revocado al desactivar o degradar a un operador;
+  - tarifas con fechas cruzadas;
+  - casetas no operativas;
+  - índices únicos parciales de turnos abiertos;
+  - monitoreo sin `catch` silenciosos.
+- [x] **CI en GitHub Actions** (`.github/workflows/ci.yml`), con 6 jobs: backend y frontend en Ubuntu y Windows, backend con PostgreSQL 16 (maestro, matriz y concurrencia) y E2E. `develop` está protegida: se fusiona solo por PR y con el CI en verde.
+- [x] **Totales de pruebas** (CI del 2026-11-22 sobre `develop`):
+  - Backend (`dotnet test`): **449** pruebas, incluidas las de concurrencia contra PostgreSQL.
+  - Frontend (Vitest): **465** pruebas.
+  - E2E (Playwright, modo mocks): **70** pruebas.
 - [x] Documentación de limitaciones: [docs/limitaciones-conocidas.md](docs/limitaciones-conocidas.md).
 
 ### Pendientes abiertos
@@ -107,6 +115,21 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 - [ ] Preparar la sustentación final:
   - Revisar las diapositivas basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.
   - Demostración en vivo de los 3 roles en el frontend y de la ejecución de los triggers y funciones en PostgreSQL.
-- [ ] Ejecutar la [checklist de verificación en Windows](docs/verificacion-windows.md) (P7): cubierto en gran parte por el CI en windows-latest; la checklist manual sigue siendo útil para Docker y `capturar`.
 - [ ] Decidir sobre las decisiones a revisar de [limitaciones conocidas](docs/limitaciones-conocidas.md) (en especial, si `GET /api/tarifas` debe exigir autenticación, y la auditoría de los exentos con `postgres`).
 - [ ] Opcional: un commit de formato con Prettier para los archivos antiguos del frontend que hoy no pasan `pnpm format`.
+
+---
+
+## 🧪 5. Pruebas manuales del equipo (antes de la sustentación)
+
+La guía completa, con los pasos y el resultado esperado de cada prueba, está en **[docs/pruebas-manuales.md](docs/pruebas-manuales.md)**. Las pruebas se hacen con la base de datos real (`pnpm db` y `pnpm dev`). Antes de cada bloque, ejecuta `pnpm db:reset`.
+
+**Cómo reportar:** abre un issue en GitHub con la plantilla **"Prueba manual"**, indicando el número de la prueba, una captura y tu sistema. Cuando termines un bloque, marca aquí tu casilla.
+
+- [ ] **Alex** (`REC-001`): bloque 1, Recaudador (R1 a R16), y bloque 4, Seguridad (X1 a X7).
+- [ ] **Camilo** (`REC-002`): bloque 1, Recaudador, con atención especial a R16 (móvil, ~390 px); bloque 4, Seguridad; y revisión de textos, ortografía y tema claro y oscuro.
+- [ ] **Samuel** (`SUP-001`): bloque 2, Supervisor (S1 a S9), y bloque 4, Seguridad. Debe comprobar que los totales cuadran con lo cobrado en el bloque 1.
+- [ ] **Manuel** (`ADM-001`): bloque 3, Administrador (A1 a A10); bloque 4, Seguridad; coordinar la prueba X5 (dos personas abriendo turno a la vez) y revisar los issues.
+- [ ] **Quien use Windows**: ejecutar la [checklist de verificación en Windows](docs/verificacion-windows.md). El CI ya cubre la compilación y las pruebas; la checklist comprueba Docker Desktop, `pnpm dev` en el navegador y `pnpm capturar`.
+- [ ] **Sesión conjunta**: los bloques 1 y 2 a la misma hora. Los recaudadores cobran y anulan, y el supervisor revisa en vivo el arqueo, el recaudo y la auditoría.
+- [ ] Corregir los issues que salgan, cada uno en su rama con PR hacia `develop`, y repetir las pruebas afectadas.
