@@ -36,6 +36,8 @@ public class CierreTurnoFormaTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         using var db = new PeajeSysDbContext(options);
+        db.Casetas.Add(new Caseta { IdCaseta = 1, IdEstacion = 1, Estado = "OPERATIVA" });
+        await db.SaveChangesAsync();
         var servicio = new TurnoService(db);
 
         var abierto = await servicio.AbrirTurnoAsync(new AbrirTurnoRequestDto { IdCaseta = 1, IdOperador = 1, FondoInicialCaja = 5000, Diurno = true }, Actor);

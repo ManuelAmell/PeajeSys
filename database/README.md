@@ -87,7 +87,7 @@ Si se desea ejecutar componente por componente en orden de dependencias referenc
 2. **`02_SQL/02_DML_Datos_PeajeSys.sql`**  
    Carga los datos iniciales de prueba (más de 10 registros útiles por tabla principal) y ejecuta casos transaccionales DML con `COMMIT` y `ROLLBACK`.
 3. **`02_SQL/04_Objetos_PeajeSys.sql`**  
-   Instala las vistas de negocio (`vw_resumen_diario_estacion`, `vw_estado_cuentas_telepeaje`), la secuencia (`seq_numero_ticket`) y el índice B-Tree compuesto (`idx_transaccion_fecha_turno`).
+   Instala las vistas de negocio (`vw_resumen_diario_estacion`, `vw_estado_cuentas_telepeaje`), la secuencia (`seq_numero_ticket`), el índice B-Tree compuesto (`idx_transaccion_fecha_turno`) y los índices únicos parciales de control de turnos abiertos (`uq_turno_caseta_abierto` y `uq_turno_operador_abierto`).
 4. **`03_PLSQL/01_Funciones_PeajeSys.sql`**  
    Compila las funciones almacenadas de liquidación tarifaria, validación RFID y cálculo de descuadres.
 5. **`03_PLSQL/03_Triggers_PeajeSys.sql`**  

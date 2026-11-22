@@ -29,6 +29,8 @@ public class TurnoServicePermisosTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
         var db = new PeajeSysDbContext(options);
+        db.Casetas.Add(new Caseta { IdCaseta = 1, IdEstacion = 1, Estado = "OPERATIVA" });
+        db.Casetas.Add(new Caseta { IdCaseta = 2, IdEstacion = 1, Estado = "OPERATIVA" });
         db.Turnos.Add(new Turno { IdTurno = TurnoDeRec1, IdCaseta = 1, IdOperador = 1, FondoInicialCaja = 1000, Estado = "ABIERTO" });
         db.SaveChanges();
         return (new TurnoService(db), db);

@@ -335,7 +335,7 @@ BEGIN
 
     -- Crear turno temporal
     INSERT INTO TURNO (id_caseta, id_operador, fecha, diurno, fondo_inicial_caja, estado)
-    VALUES (2, 6, CURRENT_DATE, TRUE, 50000.00, 'ABIERTO')
+    VALUES (4, 6, CURRENT_DATE, TRUE, 50000.00, 'ABIERTO')
     RETURNING id_turno INTO v_id_turno;
 
     -- Transacción en efectivo por $22.000 COP

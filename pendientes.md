@@ -103,7 +103,7 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 
 ### Pendientes abiertos
 
-- [ ] Regenerar `Diccionario_Datos_PeajeSys.pdf` (en `database/01_Modelado` y `docs/entregas`) con la columna `OPERADOR.password_hash` y el rol `ADMINISTRADOR`.
+- [ ] Regenerar `Diccionario_Datos_PeajeSys.pdf` (en `database/01_Modelado` y `docs/entregas`) con la columna `OPERADOR.password_hash`, el rol `ADMINISTRADOR` y los índices únicos parciales de turnos abiertos (`uq_turno_caseta_abierto` y `uq_turno_operador_abierto`).
 - [ ] Preparar la sustentación final:
   - Revisar las diapositivas basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.
   - Demostración en vivo de los 3 roles en el frontend y de la ejecución de los triggers y funciones en PostgreSQL.
