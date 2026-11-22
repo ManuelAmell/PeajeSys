@@ -107,6 +107,6 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 - [ ] Preparar la sustentación final:
   - Revisar las diapositivas basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.
   - Demostración en vivo de los 3 roles en el frontend y de la ejecución de los triggers y funciones en PostgreSQL.
-- [ ] Ejecutar la [checklist de verificación en Windows](docs/verificacion-windows.md) (P7) en una máquina Windows y anotar el resultado.
+- [ ] Ejecutar la [checklist de verificación en Windows](docs/verificacion-windows.md) (P7): cubierto en gran parte por el CI en windows-latest; la checklist manual sigue siendo útil para Docker y `capturar`.
 - [ ] Decidir sobre las decisiones a revisar de [limitaciones conocidas](docs/limitaciones-conocidas.md) (en especial, si `GET /api/tarifas` debe exigir autenticación, y la auditoría de los exentos con `postgres`).
 - [ ] Opcional: un commit de formato con Prettier para los archivos antiguos del frontend que hoy no pasan `pnpm format`.
