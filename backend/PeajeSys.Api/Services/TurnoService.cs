@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Enums;
@@ -45,6 +46,19 @@ public class TurnoService : ITurnoService
             throw new AppException("OPERADOR_REQUERIDO", "El identificador de operador es invalido.", 400);
         }
 
+        // Regla: caseta existente y operativa
+        var caseta = await _context.Casetas.FindAsync(request.IdCaseta);
+        if (caseta == null)
+        {
+            throw new NotFoundException("CASETA_NO_ENCONTRADA", $"No existe una caseta con id {request.IdCaseta}.");
+        }
+
+        if (!string.Equals(caseta.Estado, "OPERATIVA", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ConflictException("CASETA_NO_OPERATIVA",
+                $"La caseta {request.IdCaseta} se encuentra en estado '{caseta.Estado}' y no permite apertura de turnos.");
+        }
+
         // Regla: caseta sin turno ABIERTO
         bool casetaOcupada = await _context.Turnos
             .AnyAsync(t => t.IdCaseta == request.IdCaseta && t.Estado == "ABIERTO");
@@ -74,7 +88,34 @@ public class TurnoService : ITurnoService
         };
 
         _context.Turnos.Add(turno);
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.GetBaseException() is PostgresException pgEx && pgEx.SqlState == "23505")
+        {
+            if (pgEx.ConstraintName == "uq_turno_caseta_abierto")
+            {
+                throw new ConflictException("CASETA_OCUPADA", "La caseta ya tiene un turno ABIERTO.");
+            }
+            if (pgEx.ConstraintName == "uq_turno_operador_abierto")
+            {
+                throw new ConflictException("OPERADOR_CON_TURNO_ACTIVO", "El operador ya tiene un turno ABIERTO en el sistema.");
+            }
+            throw;
+        }
+        catch (PostgresException pgEx) when (pgEx.SqlState == "23505")
+        {
+            if (pgEx.ConstraintName == "uq_turno_caseta_abierto")
+            {
+                throw new ConflictException("CASETA_OCUPADA", "La caseta ya tiene un turno ABIERTO.");
+            }
+            if (pgEx.ConstraintName == "uq_turno_operador_abierto")
+            {
+                throw new ConflictException("OPERADOR_CON_TURNO_ACTIVO", "El operador ya tiene un turno ABIERTO en el sistema.");
+            }
+            throw;
+        }
 
         return new AbrirTurnoResponseDto
         {
