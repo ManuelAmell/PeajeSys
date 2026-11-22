@@ -12,6 +12,7 @@
 <br/><br/>
 
 <!-- ═══════════════════ BADGES BAR ═══════════════════ -->
+[![CI](https://github.com/ManuelAmell/PeajeSys/actions/workflows/ci.yml/badge.svg)](https://github.com/ManuelAmell/PeajeSys/actions/workflows/ci.yml)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white)](https://learn.microsoft.com/dotnet/csharp/)
 [![.NET](https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
@@ -95,7 +96,7 @@
 
 ## ⚡ Inicio rápido
 
-Pensado para clonar y ejecutar en **Windows (PowerShell)** y **Linux/macOS (bash)** sin crear archivos de configuración.
+Pensado para clonar y ejecutar en **Windows (PowerShell)** y **Linux/macOS (bash)** sin crear archivos de configuración. La integración continua en GitHub Actions ejecuta las mismas pruebas y compilación en Windows (`windows-latest`) y en Linux (`ubuntu-latest`).
 
 ### Requisitos
 
