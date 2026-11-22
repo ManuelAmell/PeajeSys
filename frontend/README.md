@@ -5,15 +5,18 @@ Desarrollado en React 18, Vite, TypeScript estricto, Tailwind CSS y componentes 
 
 ## 0. Arranque rápido
 
+Requisitos: Node 20 o superior y `corepack enable` (pnpm 10.33.2). La guía completa, con la base de datos y la solución de problemas, está en el [README raíz](../README.md#-inicio-r%C3%A1pido).
+
 Desde la **raíz** del repositorio, igual en Windows (cmd/PowerShell) y Linux, sin crear ningún `.env`:
 
 ```bash
 pnpm install
+pnpm db           # PostgreSQL en Docker; esperar a "healthy" (docker compose ps)
 pnpm dev          # API (.NET, 5080) + frontend (Vite, 5180) conectados
 pnpm dev:mocks    # solo el frontend con datos simulados (MSW), sin backend
 ```
 
-- `pnpm dev` usa `frontend/.env.development` (`VITE_USAR_MOCKS=false`): el frontend llama a `/api` y Vite lo reenvía a la API real mediante un proxy. Necesita PostgreSQL para los datos; sin BD, la API responde pero las consultas fallan.
+- `pnpm dev` usa `frontend/.env.development` (`VITE_USAR_MOCKS=false`): el frontend llama a `/api` y Vite lo reenvía a la API real mediante un proxy. Necesita la base de datos (`pnpm db`); sin ella, la API responde pero las consultas fallan.
 - `pnpm dev:mocks` usa `frontend/.env.mocks` (`VITE_USAR_MOCKS=true`) y no necesita backend ni BD.
 - Ya no hace falta un `.env`. Si quieres sobrescribir algo, crea `frontend/.env.local` (no se versiona); `frontend/.env.example` muestra las variables.
 - `VITE_API_PROXY_TARGET` cambia el destino del proxy (por defecto `http://localhost:5080`).
@@ -23,7 +26,9 @@ pnpm dev:mocks    # solo el frontend con datos simulados (MSW), sin backend
 Todos los comandos se ejecutan dentro del directorio `frontend/`:
 
 ```bash
-# Desarrollo local contra la API real (puerto 5180 con --strictPort)
+# Desarrollo local contra la API real (puerto 5180 con --strictPort).
+# Necesita la API en el 5080: lo más simple es `pnpm dev` desde la raíz,
+# que arranca API y web juntas.
 pnpm dev
 
 # Desarrollo local solo con mocks (sin backend)
@@ -57,8 +62,10 @@ pnpm test
 pnpm test:cov
 
 # Pruebas de extremo a extremo (E2E) con Playwright
-# Compila solo en modo mocks (`pnpm build:mocks`), no depende de ningún .env.
-# Si no hay Chromium del sistema (/usr/bin/chromium o PLAYWRIGHT_CHROMIUM_PATH):
+# Compila solo en modo mocks (`pnpm build:mocks`), no depende de ningún .env
+# ni del backend. 70 pruebas.
+# Si no hay Chromium del sistema (/usr/bin/chromium o PLAYWRIGHT_CHROMIUM_PATH),
+# instálalo una vez (Windows y Linux):
 #   pnpm exec playwright install chromium
 pnpm e2e
 
@@ -66,9 +73,29 @@ pnpm e2e
 pnpm capturar -- --ruta <ruta> --rol <rol> --espera <selector> --salida <carpeta>
 ```
 
-## 2. Regla de oro: Candado común (`flock`) y entorno
+## 2. Ejecutar tareas pesadas
 
-En esta máquina (memoria RAM limitada de ~7 GB con ~1,5 GB libres):
+**Para todos** (Windows, Linux, macOS): ejecuta la tarea en primer plano, una a la vez:
+
+```bash
+pnpm <tarea>      # install, test:cov, build, e2e, capturar...
+```
+
+Antes de arrancar un servidor comprueba que el puerto está libre, y al terminar que quedó libre:
+
+```bash
+# Linux / macOS
+ss -ltnp | grep <puerto>
+```
+
+```powershell
+# Windows (PowerShell o cmd)
+netstat -ano | findstr :<puerto>
+```
+
+### Solo para la máquina Linux del orquestador
+
+Esta sección aplica únicamente a la máquina Linux con poca RAM (~7 GB, ~1,5 GB libres) compartida entre varios agentes de trabajo. Usa `flock`, `nice`, `free` y `ss`, que no existen en Windows. Nadie más necesita seguirla.
 
 1. **Verificar memoria antes de tareas pesadas**:
 
@@ -84,13 +111,12 @@ En esta máquina (memoria RAM limitada de ~7 GB con ~1,5 GB libres):
    flock /tmp/peajesys-pesado.lock nice -n 10 pnpm <tarea>
    ```
 
-   Aplica obligatoriamente a: `pnpm install`, `pnpm test:cov`, `pnpm build`, `pnpm e2e` y `pnpm capturar`.
+   Aplica a: `pnpm install`, `pnpm test:cov`, `pnpm build`, `pnpm e2e` y `pnpm capturar`.
    **Nunca** lanzar instalaciones o builds en segundo plano ni en paralelo.
 
-3. **Límites de paralelismo para control de RAM**:
-   Dado que este entorno cuenta con ~6,9 GB de RAM compartidos entre múltiples agentes de trabajo, el paralelismo está estrictamente limitado en las herramientas de prueba:
-   - **Vitest (`vitest.config.ts`)**: Se utiliza el pool `'forks'` limitado a un máximo de 2 procesos (`maxWorkers: 2`, `minWorkers: 1`, `poolOptions.forks: { maxForks: 2, minForks: 1 }`). Esto previene el sobrecosto de memoria (evitando abrir ~10 forks simultáneos de ~700 MB). Aplica a `pnpm test` y `pnpm test:cov`.
-   - **Playwright (`playwright.config.ts`)**: Configurado con `workers: 1` y `fullyParallel: false` para ejecutar las pruebas E2E secuencialmente en un único proceso Chromium controlado. Aplica a `pnpm e2e`.
+3. **Límites de paralelismo para control de RAM** (ya están en la configuración y no estorban en otras máquinas):
+   - **Vitest (`vitest.config.ts`)**: pool `'forks'` limitado a un máximo de 2 procesos. Aplica a `pnpm test` y `pnpm test:cov`.
+   - **Playwright (`playwright.config.ts`)**: `workers: 1` y `fullyParallel: false` (un único Chromium, pruebas secuenciales). Aplica a `pnpm e2e`.
 
 ## 3. Puertos asignados por bloque
 
@@ -108,11 +134,7 @@ Cada bloque tiene un puerto único asignado para evitar colisiones:
 | **B6**          | Pruebas E2E completas                  | **5187** |
 | **Integración** | Fusión en develop                      | **5188** |
 
-Siempre usar `--strictPort` en `vite dev` o `vite preview`. Al terminar cualquier servidor, verificar que el puerto quedó libre:
-
-```bash
-ss -ltnp | grep <puerto>
-```
+Siempre usar `--strictPort` en `vite dev` o `vite preview`. Al terminar cualquier servidor, verificar que el puerto quedó libre (`ss -ltnp | grep <puerto>` en Linux, `netstat -ano | findstr :<puerto>` en Windows). Esta tabla es histórica: el desarrollo normal usa siempre el 5180.
 
 ## 4. Estructura de carpetas
 
@@ -192,12 +214,10 @@ test('renderiza con usuario autenticado', () => {
 Cada bloque debe generar capturas en claro y oscuro, a 1280 px y a 390 px:
 
 ```bash
-flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
-  --ruta /operador \
-  --rol RECAUDADOR \
-  --espera h1 \
-  --salida ./capturas/B3/
+pnpm capturar -- --ruta /operador --rol RECAUDADOR --espera h1 --salida ./capturas/B3/
 ```
+
+(En la máquina Linux del orquestador se antepone `flock /tmp/peajesys-pesado.lock nice -n 10`; los `\` de fin de línea de los ejemplos largos son solo de bash: en PowerShell escríbelos en una sola línea o usa el acento grave `` ` ``.)
 
 La carpeta `capturas/` no se versiona (esta en `.gitignore`).
 
@@ -211,7 +231,7 @@ Opciones de interacción (para capturar estados que requieren acciones, por ejem
 Ejemplo: rellenar el formulario del login con un usuario INACTIVO de la semilla, enviar y esperar el mensaje de error:
 
 ```bash
-flock /tmp/peajesys-pesado.lock nice -n 10 pnpm capturar -- \
+pnpm capturar -- \
   --ruta /login \
   --rol ninguno \
   --espera 'h1:has-text("Inicia sesión")' \
