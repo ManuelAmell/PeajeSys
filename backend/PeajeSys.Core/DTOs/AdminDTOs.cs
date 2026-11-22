@@ -154,6 +154,47 @@ public class CrearOperadorRequestDto
     public string ObtenerPassword() => Password ?? Clave ?? string.Empty;
 }
 
+/// <summary>
+/// Actualizacion parcial de un operador: solo se validan y aplican los campos presentes (no nulos).
+/// La contrasena se hashea al guardarla y nunca se devuelve.
+/// </summary>
+public class ActualizarOperadorRequestDto
+{
+    [JsonPropertyName("numero_documento")]
+    public string? NumeroDocumento { get; set; }
+
+    [JsonPropertyName("documento_identidad")]
+    public string? DocumentoIdentidad { get; set; }
+
+    [JsonPropertyName("nombres")]
+    public string? Nombres { get; set; }
+
+    [JsonPropertyName("apellidos")]
+    public string? Apellidos { get; set; }
+
+    [JsonPropertyName("codigo_empleado")]
+    public string? CodigoEmpleado { get; set; }
+
+    [JsonPropertyName("codigo")]
+    public string? Codigo { get; set; }
+
+    [JsonPropertyName("rol")]
+    public string? Rol { get; set; }
+
+    [JsonPropertyName("estado")]
+    public string? Estado { get; set; }
+
+    [JsonPropertyName("password")]
+    public string? Password { get; set; }
+
+    [JsonPropertyName("clave")]
+    public string? Clave { get; set; }
+
+    public string? ObtenerDocumento() => NumeroDocumento ?? DocumentoIdentidad;
+    public string? ObtenerCodigo() => CodigoEmpleado ?? Codigo;
+    public string? ObtenerPassword() => Password ?? Clave;
+}
+
 public class ActualizarEstadoRequestDto
 {
     [JsonPropertyName("estado")]
