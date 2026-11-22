@@ -38,7 +38,7 @@ export function MarcoDialogoOperador({
     <Dialog open onOpenChange={(abierta) => !abierta && onCerrar()}>
       <DialogContent
         aria-labelledby={idTitulo}
-        className="max-h-[92vh] max-w-[520px] gap-4 overflow-y-auto rounded-[10px] border-[3px] border-texto p-7"
+        className="max-h-[92vh] max-w-[640px] gap-4 overflow-y-auto rounded-[10px] border-[3px] border-texto p-7"
         onCloseAutoFocus={alCerrarAutoFoco}
       >
         <DialogTitle id={idTitulo} className="text-[26px] font-bold">

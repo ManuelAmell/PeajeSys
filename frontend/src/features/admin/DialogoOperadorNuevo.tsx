@@ -82,40 +82,44 @@ export function DialogoOperadorNuevo({
       onCerrar={onCerrar}
       onSubmit={handleSubmit(enviar)}
     >
-      <CampoTexto
-        id="op-documento"
-        etiqueta="Documento"
-        inputMode="numeric"
-        autoComplete="off"
-        maxLength={20}
-        error={errors.documento?.message}
-        {...register('documento')}
-      />
-      <CampoTexto
-        id="op-nombres"
-        etiqueta="Nombres"
-        autoComplete="off"
-        maxLength={100}
-        error={errors.nombres?.message}
-        {...register('nombres')}
-      />
-      <CampoTexto
-        id="op-apellidos"
-        etiqueta="Apellidos"
-        autoComplete="off"
-        maxLength={100}
-        error={errors.apellidos?.message}
-        {...register('apellidos')}
-      />
-      <CampoTexto
-        id="op-codigo"
-        etiqueta="Código de empleado"
-        autoComplete="off"
-        maxLength={20}
-        placeholder="REC-010"
-        error={errors.codigo?.message}
-        {...register('codigo')}
-      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CampoTexto
+          id="op-documento"
+          etiqueta="Documento"
+          inputMode="numeric"
+          autoComplete="off"
+          maxLength={20}
+          error={errors.documento?.message}
+          {...register('documento')}
+        />
+        <CampoTexto
+          id="op-codigo"
+          etiqueta="Código de empleado"
+          autoComplete="off"
+          maxLength={20}
+          placeholder="REC-010"
+          error={errors.codigo?.message}
+          {...register('codigo')}
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CampoTexto
+          id="op-nombres"
+          etiqueta="Nombres"
+          autoComplete="off"
+          maxLength={100}
+          error={errors.nombres?.message}
+          {...register('nombres')}
+        />
+        <CampoTexto
+          id="op-apellidos"
+          etiqueta="Apellidos"
+          autoComplete="off"
+          maxLength={100}
+          error={errors.apellidos?.message}
+          {...register('apellidos')}
+        />
+      </div>
       <CampoSelect
         id="op-rol"
         etiqueta="Rol"
@@ -128,22 +132,24 @@ export function DialogoOperadorNuevo({
           </option>
         ))}
       </CampoSelect>
-      <CampoTexto
-        id="op-password"
-        etiqueta="Contraseña"
-        type={clave.tipo}
-        autoComplete="new-password"
-        error={errors.password?.message}
-        {...register('password')}
-      />
-      <CampoTexto
-        id="op-confirmacion"
-        etiqueta="Confirmar contraseña"
-        type={clave.tipo}
-        autoComplete="new-password"
-        error={errors.confirmacion?.message}
-        {...register('confirmacion')}
-      />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <CampoTexto
+          id="op-password"
+          etiqueta="Contraseña"
+          type={clave.tipo}
+          autoComplete="new-password"
+          error={errors.password?.message}
+          {...register('password')}
+        />
+        <CampoTexto
+          id="op-confirmacion"
+          etiqueta="Confirmar contraseña"
+          type={clave.tipo}
+          autoComplete="new-password"
+          error={errors.confirmacion?.message}
+          {...register('confirmacion')}
+        />
+      </div>
       <BotonMostrarClave visible={clave.visible} onAlternar={clave.alternar} />
     </MarcoDialogoOperador>
   );
