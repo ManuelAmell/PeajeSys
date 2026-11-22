@@ -29,6 +29,7 @@
 <br>
 [📌 Descripción](#-descripci%C3%B3n-del-proyecto) &nbsp;·&nbsp;
 [🚀 Características](#-caracter%C3%ADsticas-principales) &nbsp;·&nbsp;
+[⚡ Inicio rápido](#-inicio-r%C3%A1pido) &nbsp;·&nbsp;
 [🛠️ Stack Tecnológico](#%EF%B8%8F-stack-tecnol%C3%B3gico) &nbsp;·&nbsp;
 [🏛️ Arquitectura & Modelo](#%EF%B8%8F-arquitectura-del-sistema-y-base-de-datos) &nbsp;·&nbsp;
 [👥 Equipo y Roles](#-distribuci%C3%B3n-del-equipo-y-responsabilidades) &nbsp;·&nbsp;
@@ -89,6 +90,123 @@
     </td>
   </tr>
 </table>
+
+---
+
+## ⚡ Inicio rápido
+
+Pensado para clonar y ejecutar en **Windows (PowerShell)** y **Linux/macOS (bash)** sin crear archivos de configuración.
+
+### Requisitos
+
+- [Git](https://git-scm.com/).
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (Windows/macOS) o Docker Engine con el plugin `docker compose` (Linux). Se usa solo para la base de datos; hay una alternativa sin Docker más abajo.
+- [.NET SDK](https://dotnet.microsoft.com/download) 8 o superior. El proyecto apunta a `net8.0` y se compila con cualquier SDK 8 o superior (`RollForward=Major`).
+- [Node.js](https://nodejs.org/) 20 o superior y pnpm 10.33.2, que se activa con `corepack enable` (en Windows, desde una terminal con permisos de administrador si falla).
+
+### Pasos
+
+**bash (Linux / macOS / Git Bash)**
+
+```bash
+git clone https://github.com/ManuelAmell/PeajeSys.git
+cd PeajeSys
+corepack enable
+pnpm install        # instala la raíz y, con postinstall, también el frontend
+pnpm db             # levanta PostgreSQL 16 en Docker (puerto 5432)
+docker compose ps   # repetir hasta que el servicio db diga "healthy" (la primera vez tarda)
+pnpm dev            # API en 5080 + web en 5180
+```
+
+**PowerShell (Windows)**
+
+```powershell
+git clone https://github.com/ManuelAmell/PeajeSys.git
+cd PeajeSys
+corepack enable
+pnpm install        # instala la raíz y, con postinstall, también el frontend
+pnpm db             # levanta PostgreSQL 16 en Docker (puerto 5432)
+docker compose ps   # repetir hasta que el servicio db diga "healthy" (la primera vez tarda)
+pnpm dev            # API en 5080 + web en 5180
+```
+
+En PowerShell 5 no existe `&&`: ejecuta cada comando en su propia línea (o sepáralos con `;`).
+
+Cuando `docker compose ps` muestre `healthy`, abre <http://localhost:5180> e inicia sesión con un [usuario de prueba](#-usuarios-de-prueba), por ejemplo `SUP-001` / `Samuel2026*`. La API tiene Swagger en <http://localhost:5080/swagger> y health check en <http://localhost:5080/health>.
+
+Para detener todo: `Ctrl+C` en la terminal de `pnpm dev` y `docker compose stop` (o `docker compose down` para quitar el contenedor; los datos se conservan en un volumen hasta `docker compose down -v`).
+
+### Sin Docker (PostgreSQL local)
+
+Instala PostgreSQL 14 o superior, crea la base `peajesys_db` y carga `database/00_Master_PeajeSys.sql` con `psql`: los comandos exactos, para bash y PowerShell, están en [database/README.md](database/README.md). La API espera `localhost:5432`, base `peajesys_db`, usuario y contraseña `postgres`/`postgres`; si los tuyos difieren, define `ConnectionStrings__DefaultConnection` como se muestra en la solución de problemas. Después usa `pnpm dev` igual que arriba (no ejecutes `pnpm db`).
+
+### Modo sin backend
+
+Para ver la interfaz sin API ni base de datos (datos simulados con MSW):
+
+```bash
+pnpm install
+pnpm dev:mocks      # http://localhost:5180
+```
+
+En este modo el login acepta cualquier contraseña no vacía (ver [limitaciones conocidas](docs/limitaciones-conocidas.md)).
+
+### Otros comandos de la raíz
+
+| Comando | Qué hace |
+|---|---|
+| `pnpm dev` | API (5080) + web (5180) contra la base real |
+| `pnpm dev:mocks` | Solo la web con datos simulados |
+| `pnpm api` / `pnpm web` | Solo la API / solo la web |
+| `pnpm db` / `pnpm db:reset` | Levanta la base / la reinicia desde cero (borra los datos) |
+| `pnpm test` | Pruebas del backend (`dotnet test`) y del frontend (Vitest) |
+
+Las pruebas E2E se ejecutan desde `frontend/`: `pnpm e2e` (ver [frontend/README.md](frontend/README.md)). Para verificar el proyecto en un Windows limpio hay una [checklist](docs/verificacion-windows.md).
+
+### Solución de problemas
+
+**El puerto 5432 está ocupado** (otro PostgreSQL local o contenedor). Usa otro puerto para Docker y dile a la API cuál es:
+
+```bash
+# bash
+PEAJESYS_DB_PORT=5433 pnpm db
+export ConnectionStrings__DefaultConnection="Host=localhost;Port=5433;Database=peajesys_db;Username=postgres;Password=postgres"
+pnpm dev
+```
+
+```powershell
+# PowerShell (las variables valen solo para esa ventana)
+$env:PEAJESYS_DB_PORT = "5433"
+pnpm db
+$env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=5433;Database=peajesys_db;Username=postgres;Password=postgres"
+pnpm dev
+```
+
+Si ya creaste el contenedor con otro puerto, usa siempre el mismo valor de `PEAJESYS_DB_PORT` en los comandos `docker compose` (incluido `docker compose down -v`).
+
+**Los puertos 5080 o 5180 están ocupados.** Cierra el proceso que los usa. Averigua cuál es:
+
+```bash
+# bash
+ss -ltnp | grep -E ':(5080|5180)'
+```
+
+```powershell
+# PowerShell
+netstat -ano | findstr ":5080"
+netstat -ano | findstr ":5180"
+# el último número es el PID: Stop-Process -Id <PID>
+```
+
+El frontend usa `--strictPort`: si el 5180 está ocupado, falla en lugar de cambiar de puerto.
+
+**Reiniciar la base de datos desde cero** (borra los datos y vuelve a cargar el script maestro): `pnpm db:reset`. En PowerShell 5 también funciona, porque el `&&` lo ejecuta pnpm y no la shell. Después espera de nuevo a `healthy`. Si `docker compose ps` muestra `exited`, mira `docker compose logs db`.
+
+**Los E2E fallan por falta de Chromium.** Desde `frontend/`: `pnpm exec playwright install chromium` y repite `pnpm e2e`.
+
+**`dotnet` no encuentra el SDK** (`No .NET SDKs were found`, o `dotnet` no se reconoce). Instala el SDK 8 o superior (no basta el runtime), abre una terminal nueva y comprueba `dotnet --list-sdks`. Si hay varias versiones y una `global.json` ajena fuerza otra, ejecuta el comando desde la carpeta del repo.
+
+**La API arranca pero el login falla con error de conexión.** La base no está lista o no es la esperada: revisa `docker compose ps` y el puerto (ver el primer punto).
 
 ---
 
@@ -189,78 +307,39 @@ erDiagram
 
 ```text
 PeajeSys/
-├── 📁 .github/             # Plantillas de issues, workflows y configuración
-├── 📁 database/            # Scripts de Base de Datos PostgreSQL
-│   ├── 📁 ddl/             # Creación de tablas, llaves y restricciones
-│   ├── 📁 dml/             # Datos iniciales (categorías, tarifas, usuarios)
-│   ├── 📁 triggers/        # Triggers de auditoría y cálculo de saldos
-│   └── 📁 procedures/      # Procedimientos almacenados y funciones PL/pgSQL
-├── 📁 backend/             # Solución Web API en C# + .NET (Visual Studio)
-│   ├── 📁 PeajeSys.Api/    # Controladores, Middleware y Configuración
-│   ├── 📁 PeajeSys.Core/   # Entidades de dominio e interfaces
-│   └── 📁 PeajeSys.Data/   # DbContext, Repositorios y Mapeos
-├── 📁 frontend/            # Aplicación Web en TypeScript (VS Code)
-│   ├── 📁 src/             # Componentes, vistas, servicios y tipados
-│   └── 📁 public/          # Assets, iconos y estilos globales
-├── 📁 docs/                # Diagramas MER, diccionario de datos y especificaciones
-├── 📄 .gitignore           # Exclusiones de binarios, dependencias y credenciales
-└── 📄 README.md            # Documentación general del proyecto
+├── 📁 database/            # PostgreSQL: scripts SQL y PL/pgSQL (ver database/README.md)
+│   ├── 📄 00_Master_PeajeSys.sql  # Script maestro: reconstruye todo en limpio
+│   ├── 📁 01_Modelado/     # Diccionario de datos y esquema E-R
+│   ├── 📁 02_SQL/          # DDL, DML (datos), consultas y objetos (vistas, índice)
+│   └── 📁 03_PLSQL/        # Funciones, procedimientos, triggers, proceso con cursor y matriz de pruebas
+├── 📁 backend/             # Solución .NET (PeajeSys.sln, net8.0)
+│   ├── 📁 PeajeSys.Api/    # Controladores, middlewares, servicios y Program.cs
+│   ├── 📁 PeajeSys.Core/   # Entidades, DTOs, interfaces y excepciones de dominio
+│   ├── 📁 PeajeSys.Data/   # DbContext (EF Core + Npgsql), mapeos y repositorios
+│   ├── 📁 PeajeSys.Dominio/# Clases de dominio complementarias
+│   └── 📁 PeajeSys.Tests/  # Pruebas xUnit
+├── 📁 frontend/            # React + Vite + TypeScript (pnpm, MSW, Vitest, Playwright)
+│   ├── 📁 src/             # Features, componentes, API tipada y mocks
+│   ├── 📁 e2e/             # Pruebas E2E
+│   └── 📁 scripts/         # Herramienta de capturas
+├── 📁 docs/                # Arquitectura, contrato de la API, diseño, tareas y entregas
+├── 📄 docker-compose.yml   # PostgreSQL 16 de desarrollo (carga el script maestro)
+├── 📄 package.json         # Comandos de la raíz: pnpm dev, db, test...
+├── 📄 pendientes.md        # Estado y pendientes del proyecto
+└── 📄 README.md            # Este documento
 ```
 
 ---
 
-## ⚙️ Instalación y Ejecución Local
+## ⚙️ Ejecución por partes
 
-### 1️⃣ Prerrequisitos
-- [Git](https://git-scm.com/) (v2.30 o superior)
-- [PostgreSQL](https://www.postgresql.org/download/) (v15 o superior)
-- [.NET SDK](https://dotnet.microsoft.com/download) (v8.0 o superior)
-- [Node.js & npm](https://nodejs.org/) (v18 o superior)
-- IDEs: [Visual Studio Community 2022](https://visualstudio.microsoft.com/) / [Visual Studio Code](https://code.visualstudio.com/)
+La forma rápida está en [Inicio rápido](#-inicio-r%C3%A1pido). Si prefieres arrancar cada pieza por separado:
 
----
+1. **Base de datos**: `pnpm db` (Docker) o `psql` con un PostgreSQL local, según [database/README.md](database/README.md).
+2. **API** (.NET): `cd backend/PeajeSys.Api` y `dotnet run`. Arranca en Development, en `http://localhost:5080` (Swagger en `/swagger`, health en `/health`), sin configurar nada. Detalles, JWT y seguridad en [backend/README.md](backend/README.md).
+3. **Frontend**: desde la raíz `pnpm web` (o `pnpm --dir frontend dev`), en `http://localhost:5180`. Detalles en [frontend/README.md](frontend/README.md).
 
-### 2️⃣ Clonar el Repositorio
-```bash
-git clone https://github.com/ManuelAmell/PeajeSys.git
-cd PeajeSys
-```
-
----
-
-### 3️⃣ Configuración de la Base de Datos (PostgreSQL)
-1. Iniciar el servicio de PostgreSQL (vía `pgAdmin` o terminal `psql`).
-2. Crear la base de datos `peajesys_db`:
-   ```sql
-   CREATE DATABASE peajesys_db;
-   ```
-3. Ejecutar los scripts DDL y DML en orden:
-   ```bash
-   psql -U postgres -d peajesys_db -f database/ddl/01_init_schema.sql
-   psql -U postgres -d peajesys_db -f database/dml/02_initial_data.sql
-   psql -U postgres -d peajesys_db -f database/triggers/03_audit_triggers.sql
-   ```
-
----
-
-### 4️⃣ Ejecución del Backend (C# .NET)
-```bash
-cd backend/PeajeSys.Api
-dotnet restore
-dotnet build
-dotnet run
-```
-> La API estará disponible por defecto en `https://localhost:7001` (con documentación Swagger en `/swagger`).
-
----
-
-### 5️⃣ Ejecución del Frontend (TypeScript)
-```bash
-cd frontend
-npm install
-npm run dev
-```
-> La interfaz web estará disponible por defecto en `http://localhost:5173`.
+Documentación adicional: [limitaciones conocidas](docs/limitaciones-conocidas.md), [verificación en Windows](docs/verificacion-windows.md) y [pendientes](pendientes.md).
 
 ---
 

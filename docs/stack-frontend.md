@@ -1,6 +1,6 @@
 # Stack del frontend — PeajeSys
 
-Decidido el 2026-11-18. El backend en C#/.NET queda en espera hasta que llegue la especificación; mientras tanto el front trabaja contra una API simulada que respeta el esquema de `database/01_DDL_PeajeSys.sql`.
+Decidido el 2026-11-18. El backend en C#/.NET queda en espera hasta que llegue la especificación; mientras tanto el front trabaja contra una API simulada que respeta el esquema de `database/02_SQL/01_DDL_PeajeSys.sql`.
 
 ## Decisiones
 
@@ -10,7 +10,7 @@ Decidido el 2026-11-18. El backend en C#/.NET queda en espera hasta que llegue l
 | Framework | React + Vite | Lo que exporta Claude Design se lleva directo al código. |
 | Estilos y componentes | Tailwind CSS + shadcn/ui | Componentes accesibles que viven en el repo y se personalizan. |
 | Gestor de paquetes | pnpm | Más rápido y con menos disco; cada integrante lo instala una vez (`npm i -g pnpm` o `corepack enable`). |
-| Datos sin backend | API simulada tipada con MSW | Los tipos salen de las tablas del DDL y los datos de prueba de `02_DML_Datos_PeajeSys.sql`. Cuando exista el backend solo cambia la URL base. |
+| Datos sin backend | API simulada tipada con MSW | Los tipos salen de las tablas del DDL y los datos de prueba de `database/02_SQL/02_DML_Datos_PeajeSys.sql`. Cuando exista el backend solo cambia la URL base. |
 | Autenticación | Login simulado por rol | Usuarios de prueba (operadores del DML, un supervisor y un administrador); el rol decide el menú. Luego se conecta al auth del backend. |
 | Tema | Claro y oscuro (sigue al sistema, con botón para cambiar) | Pedido del equipo el 2026-11-18; paleta oscura con contraste AA y siluetas sobre placa clara. |
 | Dispositivo | Escritorio adaptable | Pensado para 1280 px o más, usable en tableta; la pantalla del operador usa botones grandes. |
