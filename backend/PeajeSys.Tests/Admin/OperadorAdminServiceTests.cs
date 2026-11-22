@@ -83,4 +83,55 @@ public class OperadorAdminServiceTests
             Assert.DoesNotContain("$2", json);
         }
     }
+
+    [Theory]
+    [InlineData("ADMIN")]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("GERENTE")]
+    public async Task Crear_ConRolInvalido_Lanza422RolInvalidoYNoGuarda(string rol)
+    {
+        var servicio = Crear(out var db);
+        using var _ = db;
+        var peticion = Peticion("Clave2026*");
+        peticion.Rol = rol;
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => servicio.CrearOperadorAsync(peticion));
+
+        Assert.Equal(422, ex.StatusCode);
+        Assert.Equal("ROL_INVALIDO", ex.Codigo);
+        Assert.Empty(db.Operadores);
+    }
+
+    [Fact]
+    public async Task Crear_ConEstadoInvalido_Lanza422EstadoInvalidoYNoGuarda()
+    {
+        var servicio = Crear(out var db);
+        using var _ = db;
+        var peticion = Peticion("Clave2026*");
+        peticion.Estado = "BORRADO";
+
+        var ex = await Assert.ThrowsAsync<AppException>(() => servicio.CrearOperadorAsync(peticion));
+
+        Assert.Equal(422, ex.StatusCode);
+        Assert.Equal("ESTADO_INVALIDO", ex.Codigo);
+        Assert.Empty(db.Operadores);
+    }
+
+    [Theory]
+    [InlineData("recaudador", "RECAUDADOR")]
+    [InlineData(" Supervisor ", "SUPERVISOR")]
+    [InlineData("ADMINISTRADOR", "ADMINISTRADOR")]
+    public async Task Crear_ConRolValido_LoNormalizaYGuarda(string entrada, string esperado)
+    {
+        var servicio = Crear(out var db);
+        using var _ = db;
+        var peticion = Peticion("Clave2026*");
+        peticion.Rol = entrada;
+
+        var dto = await servicio.CrearOperadorAsync(peticion);
+
+        Assert.Equal(esperado, dto.Rol);
+        Assert.Single(db.Operadores);
+    }
 }

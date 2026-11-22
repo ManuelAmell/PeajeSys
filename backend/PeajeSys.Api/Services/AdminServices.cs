@@ -347,6 +347,8 @@ public class OperadorAdminService : IOperadorAdminService
 
         string rol = (request.Rol ?? "RECAUDADOR").Trim().ToUpperInvariant();
         string estado = (request.Estado ?? "ACTIVO").Trim().ToUpperInvariant();
+        ValidarRol(rol);
+        ValidarEstado(estado);
         string password = request.ObtenerPassword();
         if (string.IsNullOrWhiteSpace(password))
         {
@@ -392,6 +394,22 @@ public class OperadorAdminService : IOperadorAdminService
         return MapearOperador(op);
     }
 
+    private static void ValidarRol(string rol)
+    {
+        if (rol != Roles.Recaudador && rol != Roles.Supervisor && rol != Roles.Administrador)
+        {
+            throw new AppException("ROL_INVALIDO", "El rol debe ser RECAUDADOR, SUPERVISOR o ADMINISTRADOR.", 422);
+        }
+    }
+
+    private static void ValidarEstado(string estado)
+    {
+        if (estado != "ACTIVO" && estado != "INACTIVO")
+        {
+            throw new AppException("ESTADO_INVALIDO", "El estado debe ser ACTIVO o INACTIVO.", 422);
+        }
+    }
+
     public async Task<OperadorAdminDto> ActualizarOperadorAsync(int id, ActualizarOperadorRequestDto request)
     {
         var op = await _context.Operadores.FindAsync(id);
@@ -414,15 +432,8 @@ public class OperadorAdminService : IOperadorAdminService
         ValidarTexto(documento, "numero_documento", 20);
         ValidarTexto(codigo, "codigo_empleado", 20);
 
-        if (rol != null && rol != Roles.Recaudador && rol != Roles.Supervisor && rol != Roles.Administrador)
-        {
-            throw new AppException("ROL_INVALIDO", "El rol debe ser RECAUDADOR, SUPERVISOR o ADMINISTRADOR.", 422);
-        }
-
-        if (estado != null && estado != "ACTIVO" && estado != "INACTIVO")
-        {
-            throw new AppException("ESTADO_INVALIDO", "El estado debe ser ACTIVO o INACTIVO.", 422);
-        }
+        if (rol != null) ValidarRol(rol);
+        if (estado != null) ValidarEstado(estado);
 
         if (password != null && string.IsNullOrWhiteSpace(password))
         {
