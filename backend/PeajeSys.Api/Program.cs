@@ -92,6 +92,7 @@ builder.Services.AddScoped<ICobroService, CobroService>();
 builder.Services.AddScoped<IArqueoService, ArqueoService>();
 builder.Services.AddScoped<IReporteRecaudoService, ReporteRecaudoService>();
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+builder.Services.AddScoped<IVistaCuentasTelepeaje, VistaCuentasTelepeajeEf>();
 builder.Services.AddScoped<ITelepeajeMonitoreoService, TelepeajeMonitoreoService>();
 
 // Servicios de Administracion, Tarifas y Personal (BK-05)

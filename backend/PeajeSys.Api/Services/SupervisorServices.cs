@@ -367,18 +367,67 @@ public class AuditoriaService : IAuditoriaService
 // 4. SERVICIO DE MONITOREO DE TELEPEAJE Y RECARGAS
 // ============================================================
 
+/// <summary>
+/// Implementacion de consulta directa a la vista de base de datos vw_estado_cuentas_telepeaje.
+/// No tiene caida a consultas directas ni silencia excepciones: si la vista falla, el error sube.
+/// </summary>
+public class VistaCuentasTelepeajeEf : IVistaCuentasTelepeaje
+{
+    private readonly PeajeSysDbContext _context;
+
+    public VistaCuentasTelepeajeEf(PeajeSysDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<IEnumerable<EstadoCuentaTelepeaje>> ConsultarAsync(
+        string? condicionSaldo,
+        string? estado,
+        string? q)
+    {
+        var queryVista = _context.EstadoCuentasTelepeaje.AsNoTracking().AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(condicionSaldo))
+        {
+            string condNorm = condicionSaldo.Trim().ToUpperInvariant();
+            // Normalizar busqueda sin tilde para que coincida con la condicion oficial de la vista ("SALDO CRÍTICO")
+            if (condNorm == "SALDO CRITICO") condNorm = "SALDO CRÍTICO";
+            queryVista = queryVista.Where(c => c.CondicionSaldo.ToUpper() == condNorm);
+        }
+
+        if (!string.IsNullOrWhiteSpace(estado))
+        {
+            string estNorm = estado.Trim().ToUpperInvariant();
+            queryVista = queryVista.Where(c => c.EstadoCuenta.ToUpper() == estNorm);
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            string qNorm = q.Trim().ToUpperInvariant();
+            queryVista = queryVista.Where(c => c.PlacaVehiculo.ToUpper().Contains(qNorm) || c.TagRfidSerial.ToUpper().Contains(qNorm));
+        }
+
+        return await queryVista.ToListAsync();
+    }
+}
+
 public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
 {
     private readonly PeajeSysDbContext _context;
     private readonly ILogger<TelepeajeMonitoreoService> _logger;
-
     private readonly IAjustesAtomicos _ajustes;
+    private readonly IVistaCuentasTelepeaje _vista;
 
-    public TelepeajeMonitoreoService(PeajeSysDbContext context, ILogger<TelepeajeMonitoreoService> logger, IAjustesAtomicos ajustes)
+    public TelepeajeMonitoreoService(
+        PeajeSysDbContext context,
+        ILogger<TelepeajeMonitoreoService> logger,
+        IAjustesAtomicos ajustes,
+        IVistaCuentasTelepeaje? vista = null)
     {
         _context = context;
         _ajustes = ajustes;
         _logger = logger;
+        _vista = vista ?? new VistaCuentasTelepeajeEf(context);
     }
 
     public async Task<IEnumerable<MonitoreoCuentaTelepeajeDto>> ListarCuentasMonitoreoAsync(
@@ -386,97 +435,21 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
         string? estado,
         string? q)
     {
-        // Intento 1: consultar la vista vw_estado_cuentas_telepeaje
-        try
+        // La vista de base de datos vw_estado_cuentas_telepeaje es la unica fuente de verdad.
+        // Si el filtro devuelve 0 registros, se retorna una coleccion vacia valida.
+        // Si la vista falla, la excepcion sube directamente (sin catch silencioso).
+        var listaVista = await _vista.ConsultarAsync(condicionSaldo, estado, q);
+
+        return listaVista.Select(v => new MonitoreoCuentaTelepeajeDto
         {
-            var queryVista = _context.EstadoCuentasTelepeaje.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(condicionSaldo))
-            {
-                string condNorm = condicionSaldo.Trim().ToUpperInvariant();
-                queryVista = queryVista.Where(c => c.CondicionSaldo.ToUpper() == condNorm);
-            }
-
-            if (!string.IsNullOrWhiteSpace(estado))
-            {
-                string estNorm = estado.Trim().ToUpperInvariant();
-                queryVista = queryVista.Where(c => c.EstadoCuenta.ToUpper() == estNorm);
-            }
-
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                string qNorm = q.Trim().ToUpperInvariant();
-                queryVista = queryVista.Where(c => c.PlacaVehiculo.ToUpper().Contains(qNorm) || c.TagRfidSerial.ToUpper().Contains(qNorm));
-            }
-
-            var listaVista = await queryVista.ToListAsync();
-
-            if (listaVista.Count > 0)
-            {
-                return listaVista.Select(v => new MonitoreoCuentaTelepeajeDto
-                {
-                    IdCuenta = v.IdCuenta,
-                    PlacaVehiculo = v.PlacaVehiculo,
-                    CategoriaVehiculo = v.CategoriaVehiculo,
-                    TagRfidSerial = v.TagRfidSerial,
-                    SaldoDisponible = v.SaldoDisponible,
-                    EstadoCuenta = v.EstadoCuenta,
-                    CondicionSaldo = v.CondicionSaldo
-                });
-            }
-        }
-        catch
-        {
-            // Fallback a consulta directa sobre CUENTA_TELEPEAJE
-        }
-
-        // Fallback: consulta directa con calculo de condicion de saldo
-        var query = _context.CuentasTelepeaje
-            .Include(c => c.Vehiculo)
-            .ThenInclude(v => v!.Categoria)
-            .AsQueryable();
-
-        if (!string.IsNullOrWhiteSpace(estado))
-        {
-            string estNorm = estado.Trim().ToUpperInvariant();
-            query = query.Where(c => c.EstadoCuenta.ToUpper() == estNorm);
-        }
-
-        if (!string.IsNullOrWhiteSpace(q))
-        {
-            string qNorm = q.Trim().ToUpperInvariant();
-            query = query.Where(c => c.PlacaVehiculo.ToUpper().Contains(qNorm) || c.TagRfidSerial.ToUpper().Contains(qNorm));
-        }
-
-        var cuentas = await query.ToListAsync();
-
-        var resultado = cuentas.Select(c =>
-        {
-            string condicion = c.SaldoDisponible == 0
-                ? "SIN SALDO"
-                : c.SaldoDisponible < 20000
-                    ? "SALDO CRITICO"
-                    : "SALDO SUFICIENTE";
-
-            return new MonitoreoCuentaTelepeajeDto
-            {
-                IdCuenta = c.IdCuenta,
-                PlacaVehiculo = c.PlacaVehiculo,
-                CategoriaVehiculo = c.Vehiculo?.Categoria?.Codigo ?? "CAT_I",
-                TagRfidSerial = c.TagRfidSerial,
-                SaldoDisponible = c.SaldoDisponible,
-                EstadoCuenta = c.EstadoCuenta,
-                CondicionSaldo = condicion
-            };
+            IdCuenta = v.IdCuenta,
+            PlacaVehiculo = v.PlacaVehiculo,
+            CategoriaVehiculo = v.CategoriaVehiculo,
+            TagRfidSerial = v.TagRfidSerial,
+            SaldoDisponible = v.SaldoDisponible,
+            EstadoCuenta = v.EstadoCuenta,
+            CondicionSaldo = v.CondicionSaldo
         });
-
-        if (!string.IsNullOrWhiteSpace(condicionSaldo))
-        {
-            string condNorm = condicionSaldo.Trim().ToUpperInvariant();
-            resultado = resultado.Where(c => c.CondicionSaldo.ToUpper() == condNorm);
-        }
-
-        return resultado;
     }
 
     public async Task<RecargaTagResponseDto> RecargarCuentaAsync(RecargaTagRequestDto request, string usuarioResponsable)

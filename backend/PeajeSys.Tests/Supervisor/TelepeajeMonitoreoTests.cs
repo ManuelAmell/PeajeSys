@@ -145,4 +145,33 @@ public class TelepeajeMonitoreoTests
 
         Assert.Empty(resultado);
     }
+
+    [Fact]
+    public async Task ListarCuentasMonitoreoAsync_CuandoVistaFalla_ErrorSubeYNoEsSilenciado()
+    {
+        // Comprueba que no exista ningun try/catch silencioso envolviendo la consulta a la vista:
+        // si la vista falla (p. ej. error en PostgreSQL o vista caida), la excepcion debe subir.
+        using var db = NuevoDbMemoria();
+        var fakeVistaFalla = new VistaQueLanzaExcepcion(new InvalidOperationException("Fallo critico en conexion a vista"));
+
+        var service = new TelepeajeMonitoreoService(
+            db,
+            NullLogger<TelepeajeMonitoreoService>.Instance,
+            new Cobro.AjustesAtomicosEnMemoria(db),
+            fakeVistaFalla);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.ListarCuentasMonitoreoAsync(null, null, null));
+
+        Assert.Equal("Fallo critico en conexion a vista", ex.Message);
+    }
+
+    private sealed class VistaQueLanzaExcepcion : Core.Interfaces.IVistaCuentasTelepeaje
+    {
+        private readonly Exception _ex;
+        public VistaQueLanzaExcepcion(Exception ex) => _ex = ex;
+
+        public Task<IEnumerable<EstadoCuentaTelepeaje>> ConsultarAsync(string? condicionSaldo, string? estado, string? q)
+            => Task.FromException<IEnumerable<EstadoCuentaTelepeaje>>(_ex);
+    }
 }
