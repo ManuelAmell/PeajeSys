@@ -21,7 +21,8 @@
 --
 -- GUÍA DE EJECUCIÓN:
 --   Opción A (Recomendada en psql por consola):
---     psql -U postgres -d peajesys -f 00_Master_PeajeSys.sql
+--     psql -U postgres -d peajesys_db -f 00_Master_PeajeSys.sql
+--   Opcion Docker (desde la raiz del repo): docker compose up -d   (carga este script automaticamente)
 --
 --   Opción B (En pgAdmin 4 / DBeaver / DataGrip):
 --     Abrir este archivo 00_Master_PeajeSys.sql en el Query Tool y presionar "Execute" (F5).

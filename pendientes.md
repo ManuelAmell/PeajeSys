@@ -95,7 +95,7 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
   - [x] Usuarios del equipo en la base de datos con contraseña BCrypt; sin usuarios ni contraseñas fijos en el código.
 - [ ] Regenerar `Diccionario_Datos_PeajeSys.pdf` (en `database/01_Modelado` y `docs/entregas`) con la columna `OPERADOR.password_hash` y el rol `ADMINISTRADOR`.
 - [ ] **Prueba de integración End-to-End**:
-  - Levantar la base de datos ejecutando `00_Master_PeajeSys.sql` en PostgreSQL local.
+  - Levantar la base de datos con `docker compose up -d` (o `pnpm db`) desde la raíz (carga `00_Master_PeajeSys.sql` automáticamente) o ejecutando `00_Master_PeajeSys.sql` con `psql` según `database/README.md`.
   - Iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api` y `dotnet run`; entorno Development, puerto 5080; no requiere configuración).
   - Desde la raíz: `pnpm install` y `pnpm dev` (API + frontend contra la BD real; `pnpm dev:mocks` para usar solo los mocks).
 - [ ] **Preparación de la sustentación final**:
