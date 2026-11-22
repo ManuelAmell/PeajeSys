@@ -14,12 +14,14 @@ namespace PeajeSys.Api.Services;
 public class CobroService : ICobroService
 {
     private readonly PeajeSysDbContext _context;
+    private readonly TimeProvider _reloj;
     private static long _fallbackSequence = 100;
     private static readonly object _sequenceLock = new();
 
-    public CobroService(PeajeSysDbContext context)
+    public CobroService(PeajeSysDbContext context, TimeProvider? reloj = null)
     {
         _context = context;
+        _reloj = reloj ?? TimeProvider.System;
     }
 
     public async Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request)
@@ -115,7 +117,7 @@ public class CobroService : ICobroService
 
         // 4. Regla 5: Consecutivo de tiquete fiscal
         long seqVal = await ObtenerSiguienteConsecutivoTicketAsync();
-        string numeroTicket = FormatearNumeroTicket(DateTime.UtcNow, seqVal);
+        string numeroTicket = FormatearNumeroTicket(ZonaHorariaApp.DiaCivil(_reloj.GetUtcNow()).ToDateTime(TimeOnly.MinValue), seqVal);
 
         string estadoPaso = metodoPagoNorm == "EXENTO" ? "EXENTO" : "APROBADO";
 

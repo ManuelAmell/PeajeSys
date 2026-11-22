@@ -33,7 +33,8 @@ export interface TarifaEnEdicion {
 export interface DialogoTarifaProps {
   tarifa: TarifaEnEdicion;
   onCerrar: () => void;
-  onGuardada: (entrada: EntradaHistorialTarifa, aviso: string) => void;
+  /** entrada es null cuando el monto no cambió: no se registra en el historial. */
+  onGuardada: (entrada: EntradaHistorialTarifa | null, aviso: string) => void;
 }
 
 /**
@@ -74,6 +75,20 @@ export function DialogoTarifa({
 
   const enviar = async (datos: DatosFormularioTarifa) => {
     setErrorServidor(null);
+    const activa = tarifa.tarifaActiva;
+    const mismoMonto = activa !== null && activa.monto === datos.monto;
+    const todoIgual =
+      mismoMonto &&
+      datos.resolucion === (activa.resolucion_legal ?? '') &&
+      datos.desde === activa.fecha_inicio_vigencia &&
+      datos.hasta === (activa.fecha_fin_vigencia ?? null);
+    if (todoIgual) {
+      onGuardada(
+        null,
+        `Sin cambios: la tarifa de la categoría ${tarifa.roman} en ${tarifa.estacionNombre} ya es ${formatearMoneda(datos.monto)}.`,
+      );
+      return;
+    }
     try {
       const nueva = await crear.mutateAsync({
         id_estacion: tarifa.idEstacion,
@@ -83,6 +98,14 @@ export function DialogoTarifa({
         fecha_inicio_vigencia: datos.desde,
         fecha_fin_vigencia: datos.hasta,
       });
+
+      if (mismoMonto) {
+        onGuardada(
+          null,
+          `Sin cambios en el monto de la categoría ${tarifa.roman} en ${tarifa.estacionNombre} (${formatearMoneda(nueva.monto)}); se guardó la nueva resolución o vigencia.`,
+        );
+        return;
+      }
 
       const entrada = generarHistorialTarifa(
         tarifa.tarifaActiva,

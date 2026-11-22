@@ -99,6 +99,8 @@ export interface OperadorNuevo {
   codigo_empleado: string;
   rol: RolOperador;
   estado?: EstadoOperador;
+  /** Solo viaja en el alta o en el cambio de contraseña; la API la hashea y nunca la devuelve. */
+  password: string;
 }
 
 // =============================================================================

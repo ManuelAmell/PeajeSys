@@ -5,7 +5,20 @@ import {
   useOperadores,
 } from '@/api/recursos/operadores';
 import { ErrorApi } from '@/api/clienteHttp';
+import type { Operador } from '@/types';
 import { sinTildes } from './ayudas';
+import { DialogoOperadorEditar } from './DialogoOperadorEditar';
+import { DialogoOperadorNuevo } from './DialogoOperadorNuevo';
+import { DialogoOperadorPassword } from './DialogoOperadorPassword';
+
+type DialogoAbierto =
+  | { tipo: 'nuevo' }
+  | { tipo: 'editar'; operador: Operador }
+  | { tipo: 'password'; operador: Operador }
+  | null;
+
+const CLASE_BOTON_FILA =
+  'h-[44px] cursor-pointer whitespace-nowrap rounded-[6px] border-2 border-texto bg-superficie px-[14px] text-[16px] font-semibold text-texto transition-colors hover:bg-hover focus-visible:outline-[3px] focus-visible:outline-texto focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50';
 
 export interface SeccionPersonalProps {
   onAviso?: (aviso: string) => void;
@@ -13,8 +26,8 @@ export interface SeccionPersonalProps {
 
 /**
  * Sección Personal de Admin.dc.html: lista de operadores del DML con búsqueda
- * por nombre o código tolerante a tildes y acción de activar o desactivar.
- * No tiene altas: el prototipo no las contempla y el bloque no las construye.
+ * por nombre o código tolerante a tildes, activar o desactivar, alta de
+ * operadores con contraseña, edición de nombres y rol, y cambio de contraseña.
  */
 export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
   const operadores = useOperadores();
@@ -22,6 +35,12 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
   const [busqueda, setBusqueda] = useState('');
   const [errorAccion, setErrorAccion] = useState<string | null>(null);
   const [aviso, setAviso] = useState('');
+  const [dialogo, setDialogo] = useState<DialogoAbierto>(null);
+
+  const avisar = (mensaje: string) => {
+    setAviso(mensaje);
+    onAviso?.(mensaje);
+  };
 
   const texto = sinTildes(busqueda.trim());
   const filtrados = (operadores.data ?? []).filter((operador) => {
@@ -49,9 +68,7 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
         id: idOperador,
         datos: { estado: nuevoEstado },
       });
-      const mensajeAviso = `${nombreCompleto} ahora está ${nuevoEstado}.`;
-      setAviso(mensajeAviso);
-      onAviso?.(mensajeAviso);
+      avisar(`${nombreCompleto} ahora está ${nuevoEstado}.`);
     } catch (error) {
       const errorApi = error instanceof ErrorApi ? error : null;
       setErrorAccion(
@@ -84,6 +101,13 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
             Un usuario INACTIVO no puede iniciar sesión ni abrir turno.
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setDialogo({ tipo: 'nuevo' })}
+          className="h-[48px] cursor-pointer rounded-[6px] border-[3px] border-texto bg-[#FCBD17] px-[18px] text-[17px] font-bold text-sobre-acento transition-colors hover:bg-[#E5A800] focus-visible:outline-[3px] focus-visible:outline-texto focus-visible:outline-offset-2"
+        >
+          Nuevo operador
+        </button>
         <div className="flex flex-col gap-1.5">
           <label htmlFor="ad-buscar" className="text-[15px] font-semibold">
             Buscar por nombre o código
@@ -198,21 +222,43 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
                         </span>
                       </td>
                       <td className="border-b border-superficie-2 p-2.5 text-right">
-                        <button
-                          type="button"
-                          aria-label={`${activo ? 'Desactivar a' : 'Activar a'} ${nombreCompleto}`}
-                          disabled={actualizar.isPending}
-                          onClick={() =>
-                            alternarEstado(
-                              operador.id_operador,
-                              nombreCompleto,
-                              activo,
-                            )
-                          }
-                          className="h-[44px] cursor-pointer whitespace-nowrap rounded-[6px] border-2 border-texto bg-superficie px-[14px] text-[16px] font-semibold text-texto transition-colors hover:bg-hover focus-visible:outline-[3px] focus-visible:outline-texto focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {activo ? 'Desactivar' : 'Activar'}
-                        </button>
+                        <span className="flex flex-wrap justify-end gap-2">
+                          <button
+                            type="button"
+                            aria-label={`Editar a ${nombreCompleto}`}
+                            onClick={() =>
+                              setDialogo({ tipo: 'editar', operador })
+                            }
+                            className={CLASE_BOTON_FILA}
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`Cambiar contraseña de ${nombreCompleto}`}
+                            onClick={() =>
+                              setDialogo({ tipo: 'password', operador })
+                            }
+                            className={CLASE_BOTON_FILA}
+                          >
+                            Cambiar contraseña
+                          </button>
+                          <button
+                            type="button"
+                            aria-label={`${activo ? 'Desactivar a' : 'Activar a'} ${nombreCompleto}`}
+                            disabled={actualizar.isPending}
+                            onClick={() =>
+                              alternarEstado(
+                                operador.id_operador,
+                                nombreCompleto,
+                                activo,
+                              )
+                            }
+                            className={CLASE_BOTON_FILA}
+                          >
+                            {activo ? 'Desactivar' : 'Activar'}
+                          </button>
+                        </span>
                       </td>
                     </tr>
                   );
@@ -230,6 +276,42 @@ export function SeccionPersonal({ onAviso }: SeccionPersonalProps = {}) {
         >
           {errorAccion}
         </p>
+      )}
+
+      {dialogo?.tipo === 'nuevo' && (
+        <DialogoOperadorNuevo
+          onCerrar={() => setDialogo(null)}
+          onCreado={(creado) => {
+            setDialogo(null);
+            avisar(
+              `Operador ${creado.nombres} ${creado.apellidos} creado con el código ${creado.codigo_empleado}.`,
+            );
+          }}
+        />
+      )}
+      {dialogo?.tipo === 'editar' && (
+        <DialogoOperadorEditar
+          operador={dialogo.operador}
+          onCerrar={() => setDialogo(null)}
+          onGuardado={(guardado) => {
+            setDialogo(null);
+            avisar(
+              `Datos de ${guardado.nombres} ${guardado.apellidos} actualizados.`,
+            );
+          }}
+        />
+      )}
+      {dialogo?.tipo === 'password' && (
+        <DialogoOperadorPassword
+          operador={dialogo.operador}
+          onCerrar={() => setDialogo(null)}
+          onCambiada={(guardado) => {
+            setDialogo(null);
+            avisar(
+              `Contraseña de ${guardado.nombres} ${guardado.apellidos} cambiada.`,
+            );
+          }}
+        />
       )}
     </section>
   );

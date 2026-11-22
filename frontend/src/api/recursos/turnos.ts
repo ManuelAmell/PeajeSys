@@ -122,3 +122,41 @@ export function useAbrirTurno() {
     },
   });
 }
+
+/**
+ * Respuesta de GET /api/turnos/{id}/arqueo (ArqueoTurnoDto del backend).
+ */
+export const esquemaArqueoTurno = z.object({
+  id_turno: z.number().int(),
+  id_operador: z.number().int(),
+  id_caseta: z.number().int(),
+  efectivo_sistema: z.number(),
+  efectivo_reportado: z.number(),
+  diferencia: z.number(),
+  estado_arqueo: z.enum(['CUADRADO', 'FALTANTE', 'SOBRANTE']),
+  total_vehiculos: z.number().int(),
+});
+
+export type ArqueoTurno = z.infer<typeof esquemaArqueoTurno>;
+
+export async function obtenerArqueoTurno(
+  idTurno: number,
+  efectivoReportado: number,
+): Promise<ArqueoTurno> {
+  return clienteHttp.get<ArqueoTurno>(`/turnos/${idTurno}/arqueo`, {
+    params: { efectivo_reportado: efectivoReportado },
+    schema: esquemaArqueoTurno,
+  });
+}
+
+export function useArqueoTurno(
+  idTurno: number,
+  efectivoReportado: number,
+  opciones?: { enabled?: boolean },
+) {
+  return useQuery({
+    queryKey: clavesApi.turnos.arqueo(idTurno, efectivoReportado),
+    queryFn: () => obtenerArqueoTurno(idTurno, efectivoReportado),
+    enabled: opciones?.enabled !== false && idTurno > 0,
+  });
+}

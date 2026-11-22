@@ -85,6 +85,8 @@ export const esquemaOperadorNuevo = z.object({
   codigo_empleado: z.string().min(1).max(20),
   rol: esquemaRolOperador,
   estado: esquemaEstadoOperador.default('ACTIVO'),
+  /** La API la exige al crear (la guarda hasheada y nunca la devuelve). */
+  password: z.string().min(1, 'La contraseña es obligatoria'),
 });
 
 // =============================================================================
