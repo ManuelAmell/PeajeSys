@@ -124,7 +124,7 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
     const errorAlerta = page.locator('#lg-error, [role="alert"]');
     await expect(errorAlerta).toBeVisible();
     await expect(errorAlerta).toContainText(
-      'No existe un empleado con el código EMP-999',
+      'Código de empleado o clave incorrectos.',
     );
     await expect(page).toHaveURL(/\/login/);
     expect(errores).toEqual([]);

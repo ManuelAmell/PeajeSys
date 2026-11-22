@@ -60,18 +60,16 @@ describe('Servidor simulado MSW (src/mocks/handlers/)', () => {
       },
     );
 
-    it('rechaza empleado inexistente con HTTP 404', async () => {
+    it('rechaza empleado inexistente con HTTP 401 CREDENCIALES_INVALIDAS (no revela que la cuenta no existe)', async () => {
       const res = await fetch(`http://localhost:3000/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codigo: 'EMP-999', clave: 'prueba' }),
       });
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(401);
       const data = await res.json();
-      expect(data.error.codigo).toBe('EMPLEADO_NO_ENCONTRADO');
-      expect(data.error.mensaje).toBe(
-        'No existe un empleado con el código EMP-999.',
-      );
+      expect(data.error.codigo).toBe('CREDENCIALES_INVALIDAS');
+      expect(data.error.mensaje).toBe('Código de empleado o clave incorrectos.');
     });
 
     it('rechaza empleado inactivo (EMP-009) con HTTP 403', async () => {

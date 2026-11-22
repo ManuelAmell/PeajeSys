@@ -145,14 +145,13 @@ describe('FormularioLogin (inicio de sesión con MSW y semilla real)', () => {
     ).toBeInTheDocument();
   });
 
-  it('un código inexistente muestra el mensaje del prototipo con foco en el campo', async () => {
+  it('un código inexistente muestra el mismo mensaje genérico que una clave incorrecta', async () => {
     await escribirCredenciales('EMP-999', 'prueba');
 
     const alerta = await screen.findByRole('alert');
-    expect(alerta).toHaveTextContent(
-      'No existe un empleado con el código EMP-999.',
-    );
-    expect(screen.getByLabelText('Código de empleado')).toHaveFocus();
+    expect(alerta).toHaveTextContent('Código de empleado o clave incorrectos.');
+    expect(alerta).not.toHaveTextContent('EMP-999');
+    expect(window.sessionStorage.getItem('peajesys_sesion')).toBeNull();
   });
 
   it('el código vacío muestra el mensaje del prototipo y enfoca el campo', async () => {
