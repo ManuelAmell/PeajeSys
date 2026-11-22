@@ -6,6 +6,7 @@ using PeajeSys.Api.Services;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Entities;
 using PeajeSys.Core.Exceptions;
+using PeajeSys.Core.Interfaces;
 using PeajeSys.Data;
 using Xunit;
 
@@ -97,7 +98,7 @@ public class CobroExentoTests
         // Arrange
         using var db = NuevoContexto();
         var (_, turno, tarifa, cuenta) = await InicializarDatosPruebaAsync(db);
-        var servicio = new CobroService(db);
+        var servicio = new CobroService(db, new GeneradorTicketFalso(), new AjustesAtomicosEnMemoria(db));
 
         var request = new CobroRequestDto
         {
@@ -109,7 +110,7 @@ public class CobroExentoTests
         };
 
         // Act
-        var response = await servicio.ProcesarCobroAsync(request);
+        var response = await servicio.ProcesarCobroAsync(request, new ActorOperacion(1, "REC-001", "RECAUDADOR"));
 
         // Assert - Respuesta del servicio
         Assert.NotNull(response);
@@ -150,7 +151,7 @@ public class CobroExentoTests
         // Arrange
         using var db = NuevoContexto();
         var (_, turno, tarifa, _) = await InicializarDatosPruebaAsync(db);
-        var servicio = new CobroService(db);
+        var servicio = new CobroService(db, new GeneradorTicketFalso(), new AjustesAtomicosEnMemoria(db));
 
         var request = new CobroRequestDto
         {
@@ -162,7 +163,7 @@ public class CobroExentoTests
         };
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<AppException>(() => servicio.ProcesarCobroAsync(request));
+        var ex = await Assert.ThrowsAsync<AppException>(() => servicio.ProcesarCobroAsync(request, new ActorOperacion(1, "REC-001", "RECAUDADOR")));
         Assert.Equal(422, ex.StatusCode);
         Assert.Equal("METODO_PAGO_INVALIDO", ex.Codigo);
     }
@@ -173,7 +174,7 @@ public class CobroExentoTests
         // Arrange
         using var db = NuevoContexto();
         var (_, turno, tarifa, _) = await InicializarDatosPruebaAsync(db);
-        var servicio = new CobroService(db);
+        var servicio = new CobroService(db, new GeneradorTicketFalso(), new AjustesAtomicosEnMemoria(db));
 
         var request = new CobroRequestDto
         {
@@ -186,7 +187,7 @@ public class CobroExentoTests
         };
 
         // Act
-        var response = await servicio.ProcesarCobroAsync(request);
+        var response = await servicio.ProcesarCobroAsync(request, new ActorOperacion(1, "REC-001", "RECAUDADOR"));
 
         // Assert
         Assert.NotNull(response);
@@ -208,7 +209,7 @@ public class CobroExentoTests
         // Arrange
         using var db = NuevoContexto();
         var (_, turno, tarifa, cuenta) = await InicializarDatosPruebaAsync(db);
-        var servicio = new CobroService(db);
+        var servicio = new CobroService(db, new GeneradorTicketFalso(), new AjustesAtomicosEnMemoria(db));
 
         var request = new CobroRequestDto
         {
@@ -220,7 +221,7 @@ public class CobroExentoTests
         };
 
         // Act
-        var response = await servicio.ProcesarCobroAsync(request);
+        var response = await servicio.ProcesarCobroAsync(request, new ActorOperacion(1, "REC-001", "RECAUDADOR"));
 
         // Assert
         Assert.NotNull(response);

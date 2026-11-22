@@ -32,7 +32,7 @@ public class CuentaTelepeajePorPlacaServiceTests
         });
         await db.SaveChangesAsync();
 
-        var servicio = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance);
+        var servicio = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance, new Cobro.AjustesAtomicosEnMemoria(db));
 
         // Act
         var resultado = await servicio.ObtenerCuentaPorPlacaAsync("KJN456");
@@ -51,7 +51,7 @@ public class CuentaTelepeajePorPlacaServiceTests
     {
         // Arrange
         using var db = NuevoContexto();
-        var servicio = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance);
+        var servicio = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance, new Cobro.AjustesAtomicosEnMemoria(db));
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<NotFoundException>(() => servicio.ObtenerCuentaPorPlacaAsync("ZZZ999"));
@@ -74,7 +74,7 @@ public class CuentaTelepeajePorPlacaServiceTests
         });
         await db.SaveChangesAsync();
 
-        var servicio = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance);
+        var servicio = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance, new Cobro.AjustesAtomicosEnMemoria(db));
 
         // Act
         var resultado = await servicio.ObtenerCuentaPorPlacaAsync("  kjn 456  ");

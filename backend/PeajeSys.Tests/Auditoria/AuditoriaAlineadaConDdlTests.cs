@@ -126,7 +126,7 @@ public class AuditoriaAlineadaConDdlTests
         using var db = NuevoContexto();
         db.CuentasTelepeaje.Add(new CuentaTelepeaje { PlacaVehiculo = "ABC123", TagRfidSerial = "TAG1", SaldoDisponible = 1000m });
         await db.SaveChangesAsync();
-        var service = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance);
+        var service = new TelepeajeMonitoreoService(db, NullLogger<TelepeajeMonitoreoService>.Instance, new Cobro.AjustesAtomicosEnMemoria(db));
 
         var respuesta = await service.RecargarCuentaAsync(new RecargaTagRequestDto { Placa = "ABC123", Monto = 5000m }, "SUP-001");
 
@@ -168,7 +168,7 @@ public class AuditoriaAlineadaConDdlTests
         await db.SaveChangesAsync();
         var logger = new LoggerCapturador<TelepeajeMonitoreoService>();
 
-        await new TelepeajeMonitoreoService(db, logger).RecargarCuentaAsync(new RecargaTagRequestDto { Placa = "ABC123", Monto = 5000m }, "SUP-001");
+        await new TelepeajeMonitoreoService(db, logger, new Cobro.AjustesAtomicosEnMemoria(db)).RecargarCuentaAsync(new RecargaTagRequestDto { Placa = "ABC123", Monto = 5000m }, "SUP-001");
 
         var mensaje = Assert.Single(logger.Mensajes);
         Assert.Contains("SUP-001", mensaje);

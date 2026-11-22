@@ -21,9 +21,12 @@ public class TransaccionService : ITransaccionService
     private const int MaxMotivo = 255;
     private readonly PeajeSysDbContext _context;
 
-    public TransaccionService(PeajeSysDbContext context)
+    private readonly IAjustesAtomicos _ajustes;
+
+    public TransaccionService(PeajeSysDbContext context, IAjustesAtomicos ajustes)
     {
         _context = context;
+        _ajustes = ajustes;
     }
 
     public async Task<IReadOnlyList<TransaccionDetalleDto>> ListarPorTurnoAsync(long idTurno, ActorOperacion actor)

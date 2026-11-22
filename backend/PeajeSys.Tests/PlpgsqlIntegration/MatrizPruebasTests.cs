@@ -103,7 +103,7 @@ public class MatrizPruebasTests
         // Tarifa fija de 10.500 COP para todos los tests
         private const decimal Tarifa = 10500m;
 
-        public Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request)
+        public Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request, ActorOperacion actor)
         {
             // CP-10: Turno 99 esta cerrado
             if (request.IdTurno == 99)
@@ -302,7 +302,7 @@ public class MatrizPruebasTests
     public async Task CP05_CobrarEfectivo_MontoSuficiente_RetornaTicketYCambioExacto()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -340,7 +340,7 @@ public class MatrizPruebasTests
     public async Task CP06_CobrarEfectivo_MontoMenorATarifa_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -365,7 +365,7 @@ public class MatrizPruebasTests
     public async Task CP07_CobrarTelepeaje_CuentaActivaSaldoSuficiente_RetornaTicketYSaldoPosterior()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -400,7 +400,7 @@ public class MatrizPruebasTests
     public async Task CP08_CobrarTelepeaje_SaldoInsuficienteOCuentaInactiva_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -462,7 +462,7 @@ public class MatrizPruebasTests
     public async Task CP10_CobrarEnTurnoCerrado_LanzaConflictException409()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 99,   // 99 simula turno CERRADO
