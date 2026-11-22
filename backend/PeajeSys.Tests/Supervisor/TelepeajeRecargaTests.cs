@@ -135,6 +135,23 @@ public class TelepeajeRecargaTests
                 FechaHora = DateTime.UtcNow
             });
         }
+
+        public Task<CuentaTelepeajeDetalleDto> ObtenerCuentaPorPlacaAsync(string placa)
+        {
+            string placaNorm = (placa ?? string.Empty).Trim().ToUpperInvariant().Replace(" ", "");
+            if (_cuentasPorPlaca.TryGetValue(placaNorm, out var c))
+            {
+                return Task.FromResult(new CuentaTelepeajeDetalleDto
+                {
+                    IdCuenta = c.IdCuenta,
+                    PlacaVehiculo = c.PlacaVehiculo,
+                    TagRfidSerial = c.TagRfidSerial,
+                    SaldoDisponible = c.SaldoDisponible,
+                    EstadoCuenta = c.EstadoCuenta
+                });
+            }
+            throw new NotFoundException("CUENTA_NO_ENCONTRADA", "Cuenta no encontrada.");
+        }
     }
 
     [Fact]

@@ -56,42 +56,6 @@ public class CerrarTurnoRequestDto
     public decimal TotalDeclaradoCierre { get; set; }
 }
 
-public class CerrarTurnoResponseDto
-{
-    [JsonPropertyName("id_turno")]
-    public long IdTurno { get; set; }
-
-    [JsonPropertyName("id_caseta")]
-    public int IdCaseta { get; set; }
-
-    [JsonPropertyName("id_operador")]
-    public int IdOperador { get; set; }
-
-    [JsonPropertyName("fecha")]
-    public string Fecha { get; set; } = string.Empty;
-
-    [JsonPropertyName("fecha_inicio")]
-    public string FechaInicio { get; set; } = string.Empty;
-
-    [JsonPropertyName("fecha_fin")]
-    public string FechaFin { get; set; } = string.Empty;
-
-    [JsonPropertyName("fondo_inicial_caja")]
-    public decimal FondoInicialCaja { get; set; }
-
-    [JsonPropertyName("total_recaudado_efectivo")]
-    public decimal TotalRecaudadoEfectivo { get; set; }
-
-    [JsonPropertyName("total_declarado_cierre")]
-    public decimal TotalDeclaradoCierre { get; set; }
-
-    [JsonPropertyName("diferencia_descuadre")]
-    public decimal DiferenciaDescuadre { get; set; }
-
-    [JsonPropertyName("estado")]
-    public string Estado { get; set; } = "CERRADO";
-}
-
 public class TurnoDto
 {
     [JsonPropertyName("id_turno")]
@@ -240,6 +204,18 @@ public class CobroRequestDto
     [JsonPropertyName("recibido")]
     public decimal? Recibido { get; set; }
 
+    [JsonPropertyName("monto_tarifa")]
+    public decimal? MontoTarifa { get; set; }
+
+    [JsonPropertyName("estado_paso")]
+    public string? EstadoPaso { get; set; }
+
+    [JsonPropertyName("numero_ticket")]
+    public string? NumeroTicket { get; set; }
+
+    [JsonPropertyName("usuario_sistema")]
+    public string? UsuarioSistema { get; set; }
+
     public string ObtenerPlaca()
     {
         string raw = PlacaDetectada ?? Placa ?? string.Empty;
@@ -283,6 +259,10 @@ public class TransaccionDetalleDto
 
     [JsonPropertyName("estado_paso")]
     public string EstadoPaso { get; set; } = "APROBADO";
+
+    /// <summary>True si existe un VOID en AUDITORIA_TRANSACCION para esta transaccion. Siempre se serializa.</summary>
+    [JsonPropertyName("anulada")]
+    public bool Anulada { get; set; }
 }
 
 public class DetallePagoTelepeajeDto

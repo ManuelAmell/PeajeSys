@@ -1,5 +1,6 @@
 import http from 'http';
 import { chromium } from '@playwright/test';
+import { rutaChromium } from './plataforma';
 
 function consultarUrl(ruta: string): Promise<number> {
   return new Promise((resolve, reject) => {
@@ -16,7 +17,13 @@ function consultarUrl(ruta: string): Promise<number> {
 
 async function verificar() {
   console.log('--- Verificando respuestas HTTP directas en puerto 5180 ---');
-  const rutas = ['/login', '/operador', '/supervisor', '/admin', '/ruta-inexistente'];
+  const rutas = [
+    '/login',
+    '/operador',
+    '/supervisor',
+    '/admin',
+    '/ruta-inexistente',
+  ];
   for (const r of rutas) {
     const status = await consultarUrl(r);
     console.log(`Ruta ${r} responde con HTTP ${status}`);
@@ -24,9 +31,7 @@ async function verificar() {
 
   console.log('--- Verificando comportamiento de RequireRol en navegador ---');
   const browser = await chromium.launch({
-    executablePath:
-      process.env.PLAYWRIGHT_CHROMIUM_PATH ||
-      (process.platform === 'linux' ? '/usr/bin/chromium' : undefined),
+    executablePath: rutaChromium(),
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
   });
 
@@ -35,17 +40,26 @@ async function verificar() {
   // Intento de acceso sin sesión a /operador
   await page.goto('http://localhost:5180/operador');
   await page.waitForURL('**/login');
-  console.log('Acceso sin sesión a /operador redirige exitosamente a:', page.url());
+  console.log(
+    'Acceso sin sesión a /operador redirige exitosamente a:',
+    page.url(),
+  );
 
   // Intento de acceso sin sesión a /supervisor
   await page.goto('http://localhost:5180/supervisor');
   await page.waitForURL('**/login');
-  console.log('Acceso sin sesión a /supervisor redirige exitosamente a:', page.url());
+  console.log(
+    'Acceso sin sesión a /supervisor redirige exitosamente a:',
+    page.url(),
+  );
 
   // Intento de acceso sin sesión a /admin
   await page.goto('http://localhost:5180/admin');
   await page.waitForURL('**/login');
-  console.log('Acceso sin sesión a /admin redirige exitosamente a:', page.url());
+  console.log(
+    'Acceso sin sesión a /admin redirige exitosamente a:',
+    page.url(),
+  );
 
   // Acceso a ruta no existente
   await page.goto('http://localhost:5180/ruta-inexistente-404');

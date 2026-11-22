@@ -9,7 +9,9 @@
   },
   "scripts": {
     "dev": "vite --port 5180 --strictPort",
+    "dev:mocks": "vite --mode mocks --port 5180 --strictPort",
     "build": "tsc && vite build",
+    "build:mocks": "tsc && vite build --mode mocks",
     "preview": "vite preview --port 5180 --strictPort",
     "lint": "eslint src scripts e2e --max-warnings 0",
     "format": "prettier --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.ts\" \"e2e/**/*.ts\"",

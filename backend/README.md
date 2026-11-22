@@ -42,28 +42,19 @@ backend/
 
 ## 4. Configuración Inicial y Puesta en Marcha
 
-### 4.1 Configurar la Cadena de Conexión
-Crear o editar `backend/PeajeSys.Api/appsettings.Development.json`:
+### 4.1 Cadena de Conexión
+No hay que crear ningún archivo: `backend/PeajeSys.Api/appsettings.Development.json` ya está en el repositorio. La cadena de conexión por defecto (`appsettings.json`) apunta a `localhost:5432/peajesys_db` con usuario `postgres` y contraseña `postgres`, lo que coincide con la base que levanta `docker compose up -d` desde la raíz del repo.
 
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Port=5432;Database=peajesys_db;Username=postgres;Password=tu_password_local"
-  },
-  "JwtSettings": {
-    "Secret": "PeajeSys_Super_Secret_Key_Segura_2026_Minimo_256_Bits_HMAC_SHA256",
-    "Issuer": "PeajeSys.Backend",
-    "Audience": "PeajeSys.Frontend",
-    "ExpirationHours": 8
-  },
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning",
-      "Microsoft.EntityFrameworkCore.Database.Command": "Information"
-    }
-  }
-}
+Si tu PostgreSQL usa otros datos, sobrescribe la cadena sin tocar archivos versionados:
+
+```bash
+# Linux / macOS
+export ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=peajesys_db;Username=postgres;Password=tu_password_local"
+```
+
+```powershell
+# Windows (PowerShell, solo la sesión actual)
+$env:ConnectionStrings__DefaultConnection = "Host=localhost;Port=5432;Database=peajesys_db;Username=postgres;Password=tu_password_local"
 ```
 
 ### 4.2 Comandos de Compilación y Ejecución
@@ -89,13 +80,25 @@ Una vez iniciada la API:
 
 > Ejecuta siempre `dotnet run` desde `backend/PeajeSys.Api` (no con `--project` desde otra carpeta): así se cargan `appsettings.json` y el perfil de `Properties/launchSettings.json`, que fija el entorno `Development` y el puerto `5080`.
 
-> Con `dotnet run` (perfil de `launchSettings.json`, entorno `Development`) los usuarios semilla EMP-001…EMP-010 y ADM-001 entran con la contraseña de demo `Turno123*` (`Security:DefaultDevPassword`). En cualquier otro entorno quedan deshabilitados.
+> Los usuarios de prueba viven en la base de datos con su contraseña cifrada (hash BCrypt hecho con `BCrypt.Net-Next`, BCrypt estándar compatible con pgcrypto). El login valida solo contra la tabla `operador`: consulta la sección «Usuarios de prueba» del [README raíz](../README.md#-usuarios-de-prueba).
 
 ### 4.3 Configuración de la clave JWT
 
-La clave secreta del JWT **no está en el repositorio**. Debes definirla en tu máquina antes de iniciar la API (mínimo 32 bytes en UTF-8).
+**Desarrollo: no hay que hacer nada.** La clave de desarrollo está versionada en `backend/PeajeSys.Api/appsettings.Development.json` y se usa solo con `dotnet run` (entorno `Development`). Es una clave pública del repositorio: nunca debe usarse fuera de desarrollo.
 
-**Opción A: user-secrets (recomendada, solo en entorno Development)**
+**Producción u otros entornos: es obligatorio definir `JwtSettings__SecretKey`** (mínimo 32 bytes en UTF-8). La clave de producción no está en el repositorio.
+
+```bash
+# Linux / macOS
+export JwtSettings__SecretKey="$(openssl rand -base64 48)"
+```
+
+```powershell
+# Windows (PowerShell, solo la sesión actual)
+$env:JwtSettings__SecretKey = [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
+```
+
+**Opcional: tu propia clave local con user-secrets** (sobrescribe la de `appsettings.Development.json`):
 
 ```bash
 # Linux / macOS
@@ -107,18 +110,6 @@ dotnet user-secrets set "JwtSettings:SecretKey" "$(openssl rand -base64 48)"
 # Windows (PowerShell)
 cd backend\PeajeSys.Api
 dotnet user-secrets set "JwtSettings:SecretKey" ([Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(48)))
-```
-
-**Opción B: variable de entorno** (útil en servidores o CI)
-
-```bash
-# Linux / macOS
-export JwtSettings__SecretKey="$(openssl rand -base64 48)"
-```
-
-```powershell
-# Windows (PowerShell, solo la sesión actual)
-$env:JwtSettings__SecretKey = [Convert]::ToBase64String([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
 ```
 
 Si la clave falta, es más corta de 32 bytes, o `Issuer`, `Audience` o `ExpirationHours` son inválidos, la API **no arranca** y muestra un `OptionsValidationException`, por ejemplo: `JwtSettings:SecretKey no esta configurada. Definala con user-secrets o la variable de entorno JwtSettings__SecretKey.` El mensaje nunca incluye el valor de la clave.

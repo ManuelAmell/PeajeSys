@@ -50,7 +50,7 @@ public class FnTarifaVigenteService : IFnTarifaVigenteService
         //
         // Para el entorno offline o de test, resolvemos por LINQ sobre TARIFA directamente.
         string placaNorm = placa.Trim().ToUpperInvariant();
-        var hoy = DateTime.UtcNow.Date;
+        var hoy = ZonaHorariaApp.HoyComoFecha();
 
         // Replicar logica de fn_obtener_tarifa_vigente: buscar categoria del vehiculo,
         // validar estacion activa y obtener tarifa vigente.
@@ -158,7 +158,8 @@ public class SpCerrarArqueoTurnoService : ISpCerrarArqueoTurnoService
         // Replicar logica de pr_cerrar_arqueo_turno en C# (equivale al SP en PostgreSQL).
         // Con BD real: CALL pr_cerrar_arqueo_turno({idTurno}, {efectivoDeclarado}, NULL, NULL, NULL)
         decimal totalSistema = await _context.TransaccionesPeaje
-            .Where(t => t.IdTurno == idTurno && t.MetodoPago == "EFECTIVO" && t.EstadoPaso == "APROBADO")
+            .Where(t => t.IdTurno == idTurno && t.MetodoPago == "EFECTIVO" && t.EstadoPaso == "APROBADO"
+                && !_context.AuditoriasTransaccion.Any(a => a.IdTransaccion == t.IdTransaccion && a.TipoOperacion == "VOID"))
             .SumAsync(t => (decimal?)t.MontoTarifa) ?? 0m;
 
         decimal diferencia = efectivoDeclarado - totalSistema;

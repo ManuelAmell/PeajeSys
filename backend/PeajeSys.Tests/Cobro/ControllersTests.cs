@@ -6,6 +6,7 @@ using PeajeSys.Api.Controllers;
 using PeajeSys.Core.DTOs;
 using PeajeSys.Core.Exceptions;
 using PeajeSys.Core.Interfaces;
+using PeajeSys.Tests.Api;
 using Xunit;
 
 namespace PeajeSys.Tests.Cobro;
@@ -16,9 +17,22 @@ public class ControllersTests
     // Fakes de Servicio para Pruebas Unitarias
     // ==========================================
 
+    // Los controladores exigen estos servicios; estas pruebas no los usan.
+    private class FakeArqueoServiceMinimo : IArqueoService
+    {
+        public Task<ArqueoTurnoDto> CalcularArqueoAsync(long idTurno, decimal efectivoReportado)
+            => throw new NotSupportedException();
+    }
+
+    private class FakeReporteRecaudoServiceMinimo : IReporteRecaudoService
+    {
+        public Task<RecaudoDiarioDto> ObtenerRecaudoDiarioAsync(int? idEstacion, string? fecha)
+            => throw new NotSupportedException();
+    }
+
     private class FakeTurnoService : ITurnoService
     {
-        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request)
+        public Task<AbrirTurnoResponseDto> AbrirTurnoAsync(AbrirTurnoRequestDto request, ActorOperacion actor)
         {
             if (request.IdCaseta == 99)
                 throw new ConflictException("CASETA_OCUPADA", "Caseta ocupada.");
@@ -35,12 +49,12 @@ public class ControllersTests
             });
         }
 
-        public Task<CerrarTurnoResponseDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request)
+        public Task<TurnoDto> CerrarTurnoAsync(long idTurno, CerrarTurnoRequestDto request, ActorOperacion actor)
         {
             if (idTurno == 99)
                 throw new ConflictException("TURNO_YA_CERRADO", "Turno ya cerrado.");
 
-            return Task.FromResult(new CerrarTurnoResponseDto
+            return Task.FromResult(new TurnoDto
             {
                 IdTurno = idTurno,
                 IdCaseta = 1,
@@ -53,7 +67,7 @@ public class ControllersTests
             });
         }
 
-        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno)
+        public Task<TurnoDto> ObtenerTurnoAsync(long idTurno, ActorOperacion actor)
         {
             if (idTurno == 999)
                 throw new NotFoundException("TURNO_NO_ENCONTRADO", "Turno no encontrado.");
@@ -68,7 +82,7 @@ public class ControllersTests
             });
         }
 
-        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
+        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, ActorOperacion actor)
         {
             var list = new List<TurnoDto>
             {
@@ -101,16 +115,8 @@ public class ControllersTests
                 });
             }
 
-            // Vehiculo no registrado: retorna valores por defecto con CAT_I y sin TAG
-            return Task.FromResult(new VehiculoConsultaDto
-            {
-                Placa = norm,
-                Encontrado = false,
-                IdCategoria = 1,
-                CategoriaCodigo = "CAT_I",
-                CategoriaDescripcion = "Automoviles, camperos y camionetas",
-                TieneTag = false
-            });
+            // Vehiculo no registrado: lanza NotFoundException con codigo VEHICULO_NO_ENCONTRADO
+            throw new NotFoundException("VEHICULO_NO_ENCONTRADO", $"Vehiculo con placa {norm} no encontrado en el sistema.");
         }
     }
 
@@ -151,7 +157,7 @@ public class ControllersTests
     public async Task TurnosController_AbrirTurno_Retorna201ConDatosDeTurno()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
         var request = new AbrirTurnoRequestDto { IdCaseta = 2, IdOperador = 2, FondoInicialCaja = 100000 };
 
         // Act
@@ -169,7 +175,7 @@ public class ControllersTests
     public async Task TurnosController_CerrarTurno_Retorna200ConResumen()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
         var request = new CerrarTurnoRequestDto { TotalDeclaradoCierre = 10000 };
 
         // Act
@@ -178,7 +184,7 @@ public class ControllersTests
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         Assert.Equal(200, okResult.StatusCode);
-        var response = Assert.IsType<CerrarTurnoResponseDto>(okResult.Value);
+        var response = Assert.IsType<TurnoDto>(okResult.Value);
         Assert.Equal("CERRADO", response.Estado);
         Assert.Equal(-500, response.DiferenciaDescuadre);
     }
@@ -187,7 +193,7 @@ public class ControllersTests
     public async Task TurnosController_ListarTurnos_Retorna200ConLista()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
 
         // Act
         var result = await controller.ListarTurnos(null, null, null, null, null);
@@ -202,7 +208,7 @@ public class ControllersTests
     public async Task TurnosController_ObtenerTurnoPorId_Retorna200ConTurno()
     {
         // Arrange
-        var controller = new TurnosController(new FakeTurnoService());
+        var controller = new TurnosController(new FakeTurnoService(), new FakeArqueoServiceMinimo()).ConUsuario(2, "RECAUDADOR");
 
         // Act
         var result = await controller.ObtenerTurnoPorId(1);
@@ -237,22 +243,15 @@ public class ControllersTests
     }
 
     [Fact]
-    public async Task VehiculosController_ConsultarVehiculoNoRegistrado_RetornaCategoriaSugeridaSinTag()
+    public async Task VehiculosController_ConsultarVehiculoNoRegistrado_LanzaNotFoundException()
     {
         // Arrange
         var controller = new VehiculosController(new FakeVehiculoService());
 
-        // Act
-        var result = await controller.ConsultarVehiculo("XYZ999");
-
-        // Assert
-        var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var vehiculo = Assert.IsType<VehiculoConsultaDto>(okResult.Value);
-        Assert.Equal("XYZ999", vehiculo.Placa);
-        Assert.False(vehiculo.Encontrado);
-        Assert.False(vehiculo.TieneTag);
-        Assert.Equal(1, vehiculo.IdCategoria);
-        Assert.Equal("CAT_I", vehiculo.CategoriaCodigo);
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<NotFoundException>(() => controller.ConsultarVehiculo("XYZ999"));
+        Assert.Equal("VEHICULO_NO_ENCONTRADO", ex.Codigo);
+        Assert.Equal(404, ex.StatusCode);
     }
 
     // ==========================================
@@ -263,7 +262,7 @@ public class ControllersTests
     public async Task RecaudoController_CobroEfectivoValido_Retorna201ConTransaccionYCambio()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -290,7 +289,7 @@ public class ControllersTests
     public async Task RecaudoController_CobroEnTurnoCerrado_LanzaConflictExceptionTurnoCerrado()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 99, // Turno 99 simula estar cerrado
@@ -310,7 +309,7 @@ public class ControllersTests
     public async Task RecaudoController_EfectivoInsuficiente_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
         var request = new CobroRequestDto
         {
             IdTurno = 1,

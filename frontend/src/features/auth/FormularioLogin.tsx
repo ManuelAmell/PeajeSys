@@ -67,7 +67,15 @@ export function FormularioLogin({ precarga = null }: FormularioLoginProps) {
         rol: respuesta.usuario.rol,
         codigo: respuesta.usuario.codigo,
       });
-      setIngresado(respuesta.usuario);
+      const usuarioDestino =
+        respuesta.usuario.rol === 'RECAUDADOR' && !respuesta.turno_abierto
+          ? {
+              ...respuesta.usuario,
+              destino: '/operador/abrir-turno',
+              destino_txt: 'Abrir turno en caseta',
+            }
+          : respuesta.usuario;
+      setIngresado(usuarioDestino);
     } catch (error) {
       const errorApi = error instanceof ErrorApi ? error : null;
       if (errorApi?.campos?.codigo) {
@@ -107,9 +115,9 @@ export function FormularioLogin({ precarga = null }: FormularioLoginProps) {
     return (
       <TarjetaIrA
         nombre={ingresado.nombre}
-        rolTxt={ingresado.rolTxt}
+        rolTxt={ingresado.rol_txt}
         codigo={ingresado.codigo}
-        destinoTxt={ingresado.destinoTxt}
+        destinoTxt={ingresado.destino_txt}
         alNavegar={() => navigate(ingresado.destino)}
         alVolver={volver}
       />

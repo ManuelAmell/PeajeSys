@@ -6,10 +6,10 @@ import { SeccionCategorias } from './SeccionCategorias';
 import { SeccionEstaciones } from './SeccionEstaciones';
 
 const admin = {
-  id: 'ADMIN-01',
+  id: 'ADM-001',
   nombre: 'Administración',
   rol: 'ADMIN' as const,
-  codigo: 'ADMIN-01',
+  codigo: 'ADM-001',
 };
 
 describe('Sección Estaciones y casetas (solo lectura, datos del DML)', () => {

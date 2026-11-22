@@ -1,5 +1,9 @@
+using System;
+using System.IO;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using PeajeSys.Tests.Auth;
 
 namespace PeajeSys.Tests.Api;
@@ -22,6 +26,39 @@ public class PeajeSysApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("JwtSettings:Issuer", JwtPruebas.Issuer);
         builder.UseSetting("JwtSettings:Audience", JwtPruebas.Audience);
         builder.UseSetting("JwtSettings:ExpirationHours", JwtPruebas.ExpirationHours.ToString());
+
+        // Corrige incompatibilidad de TestHost 8.0 con System.Text.Json en runtime 10 (PipeWriter.UnflushedBytes)
+        builder.ConfigureServices(services =>
+        {
+            services.AddTransient<IStartupFilter, BufferResponseBodyStartupFilter>();
+        });
+    }
+
+    private class BufferResponseBodyStartupFilter : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next)
+        {
+            return app =>
+            {
+                app.Use(async (context, siguiente) =>
+                {
+                    var originalBody = context.Response.Body;
+                    await using var mem = new MemoryStream();
+                    context.Response.Body = mem;
+                    try
+                    {
+                        await siguiente();
+                    }
+                    finally
+                    {
+                        mem.Position = 0;
+                        await mem.CopyToAsync(originalBody);
+                        context.Response.Body = originalBody;
+                    }
+                });
+                next(app);
+            };
+        }
     }
 }
 

@@ -20,12 +20,17 @@ export const estacionesHandlers = [
     const url = new URL(request.url);
     const estacionParam = url.searchParams.get('estacion') || url.searchParams.get('id_estacion');
     const db = getDb();
+    // Igual que la API: ocupada = la caseta tiene un turno ABIERTO (sin exponer el turno).
+    const ocupadas = new Set(
+      db.turnos.filter((t) => t.estado === 'ABIERTO').map((t) => t.id_caseta),
+    );
+    const conOcupada = db.casetas.map((c) => ({ ...c, ocupada: ocupadas.has(c.id_caseta) }));
 
     if (estacionParam) {
       const idEstacion = parseInt(estacionParam, 10);
-      return HttpResponse.json(db.casetas.filter((c) => c.id_estacion === idEstacion));
+      return HttpResponse.json(conOcupada.filter((c) => c.id_estacion === idEstacion));
     }
 
-    return HttpResponse.json(db.casetas);
+    return HttpResponse.json(conOcupada);
   }),
 ];
