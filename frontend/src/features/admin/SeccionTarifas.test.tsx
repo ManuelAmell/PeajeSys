@@ -165,7 +165,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     expect(await screen.findByText(/Sin cambios/)).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByText('$ 10.500 -> $ 10.500')).not.toBeInTheDocument();
-    expect(screen.queryByText('Estación Gambote · categoría I')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Estación Gambote · categoría I'),
+    ).not.toBeInTheDocument();
     const tarifas = await obtenerTarifas({ estacion: 1, categoria: 1 });
     expect(tarifas).toHaveLength(1);
   });
@@ -179,7 +181,9 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
         name: 'Editar tarifa de la categoría I',
       }),
     );
-    await usuario.clear(await screen.findByLabelText('Resolución que la autoriza'));
+    await usuario.clear(
+      await screen.findByLabelText('Resolución que la autoriza'),
+    );
     await usuario.type(
       screen.getByLabelText('Resolución que la autoriza'),
       'Res. nueva 0099/2026',
@@ -188,10 +192,14 @@ describe('Sección Tarifas por estación (Admin.dc.html)', () => {
     await usuario.type(screen.getByLabelText('Vigente desde'), '2026-03-01');
     await usuario.click(screen.getByRole('button', { name: 'Guardar tarifa' }));
 
-    expect(await screen.findByText(/Sin cambios en el monto/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Sin cambios en el monto/),
+    ).toBeInTheDocument();
     expect(screen.queryByText('$ 10.500 -> $ 10.500')).not.toBeInTheDocument();
     await waitFor(async () => {
-      expect(await obtenerTarifas({ estacion: 1, categoria: 1 })).toHaveLength(2);
+      expect(await obtenerTarifas({ estacion: 1, categoria: 1 })).toHaveLength(
+        2,
+      );
     });
   });
 
