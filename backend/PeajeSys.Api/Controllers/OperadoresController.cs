@@ -58,12 +58,13 @@ public class OperadoresController : ControllerBase
     [Authorize(Policy = PoliticasAuth.PoliticaAdmin)]
     [ProducesResponseType(typeof(OperadorAdminDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
-    public async Task<ActionResult<OperadorAdminDto>> ActualizarEstado(
+    public async Task<ActionResult<OperadorAdminDto>> ActualizarOperador(
         [FromRoute] int id,
-        [FromBody] ActualizarEstadoRequestDto request)
+        [FromBody] ActualizarOperadorRequestDto request)
     {
-        var actualizado = await _operadorService.ActualizarEstadoAsync(id, request.Estado);
+        var actualizado = await _operadorService.ActualizarOperadorAsync(id, request);
         return Ok(actualizado);
     }
 }

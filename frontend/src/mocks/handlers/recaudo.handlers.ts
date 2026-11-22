@@ -2,6 +2,18 @@ import { http, HttpResponse } from 'msw';
 import { procesarControlLectura } from '../control';
 import { getDb } from '../db';
 
+const FORMATO_DIA_BOGOTA = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Bogota',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+/** Día civil (YYYY-MM-DD) de un instante en Bogotá; equivale a ZonaHorariaApp.DiaCivil de la API. */
+export function diaBogota(instante: string): string {
+  return FORMATO_DIA_BOGOTA.format(new Date(instante));
+}
+
 export const recaudoHandlers = [
   http.get('/api/recaudo', async ({ request }) => {
     const { errorResponse, esVacio } = await procesarControlLectura(request);
@@ -22,7 +34,7 @@ export const recaudoHandlers = [
     let transacciones = db.transacciones.filter((t) => !anuladas.has(t.id_transaccion));
 
     if (fecha && fecha !== 'todas') {
-      transacciones = transacciones.filter((t) => t.fecha_hora.startsWith(fecha));
+      transacciones = transacciones.filter((t) => diaBogota(t.fecha_hora) === fecha);
     }
 
     if (estacion) {
@@ -39,7 +51,7 @@ export const recaudoHandlers = [
     >();
 
     for (const tx of transacciones) {
-      const diaKey = tx.fecha_hora.slice(0, 10);
+      const diaKey = diaBogota(tx.fecha_hora);
       const actual = mapaDias.get(diaKey) || {
         fecha: diaKey,
         veh: 0,
@@ -99,8 +111,14 @@ export const recaudoHandlers = [
       mapaCarriles.set(idCaseta, actual);
     }
 
+    // Igual que la API: por estación, número de carril y caseta.
+    const estacionDe = (idCaseta: number) =>
+      db.casetas.find((c) => c.id_caseta === idCaseta)?.id_estacion ?? 0;
     const carriles = Array.from(mapaCarriles.values()).sort(
-      (a, b) => a.numero_carril - b.numero_carril,
+      (a, b) =>
+        estacionDe(a.id_caseta) - estacionDe(b.id_caseta) ||
+        a.numero_carril - b.numero_carril ||
+        a.id_caseta - b.id_caseta,
     );
 
     const totalEfectivo = dias.reduce((sum, d) => sum + d.ef, 0);

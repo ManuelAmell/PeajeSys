@@ -19,6 +19,7 @@ public interface IOperadorAdminService
     Task<OperadorAdminDto> ObtenerOperadorPorIdAsync(int id);
     Task<OperadorAdminDto> CrearOperadorAsync(CrearOperadorRequestDto request);
     Task<OperadorAdminDto> ActualizarEstadoAsync(int id, string nuevoEstado);
+    Task<OperadorAdminDto> ActualizarOperadorAsync(int id, ActualizarOperadorRequestDto request);
 }
 
 public interface IEstacionCasetaService

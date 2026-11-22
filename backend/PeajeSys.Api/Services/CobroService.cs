@@ -47,7 +47,7 @@ public class CobroService : ICobroService
             idEstacion = caseta?.IdEstacion ?? 1;
         }
 
-        var hoy = DateTime.UtcNow.Date;
+        var hoy = ZonaHorariaApp.HoyComoFecha();
         Tarifa? tarifa = null;
 
         if (request.IdTarifa.HasValue && request.IdTarifa.Value > 0)
