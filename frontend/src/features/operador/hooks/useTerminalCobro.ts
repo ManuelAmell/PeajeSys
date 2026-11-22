@@ -172,6 +172,7 @@ export function useTerminalCobro() {
           metodoPago: t.metodo_pago as MetodoPagoOperador,
           monto: t.monto_tarifa,
           montoTexto: formatearMoneda(t.monto_tarifa),
+          anulada: t.anulada === true,
         };
       });
   }, [transaccionesData]);
