@@ -15,8 +15,6 @@ public class CobroService : ICobroService
 {
     private readonly PeajeSysDbContext _context;
     private readonly TimeProvider _reloj;
-    private static long _fallbackSequence = 100;
-    private static readonly object _sequenceLock = new();
 
     private readonly IGeneradorNumeroTicket _generadorTicket;
     private readonly IAjustesAtomicos _ajustes;
@@ -31,8 +29,20 @@ public class CobroService : ICobroService
 
     public async Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request, ActorOperacion actor)
     {
-        // 1. Regla 1: Validar Turno
+        // La estrategia de reintentos de Npgsql exige que la transaccion de usuario corra dentro de ella.
+        var estrategia = _context.Database.CreateExecutionStrategy();
+        return await estrategia.ExecuteAsync(() => CobrarEnTransaccionAsync(request, actor));
+    }
+
+    private async Task<CobroResponseDto> CobrarEnTransaccionAsync(CobroRequestDto request, ActorOperacion actor)
+    {
+        _context.ChangeTracker.Clear(); // un reintento debe partir de un estado limpio
+        bool relacional = _context.Database.IsRelational();
+        await using var tx = relacional ? await _context.Database.BeginTransactionAsync() : null;
+
+        // 1. Regla 1: Validar Turno (y que el cobro lo haga su dueno)
         var turno = await _context.Turnos
+            .AsNoTracking()
             .Include(t => t.Caseta)
             .FirstOrDefaultAsync(t => t.IdTurno == request.IdTurno);
 
@@ -41,12 +51,14 @@ public class CobroService : ICobroService
             throw new NotFoundException("TURNO_NO_ENCONTRADO", $"No existe un turno con id {request.IdTurno}.");
         }
 
+        ExigirDuenoDelTurno(turno, actor);
+
         if (turno.Estado != "ABIERTO")
         {
             throw new ConflictException("TURNO_CERRADO", "El turno indicado no esta ABIERTO. No se pueden procesar cobros.");
         }
 
-        // 2. Regla 2: Obtener Tarifa Vigente
+        // 2. Regla 2: Obtener Tarifa Vigente (la tarifa pedida por el cliente debe cumplir el mismo filtro)
         int idEstacion = turno.Caseta?.IdEstacion ?? 0;
         if (idEstacion == 0)
         {
@@ -55,24 +67,28 @@ public class CobroService : ICobroService
         }
 
         var hoy = ZonaHorariaApp.HoyComoFecha();
-        Tarifa? tarifa = null;
+        var aplicables = _context.Tarifas.AsNoTracking()
+            .Where(t =>
+                t.IdEstacion == idEstacion &&
+                t.IdCategoria == request.IdCategoria &&
+                t.Activa &&
+                t.FechaInicioVigencia <= hoy &&
+                (t.FechaFinVigencia == null || t.FechaFinVigencia >= hoy));
 
+        Tarifa? tarifa;
         if (request.IdTarifa.HasValue && request.IdTarifa.Value > 0)
         {
-            tarifa = await _context.Tarifas.FindAsync(request.IdTarifa.Value);
+            int idPedida = request.IdTarifa.Value;
+            tarifa = await aplicables.FirstOrDefaultAsync(t => t.IdTarifa == idPedida);
+            if (tarifa == null)
+            {
+                throw new AppException("TARIFA_NO_APLICABLE",
+                    $"La tarifa {idPedida} no aplica a la estacion {idEstacion}, la categoria {request.IdCategoria} o no esta vigente.", 422);
+            }
         }
-
-        if (tarifa == null)
+        else
         {
-            tarifa = await _context.Tarifas
-                .Where(t =>
-                    t.IdEstacion == idEstacion &&
-                    t.IdCategoria == request.IdCategoria &&
-                    t.Activa &&
-                    t.FechaInicioVigencia <= hoy &&
-                    (t.FechaFinVigencia == null || t.FechaFinVigencia >= hoy))
-                .OrderByDescending(t => t.FechaInicioVigencia)
-                .FirstOrDefaultAsync();
+            tarifa = await aplicables.OrderByDescending(t => t.FechaInicioVigencia).FirstOrDefaultAsync();
         }
 
         if (tarifa == null)
@@ -84,10 +100,10 @@ public class CobroService : ICobroService
         decimal monto = tarifa.Monto;
         decimal? cambio = null;
         decimal? saldoPosterior = null;
-        DetallePagoTelepeajeDto? detalleTelepeajeDto = null;
-        DetallePagoTelepeaje? detalleTelepeajeEntidad = null;
+        DetallePagoTelepeaje? detalle = null;
         string placaNorm = request.ObtenerPlaca();
         string metodoPagoNorm = (request.MetodoPago ?? "EFECTIVO").Trim().ToUpperInvariant();
+        CuentaTelepeaje? cuenta = null;
 
         // 3. Regla 3 y 4: Validaciones segun metodo de pago
         if (metodoPagoNorm == "EFECTIVO")
@@ -103,16 +119,19 @@ public class CobroService : ICobroService
                 throw new AppException("PLACA_REQUERIDA", "La placa es obligatoria para cobro por telepeaje.", 422);
             }
 
-            var resultadoDebito = await ProcesarDebitoTelepeajeAsync(placaNorm, monto);
-            saldoPosterior = resultadoDebito.SaldoPosterior;
-            detalleTelepeajeDto = resultadoDebito.DetalleDto;
-            detalleTelepeajeEntidad = resultadoDebito.DetalleEntidad;
+            cuenta = await _context.CuentasTelepeaje.AsNoTracking().FirstOrDefaultAsync(c => c.PlacaVehiculo == placaNorm);
+            if (cuenta == null)
+            {
+                throw new AppException("CUENTA_NO_ENCONTRADA",
+                    $"No se encontro cuenta de telepeaje para la placa '{placaNorm}'.", 422);
+            }
+
+            // Pre-validacion para dar un mensaje claro; la garantia real es el debito atomico de mas abajo.
+            ValidarCuentaTelepeaje(cuenta.EstadoCuenta, cuenta.SaldoDisponible, monto);
         }
         else if (metodoPagoNorm == "EXENTO")
         {
             monto = 0m;
-            cambio = null;
-            saldoPosterior = null;
         }
         else
         {
@@ -120,13 +139,13 @@ public class CobroService : ICobroService
                 $"El metodo de pago '{request.MetodoPago}' no es valido. Use EFECTIVO, TELEPEAJE o EXENTO.", 422);
         }
 
-        // 4. Regla 5: Consecutivo de tiquete fiscal
-        long seqVal = await ObtenerSiguienteConsecutivoTicketAsync();
+        // 4. Regla 5: Consecutivo de tiquete fiscal (si la secuencia falla, el cobro falla)
+        long seqVal = await _generadorTicket.SiguienteAsync();
         string numeroTicket = FormatearNumeroTicket(ZonaHorariaApp.DiaCivil(_reloj.GetUtcNow()).ToDateTime(TimeOnly.MinValue), seqVal);
 
         string estadoPaso = metodoPagoNorm == "EXENTO" ? "EXENTO" : "APROBADO";
 
-        // 5. Regla 6: Persistencia y acumuladores
+        // 5. Regla 6: Persistencia. El acumulado de efectivo del turno lo suma el trigger de BD.
         var transaccion = new TransaccionPeaje
         {
             IdTurno = turno.IdTurno,
@@ -140,22 +159,36 @@ public class CobroService : ICobroService
             EstadoPaso = estadoPaso
         };
 
-        _context.TransaccionesPeaje.Add(transaccion);
-
-        // Actualizar acumulador en turno para cobros en efectivo
-        if (metodoPagoNorm == "EFECTIVO")
+        if (cuenta != null)
         {
-            turno.TotalRecaudadoEfectivo += monto;
+            // Debito atomico: el UPDATE condicional bloquea la fila hasta el commit y evita el doble gasto.
+            decimal? saldoNuevo = await _ajustes.DebitarCuentaAsync(cuenta.IdCuenta, monto);
+            if (saldoNuevo == null)
+            {
+                throw new AppException("SALDO_INSUFICIENTE",
+                    $"Saldo insuficiente o cuenta no activa para la tarifa ({monto:N0}).", 422);
+            }
+
+            saldoPosterior = saldoNuevo;
+            detalle = new DetallePagoTelepeaje
+            {
+                IdCuenta = cuenta.IdCuenta,
+                SaldoAnterior = saldoNuevo.Value + monto,
+                SaldoPosterior = saldoNuevo.Value,
+                AntenaLectoraId = "ANTENA-01",
+                Transaccion = transaccion
+            };
+            _context.DetallesPagoTelepeaje.Add(detalle); // arrastra la transaccion: un solo SaveChanges
+        }
+        else
+        {
+            _context.TransaccionesPeaje.Add(transaccion);
         }
 
         await _context.SaveChangesAsync();
-
-        // Si fue telepeaje, vincular IdTransaccion al detalle y persistir
-        if (detalleTelepeajeEntidad != null)
+        if (tx != null)
         {
-            detalleTelepeajeEntidad.IdTransaccion = transaccion.IdTransaccion;
-            _context.DetallesPagoTelepeaje.Add(detalleTelepeajeEntidad);
-            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
         }
 
         var transaccionDto = new TransaccionDetalleDto
@@ -187,82 +220,23 @@ public class CobroService : ICobroService
             EstadoPaso = transaccion.EstadoPaso,
             FechaHora = transaccion.FechaHora,
             Transaccion = transaccionDto,
-            DetalleTelepeaje = detalleTelepeajeDto
-        };
-    }
-
-    // Debito atómico con bloqueo de saldo telepeaje
-    private async Task<(decimal SaldoPosterior, DetallePagoTelepeajeDto DetalleDto, DetallePagoTelepeaje DetalleEntidad)> ProcesarDebitoTelepeajeAsync(string placaNorm, decimal monto)
-    {
-        CuentaTelepeaje? cuenta = null;
-
-        try
-        {
-            // Intentar bloqueo de fila FOR UPDATE en PostgreSQL
-            cuenta = await _context.CuentasTelepeaje
-                .FromSqlRaw("SELECT * FROM cuenta_telepeaje WHERE placa_vehiculo = {0} FOR UPDATE", placaNorm)
-                .FirstOrDefaultAsync();
-        }
-        catch
-        {
-            // Fallback para entornos donde FromSqlRaw FOR UPDATE no este soportado
-            cuenta = await _context.CuentasTelepeaje
-                .FirstOrDefaultAsync(c => c.PlacaVehiculo == placaNorm);
-        }
-
-        if (cuenta == null)
-        {
-            throw new AppException("CUENTA_NO_ENCONTRADA",
-                $"No se encontro cuenta de telepeaje para la placa '{placaNorm}'.", 422);
-        }
-
-        ValidarCuentaTelepeaje(cuenta.EstadoCuenta, cuenta.SaldoDisponible, monto);
-
-        decimal saldoAnterior = cuenta.SaldoDisponible;
-        decimal saldoNuevo = saldoAnterior - monto;
-        cuenta.SaldoDisponible = saldoNuevo;
-
-        var detalleEntidad = new DetallePagoTelepeaje
-        {
-            IdCuenta = cuenta.IdCuenta,
-            SaldoAnterior = saldoAnterior,
-            SaldoPosterior = saldoNuevo,
-            AntenaLectoraId = "ANTENA-01"
-        };
-
-        var detalleDto = new DetallePagoTelepeajeDto
-        {
-            IdCuenta = cuenta.IdCuenta,
-            SaldoAnterior = saldoAnterior,
-            SaldoPosterior = saldoNuevo,
-            AntenaLectoraId = "ANTENA-01"
-        };
-
-        return (saldoNuevo, detalleDto, detalleEntidad);
-    }
-
-    // Consulta la secuencia de PostgreSQL seq_numero_ticket
-    private async Task<long> ObtenerSiguienteConsecutivoTicketAsync()
-    {
-        try
-        {
-            var resultado = await _context.Database
-                .SqlQueryRaw<long>("SELECT nextval('seq_numero_ticket') AS \"Value\"")
-                .ToListAsync();
-
-            if (resultado.Count > 0)
+            DetalleTelepeaje = detalle == null ? null : new DetallePagoTelepeajeDto
             {
-                return resultado[0];
+                IdCuenta = detalle.IdCuenta,
+                SaldoAnterior = detalle.SaldoAnterior,
+                SaldoPosterior = detalle.SaldoPosterior,
+                AntenaLectoraId = detalle.AntenaLectoraId
             }
-        }
-        catch
-        {
-            // Fallback seguro incremental para entornos de prueba sin Postgres activo
-        }
+        };
+    }
 
-        lock (_sequenceLock)
+    // Solo cobra el dueno del turno, sea cual sea su rol: la terminal de cobro es del RECAUDADOR
+    // y un supervisor o administrador que cobrara en un turno ajeno alteraria su arqueo.
+    private static void ExigirDuenoDelTurno(Turno turno, ActorOperacion actor)
+    {
+        if (turno.IdOperador != actor.IdOperador)
         {
-            return ++_fallbackSequence;
+            throw new ForbiddenException("TURNO_AJENO", "Solo el operador dueno del turno puede registrar cobros en el.");
         }
     }
 
