@@ -1,6 +1,6 @@
 # Pendientes: PeajeSys (Avance 3, corte 3 - Entrega Final)
 
-Actualizado el 2026-11-20 tras la revisión del historial de commits (`dac755e` de Base de Datos y `35afb5c` de Web API .NET).
+Actualizado el 2026-11-21 con el estado real del proyecto (secciones 1 a 3: histórico de la revisión del 2026-11-20, commits `dac755e` de Base de Datos y `35afb5c` de Web API .NET; las cifras de pruebas de esas secciones están superadas, los totales actuales están en la sección 4).
 
 ---
 
@@ -84,20 +84,29 @@ Solución modular implementada en `backend/PeajeSys.sln` con arquitectura limpia
 
 ---
 
-## 🎯 4. Próximos pasos finales / Sustentación
+## 🎯 4. Cierre técnico y pendientes finales
 
-- [x] **Revisión de Seguridad y JWT**:
-  - [x] Clave JWT de producción fuera del repositorio (se exige por `JwtSettings__SecretKey`; en desarrollo se usa una clave versionada en `appsettings.Development.json`) y validación de configuración al arrancar.
-  - [x] Validación estricta del token (`exp` obligatorio, `nbf`, `iss`, `aud`, `alg`).
-  - [x] Retirar la sobrecarga sin uso de `GenerateToken`.
-  - [x] Una sola validación del token por petición (handler de autenticación).
-  - [x] Los errores de arranque de la API ya no se silencian (código de salida distinto de 0).
+### Hecho
+
+- [x] **Seguridad y JWT**:
+  - [x] Clave JWT de producción fuera del repositorio (se exige `JwtSettings__SecretKey`; en desarrollo hay una clave versionada en `appsettings.Development.json`) y validación de configuración al arrancar.
+  - [x] Validación estricta del token (`exp` obligatorio, `nbf`, `iss`, `aud`, `alg`), una sola validación por petición y errores de arranque no silenciados.
   - [x] Usuarios del equipo en la base de datos con contraseña BCrypt; sin usuarios ni contraseñas fijos en el código.
+  - [x] Políticas por rol, propiedad del turno (`403 TURNO_AJENO`) y sobre de error estándar.
+- [x] **Integración de punta a punta**: frontend, API y PostgreSQL funcionan juntos con los 3 roles (login a través del proxy de Vite, cobro, turnos, supervisión y administración).
+- [x] **Ejecución desde el repo** (clonar y correr): `docker-compose.yml` con PostgreSQL 16 que carga el script maestro, comandos de la raíz (`pnpm install`, `pnpm db`, `pnpm dev`, `pnpm dev:mocks`, `pnpm test`), `.env.development` y `.env.mocks` versionados, y README con "Inicio rápido" para PowerShell y bash.
+- [x] **Totales de pruebas** (medidos el 2026-11-21 en un clon limpio de la rama de documentación):
+  - Backend (`dotnet test`): **405** pruebas, 0 fallos.
+  - Frontend (Vitest): **465** pruebas en 44 archivos, 0 fallos.
+  - E2E (Playwright, modo mocks): **70** pruebas, 0 fallos.
+- [x] Documentación de limitaciones: [docs/limitaciones-conocidas.md](docs/limitaciones-conocidas.md).
+
+### Pendientes abiertos
+
 - [ ] Regenerar `Diccionario_Datos_PeajeSys.pdf` (en `database/01_Modelado` y `docs/entregas`) con la columna `OPERADOR.password_hash` y el rol `ADMINISTRADOR`.
-- [ ] **Prueba de integración End-to-End**:
-  - Levantar la base de datos con `docker compose up -d` (o `pnpm db`) desde la raíz (carga `00_Master_PeajeSys.sql` automáticamente) o ejecutando `00_Master_PeajeSys.sql` con `psql` según `database/README.md`.
-  - Iniciar la Web API desde su carpeta (`cd backend/PeajeSys.Api` y `dotnet run`; entorno Development, puerto 5080; no requiere configuración).
-  - Desde la raíz: `pnpm install` y `pnpm dev` (API + frontend contra la BD real; `pnpm dev:mocks` para usar solo los mocks).
-- [ ] **Preparación de la sustentación final**:
-  - Revisar diapositivas de presentación basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.
-  - Demostración en vivo de los 3 roles en el frontend y la ejecución de los triggers / funciones en PostgreSQL.
+- [ ] Preparar la sustentación final:
+  - Revisar las diapositivas basadas en `docs/entregas/PeajeSys_Avance_Final.pdf`.
+  - Demostración en vivo de los 3 roles en el frontend y de la ejecución de los triggers y funciones en PostgreSQL.
+- [ ] Ejecutar la [checklist de verificación en Windows](docs/verificacion-windows.md) (P7) en una máquina Windows y anotar el resultado.
+- [ ] Decidir sobre las decisiones a revisar de [limitaciones conocidas](docs/limitaciones-conocidas.md) (en especial, si `GET /api/tarifas` debe exigir autenticación, y la auditoría de los exentos con `postgres`).
+- [ ] Opcional: un commit de formato con Prettier para los archivos antiguos del frontend que hoy no pasan `pnpm format`.
