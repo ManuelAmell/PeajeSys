@@ -89,7 +89,7 @@ public class MatrizPruebasTests
             });
         }
 
-        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
+        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, ActorOperacion actor)
         {
             return Task.FromResult<IEnumerable<TurnoDto>>(new List<TurnoDto>
             {

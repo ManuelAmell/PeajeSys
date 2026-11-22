@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { PanelTransaccionesTurno } from '@/features/transacciones-turno/PanelTransaccionesTurno';
 import type { MetricasArqueo, TurnoConDetalle } from '../tipos';
 
 interface SeccionArqueoProps {
@@ -8,6 +9,7 @@ interface SeccionArqueoProps {
 
 export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
   const [fechaFiltro, setFechaFiltro] = useState<string>('todas');
+  const [turnoDetalle, setTurnoDetalle] = useState<number | null>(null);
 
   // Obtener fechas únicas disponibles
   const fechasDisponibles = useMemo(() => {
@@ -102,6 +104,7 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
               <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold text-right w-[110px] min-w-[100px]">Declarado</th>
               <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[165px] min-w-[155px]">Arqueo</th>
               <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[270px] min-w-[260px]">Conciliación</th>
+              <th scope="col" className="px-2 py-2.5 border-b-2 border-texto font-semibold w-[150px] min-w-[140px]">Transacciones</th>
             </tr>
           </thead>
           <tbody>
@@ -140,11 +143,26 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
                     {t.conciliacionTexto}
                   </span>
                 </td>
+                <td className="px-2 py-2.5 border-b border-superficie-2 whitespace-nowrap">
+                  {t.estado === 'ABIERTO' ? (
+                    <button
+                      type="button"
+                      aria-label={`Ver transacciones del turno ${t.id_turno}`}
+                      aria-pressed={turnoDetalle === t.id_turno}
+                      onClick={() => setTurnoDetalle(turnoDetalle === t.id_turno ? null : t.id_turno)}
+                      className="h-[40px] px-3 rounded-[6px] border-2 border-texto bg-superficie text-texto text-[14px] font-semibold ps-secundario focus-visible:outline-[3px] focus-visible:outline-texto focus-visible:outline-offset-2"
+                    >
+                      Ver transacciones
+                    </button>
+                  ) : (
+                    <span className="text-texto-2">—</span>
+                  )}
+                </td>
               </tr>
             ))}
             {turnosFiltrados.length === 0 && (
               <tr>
-                <td colSpan={9} className="p-8 text-center text-texto-2">
+                <td colSpan={10} className="p-8 text-center text-texto-2">
                   No hay turnos registrados para la fecha seleccionada.
                 </td>
               </tr>
@@ -152,6 +170,16 @@ export function SeccionArqueo({ turnos, metricas }: SeccionArqueoProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Mismo panel y diálogo que la terminal del operador, solo para turnos abiertos */}
+      {turnoDetalle !== null && turnosFiltrados.some((t) => t.id_turno === turnoDetalle && t.estado === 'ABIERTO') && (
+        <PanelTransaccionesTurno
+          key={turnoDetalle}
+          idTurno={turnoDetalle}
+          puedeAnular
+          titulo={`Transacciones del turno ${turnoDetalle}`}
+        />
+      )}
     </section>
   );
 }

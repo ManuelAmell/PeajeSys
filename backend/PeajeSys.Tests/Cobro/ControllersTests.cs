@@ -82,7 +82,7 @@ public class ControllersTests
             });
         }
 
-        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, int? idOperador, string? estado)
+        public Task<IEnumerable<TurnoDto>> ListarTurnosAsync(int? idCaseta, string? operador, string? estado, string? fecha, int? idEstacion, ActorOperacion actor)
         {
             var list = new List<TurnoDto>
             {

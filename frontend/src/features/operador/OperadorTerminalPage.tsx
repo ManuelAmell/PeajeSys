@@ -11,6 +11,7 @@ import { CobroTelepeaje } from './components/CobroTelepeaje';
 import { BotonCobrar } from './components/BotonCobrar';
 import { ResumenCaja } from './components/ResumenCaja';
 import { DialogoCierreTurno } from './components/DialogoCierreTurno';
+import { PanelTransaccionesTurno } from '@/features/transacciones-turno/PanelTransaccionesTurno';
 import { useTerminalCobro } from './hooks/useTerminalCobro';
 import { useAtajosTeclado } from './hooks/useAtajosTeclado';
 
@@ -231,6 +232,15 @@ export function OperadorTerminalPage() {
                 totalRecaudadoEfectivo={terminal.totalRecaudadoEfectivo}
                 pasos={terminal.pasos}
               />
+
+              {/* Transacciones del turno con la opción de anular: plegado para no estorbar al cobro */}
+              <div className="basis-full">
+                <PanelTransaccionesTurno
+                  idTurno={terminal.idTurno}
+                  puedeAnular={!terminal.turnoEstaCerrado}
+                  colapsable
+                />
+              </div>
             </div>
           )}
       </main>
