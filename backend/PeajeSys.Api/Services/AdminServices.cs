@@ -233,7 +233,14 @@ public class TarifaService : ITarifaService
     {
         if (tarifaAnterior != null)
         {
-            tarifaAnterior.FechaFinVigencia = tarifaNueva.FechaInicioVigencia;
+            if (tarifaNueva.FechaInicioVigencia <= tarifaAnterior.FechaInicioVigencia)
+            {
+                throw new AppException("VIGENCIA_INVALIDA",
+                    $"La fecha de inicio de vigencia ({tarifaNueva.FechaInicioVigencia:yyyy-MM-dd}) debe ser posterior a la fecha de inicio de la tarifa activa previa ({tarifaAnterior.FechaInicioVigencia:yyyy-MM-dd}).",
+                    422);
+            }
+
+            tarifaAnterior.FechaFinVigencia = tarifaNueva.FechaInicioVigencia.AddDays(-1);
             if (tarifaNueva.FechaInicioVigencia <= ZonaHorariaApp.HoyComoFecha())
             {
                 tarifaAnterior.Activa = false;

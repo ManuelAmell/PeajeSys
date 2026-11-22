@@ -64,8 +64,20 @@ public class TurnosHttpTests : IClassFixture<PeajeSysApiMemoriaFactory>
         return _cliente.SendAsync(peticion);
     }
 
+    private void SembrarCaseta(int idCaseta, string estado = "OPERATIVA")
+    {
+        using var alcance = _fabrica.Services.CreateScope();
+        var db = alcance.ServiceProvider.GetRequiredService<PeajeSysDbContext>();
+        if (!db.Casetas.Any(c => c.IdCaseta == idCaseta))
+        {
+            db.Casetas.Add(new Caseta { IdCaseta = idCaseta, IdEstacion = 1, Estado = estado });
+            db.SaveChanges();
+        }
+    }
+
     private long SembrarTurno(int idOperador, int idCaseta)
     {
+        SembrarCaseta(idCaseta);
         using var alcance = _fabrica.Services.CreateScope();
         var db = alcance.ServiceProvider.GetRequiredService<PeajeSysDbContext>();
         var turno = new Turno { IdCaseta = idCaseta, IdOperador = idOperador, FondoInicialCaja = 1000, Estado = "ABIERTO" };
@@ -83,6 +95,7 @@ public class TurnosHttpTests : IClassFixture<PeajeSysApiMemoriaFactory>
     [Fact]
     public async Task Abrir_RecaudadorConIdOperadorAjeno_QuedaANombreDelToken()
     {
+        SembrarCaseta(201);
         var token = Token(21, Roles.Recaudador, "REC-021");
 
         var r = await Enviar(HttpMethod.Post, "/api/turnos/abrir", token, """{"id_caseta":201,"id_operador":22,"fondo_inicial_caja":5000,"diurno":true}""");

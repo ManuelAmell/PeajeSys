@@ -21,6 +21,8 @@ public class FechaCivilTurnoTests
         var options = new DbContextOptionsBuilder<PeajeSysDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
         using var db = new PeajeSysDbContext(options);
+        db.Casetas.Add(new Caseta { IdCaseta = 1, IdEstacion = 1, Estado = "OPERATIVA" });
+        await db.SaveChangesAsync();
         var servicio = new TurnoService(db, new RelojFalso(ahoraUtc));
         var actor = new ActorOperacion(1, "REC-001", Roles.Recaudador);
 
