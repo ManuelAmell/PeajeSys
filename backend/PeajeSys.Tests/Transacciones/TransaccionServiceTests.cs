@@ -47,7 +47,7 @@ public class TransaccionServiceTests
             new TransaccionPeaje { IdTransaccion = TxEnCerrado, IdTurno = TurnoCerrado, IdTarifa = 1, IdCategoria = 1, PlacaDetectada = "ZZZ999", MontoTarifa = 9000, MetodoPago = "EFECTIVO", NumeroTicket = "T-103", FechaHora = t0, EstadoPaso = "APROBADO" });
         db.DetallesPagoTelepeaje.Add(new DetallePagoTelepeaje { IdDetalleTelepeaje = 1, IdTransaccion = TxTelepeaje, IdCuenta = 5, SaldoAnterior = 50000, SaldoPosterior = 40000, AntenaLectoraId = "ANTENA-01" });
         db.SaveChanges();
-        return (new TransaccionService(db), db);
+        return (new TransaccionService(db, new Cobro.AjustesAtomicosEnMemoria(db)), db);
     }
 
     private static AnularTransaccionRequestDto Motivo(string m = "Cobro duplicado") => new() { Motivo = m };

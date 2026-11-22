@@ -122,7 +122,7 @@ public class ControllersTests
 
     private class FakeCobroService : ICobroService
     {
-        public Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request)
+        public Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request, ActorOperacion actor)
         {
             if (request.IdTurno == 99)
                 throw new ConflictException("TURNO_CERRADO", "El turno indicado no esta ABIERTO.");
@@ -262,7 +262,7 @@ public class ControllersTests
     public async Task RecaudoController_CobroEfectivoValido_Retorna201ConTransaccionYCambio()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 1,
@@ -289,7 +289,7 @@ public class ControllersTests
     public async Task RecaudoController_CobroEnTurnoCerrado_LanzaConflictExceptionTurnoCerrado()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 99, // Turno 99 simula estar cerrado
@@ -309,7 +309,7 @@ public class ControllersTests
     public async Task RecaudoController_EfectivoInsuficiente_LanzaAppException422()
     {
         // Arrange
-        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo());
+        var controller = new RecaudoController(new FakeCobroService(), new FakeReporteRecaudoServiceMinimo()).ConUsuario(1, "RECAUDADOR");
         var request = new CobroRequestDto
         {
             IdTurno = 1,

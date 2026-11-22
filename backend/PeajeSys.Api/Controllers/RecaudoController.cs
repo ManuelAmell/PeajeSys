@@ -29,7 +29,7 @@ public class RecaudoController : ControllerBase
     [ProducesResponseType(typeof(ErrorEnvelope), StatusCodes.Status422UnprocessableEntity)]
     public async Task<ActionResult<CobroResponseDto>> ProcesarCobro([FromBody] CobroRequestDto request)
     {
-        var response = await _cobroService.ProcesarCobroAsync(request);
+        var response = await _cobroService.ProcesarCobroAsync(request, ActorOperacionClaims.Desde(User));
         return StatusCode(StatusCodes.Status201Created, response);
     }
 

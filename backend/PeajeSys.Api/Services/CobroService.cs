@@ -18,13 +18,18 @@ public class CobroService : ICobroService
     private static long _fallbackSequence = 100;
     private static readonly object _sequenceLock = new();
 
-    public CobroService(PeajeSysDbContext context, TimeProvider? reloj = null)
+    private readonly IGeneradorNumeroTicket _generadorTicket;
+    private readonly IAjustesAtomicos _ajustes;
+
+    public CobroService(PeajeSysDbContext context, IGeneradorNumeroTicket generadorTicket, IAjustesAtomicos ajustes, TimeProvider? reloj = null)
     {
         _context = context;
+        _generadorTicket = generadorTicket;
+        _ajustes = ajustes;
         _reloj = reloj ?? TimeProvider.System;
     }
 
-    public async Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request)
+    public async Task<CobroResponseDto> ProcesarCobroAsync(CobroRequestDto request, ActorOperacion actor)
     {
         // 1. Regla 1: Validar Turno
         var turno = await _context.Turnos

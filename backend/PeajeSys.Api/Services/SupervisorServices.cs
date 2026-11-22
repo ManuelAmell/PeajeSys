@@ -372,9 +372,12 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
     private readonly PeajeSysDbContext _context;
     private readonly ILogger<TelepeajeMonitoreoService> _logger;
 
-    public TelepeajeMonitoreoService(PeajeSysDbContext context, ILogger<TelepeajeMonitoreoService> logger)
+    private readonly IAjustesAtomicos _ajustes;
+
+    public TelepeajeMonitoreoService(PeajeSysDbContext context, ILogger<TelepeajeMonitoreoService> logger, IAjustesAtomicos ajustes)
     {
         _context = context;
+        _ajustes = ajustes;
         _logger = logger;
     }
 

@@ -1,3 +1,4 @@
+using PeajeSys.Core.Interfaces;
 using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -37,7 +38,7 @@ public class TicketDiaCivilTests
         // 19:43 en Bogota (UTC-5) del 21 = 00:43 UTC del 22
         var reloj = new RelojFalso(new DateTimeOffset(2026, 11, 22, 0, 43, 0, TimeSpan.Zero));
 
-        var respuesta = await new CobroService(db, reloj).ProcesarCobroAsync(req);
+        var respuesta = await new CobroService(db, new GeneradorTicketFalso(), new AjustesAtomicosEnMemoria(db), reloj).ProcesarCobroAsync(req, new ActorOperacion(1, "REC-001", "RECAUDADOR"));
 
         Assert.Contains("20261121", respuesta.NumeroTicket);
         Assert.DoesNotContain("20261122", respuesta.NumeroTicket);
@@ -50,7 +51,7 @@ public class TicketDiaCivilTests
         using var _ = db;
         var reloj = new RelojFalso(new DateTimeOffset(2026, 11, 22, 5, 30, 0, TimeSpan.Zero));
 
-        var respuesta = await new CobroService(db, reloj).ProcesarCobroAsync(req);
+        var respuesta = await new CobroService(db, new GeneradorTicketFalso(), new AjustesAtomicosEnMemoria(db), reloj).ProcesarCobroAsync(req, new ActorOperacion(1, "REC-001", "RECAUDADOR"));
 
         Assert.Contains("20261122", respuesta.NumeroTicket);
     }
