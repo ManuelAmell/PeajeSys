@@ -145,7 +145,8 @@ describe('MSW: anulación de transacciones (imita a la API real)', () => {
       dias: { veh: number; ef: number; total: number }[];
       carriles: { veh: number; ef: number }[];
     };
-    const leer = async () => (await (await fetch(`${BASE}/recaudo`)).json()) as Rec;
+    const leer = async () =>
+      (await (await fetch(`${BASE}/recaudo`)).json()) as Rec;
     const antes = await leer();
 
     expect((await anular(11, 'Cobro duplicado')).status).toBe(200);

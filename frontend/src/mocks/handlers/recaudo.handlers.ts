@@ -13,7 +13,13 @@ export const recaudoHandlers = [
     const estacion = url.searchParams.get('estacion');
 
     const db = getDb();
-    let transacciones = [...db.transacciones];
+    // Igual que la API: una transacción anulada (VOID) no cuenta en el recaudo.
+    const anuladas = new Set(
+      db.auditorias
+        .filter((a) => a.tipo_operacion === 'VOID')
+        .map((a) => a.id_transaccion),
+    );
+    let transacciones = db.transacciones.filter((t) => !anuladas.has(t.id_transaccion));
 
     if (fecha && fecha !== 'todas') {
       transacciones = transacciones.filter((t) => t.fecha_hora.startsWith(fecha));

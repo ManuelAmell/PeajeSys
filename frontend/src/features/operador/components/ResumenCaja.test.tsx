@@ -25,14 +25,18 @@ describe('ResumenCaja: Últimos pasos con una anulada', () => {
       />,
     );
 
-    expect(screen.getByText('Pasos registrados').nextElementSibling).toHaveTextContent('1');
+    expect(
+      screen.getByText('Pasos registrados').nextElementSibling,
+    ).toHaveTextContent('1');
 
     const filas = screen.getAllByRole('listitem');
     expect(filas).toHaveLength(2);
-    const anulada = filas[0];
+    const anulada = filas[0]!;
     expect(within(anulada).getByText('Anulada')).toBeInTheDocument();
     expect(within(anulada).getByText('ABC122')).toHaveClass('line-through');
-    expect(within(filas[1]).queryByText('Anulada')).toBeNull();
-    expect(within(filas[1]).getByText('ABC121')).not.toHaveClass('line-through');
+    expect(within(filas[1]!).queryByText('Anulada')).toBeNull();
+    expect(within(filas[1]!).getByText('ABC121')).not.toHaveClass(
+      'line-through',
+    );
   });
 });
