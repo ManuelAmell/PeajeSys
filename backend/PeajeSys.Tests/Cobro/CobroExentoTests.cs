@@ -200,7 +200,8 @@ public class CobroExentoTests
 
         var turnoDb = await db.Turnos.FindAsync(turno.IdTurno);
         Assert.NotNull(turnoDb);
-        Assert.Equal(25000m, turnoDb.TotalRecaudadoEfectivo);
+        // El acumulado lo suma el trigger de BD (no existe en InMemory): la aplicacion no debe escribirlo.
+        Assert.Equal(10000m, turnoDb.TotalRecaudadoEfectivo);
     }
 
     [Fact]

@@ -510,9 +510,9 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
                 $"No se encontro ninguna cuenta de telepeaje para la placa '{placa}' o serial '{serialTag}'.");
         }
 
-        decimal saldoAnterior = cuenta.SaldoDisponible;
-        decimal saldoNuevo = saldoAnterior + monto;
-        cuenta.SaldoDisponible = saldoNuevo;
+        // Incremento atomico en BD: una recarga concurrente con un debito no se pisan.
+        decimal saldoNuevo = await _ajustes.AcreditarCuentaAsync(cuenta.IdCuenta, monto);
+        decimal saldoAnterior = saldoNuevo - monto;
 
         var ahora = DateTime.UtcNow;
 
@@ -522,7 +522,7 @@ public class TelepeajeMonitoreoService : ITelepeajeMonitoreoService
             string.IsNullOrWhiteSpace(usuarioResponsable) ? "SUPERVISOR" : usuarioResponsable,
             cuenta.IdCuenta, cuenta.PlacaVehiculo, saldoAnterior, saldoNuevo, monto);
 
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(); // no-op con la implementacion SQL; persiste el fake en InMemory
 
         return new RecargaTagResponseDto
         {

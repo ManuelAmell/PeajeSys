@@ -104,18 +104,21 @@ public class TransaccionService : ITransaccionService
             throw new ConflictException("TRANSACCION_YA_ANULADA", $"La transaccion {idTransaccion} ya fue anulada.");
         }
 
+        // Reversiones atomicas (un UPDATE en BD): no se lee, modifica y escribe el saldo ni el recaudo.
         if (transaccion.MetodoPago == "EFECTIVO" && transaccion.EstadoPaso == "APROBADO")
         {
-            turno.TotalRecaudadoEfectivo -= transaccion.MontoTarifa;
+            await _ajustes.RestarRecaudoEfectivoAsync(turno.IdTurno, transaccion.MontoTarifa);
         }
         else if (transaccion.MetodoPago == "TELEPEAJE")
         {
-            var detalle = await _context.DetallesPagoTelepeaje.FirstOrDefaultAsync(d => d.IdTransaccion == idTransaccion);
-            if (detalle != null)
+            var detalle = await _context.DetallesPagoTelepeaje.AsNoTracking().FirstOrDefaultAsync(d => d.IdTransaccion == idTransaccion);
+            if (detalle == null)
             {
-                var cuenta = await _context.CuentasTelepeaje.FirstAsync(c => c.IdCuenta == detalle.IdCuenta);
-                cuenta.SaldoDisponible += transaccion.MontoTarifa;
+                // No se registra un VOID que oculte el problema: el dinero debitado no se puede devolver sin saber a que cuenta.
+                throw new ConflictException("DETALLE_TELEPEAJE_AUSENTE",
+                    $"La transaccion {idTransaccion} es de telepeaje pero no tiene detalle de pago: no se puede devolver el saldo. Reportelo a un administrador.");
             }
+            await _ajustes.AcreditarCuentaAsync(detalle.IdCuenta, transaccion.MontoTarifa);
         }
 
         var auditoria = new AuditoriaTransaccion
