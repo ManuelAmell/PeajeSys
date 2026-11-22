@@ -14,8 +14,14 @@ public static class ZonaHorariaApp
         foreach (var id in new[] { "America/Bogota", "SA Pacific Standard Time" })
         {
             try { return TimeZoneInfo.FindSystemTimeZoneById(id); }
-            catch (TimeZoneNotFoundException) { }
-            catch (InvalidTimeZoneException) { }
+            catch (TimeZoneNotFoundException)
+            {
+                // Identificador no reconocido en la base de datos de zonas horarias del host (p. ej. IANA en Windows antiguo).
+            }
+            catch (InvalidTimeZoneException)
+            {
+                // Definicion de zona horaria danada o corrupta en el host; se prueba el siguiente identificador.
+            }
         }
         // Ultimo recurso (contenedor sin tzdata/ICU): Colombia no tiene horario de verano, el desfase fijo es exacto.
         return TimeZoneInfo.CreateCustomTimeZone("America/Bogota", TimeSpan.FromHours(-5), "Bogota", "Bogota");
