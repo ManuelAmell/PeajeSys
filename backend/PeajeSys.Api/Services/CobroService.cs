@@ -117,7 +117,7 @@ public class CobroService : ICobroService
 
         // 4. Regla 5: Consecutivo de tiquete fiscal
         long seqVal = await ObtenerSiguienteConsecutivoTicketAsync();
-        string numeroTicket = FormatearNumeroTicket(DateTime.UtcNow, seqVal);
+        string numeroTicket = FormatearNumeroTicket(ZonaHorariaApp.DiaCivil(_reloj.GetUtcNow()).ToDateTime(TimeOnly.MinValue), seqVal);
 
         string estadoPaso = metodoPagoNorm == "EXENTO" ? "EXENTO" : "APROBADO";
 
