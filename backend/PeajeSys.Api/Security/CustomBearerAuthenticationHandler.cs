@@ -18,35 +18,48 @@ public class CustomBearerAuthenticationHandler : AuthenticationHandler<Authentic
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
+    /// <summary>Clave de HttpContext.Items con el codigo de error que debe escribir el challenge.</summary>
+    internal const string ClaveCodigoError = "peajesys.auth.codigo";
+
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IVerificadorSesionOperador _sesiones;
 
     public CustomBearerAuthenticationHandler(
         Microsoft.Extensions.Options.IOptionsMonitor<AuthenticationSchemeOptions> options,
         Microsoft.Extensions.Logging.ILoggerFactory logger,
         System.Text.Encodings.Web.UrlEncoder encoder,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        IVerificadorSesionOperador sesiones)
         : base(options, logger, encoder)
     {
         _jwtTokenService = jwtTokenService;
+        _sesiones = sesiones;
     }
 
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         string authHeader = Request.Headers["Authorization"].ToString();
         if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
-            return Task.FromResult(AuthenticateResult.NoResult());
+            return AuthenticateResult.NoResult();
         }
 
         string token = authHeader.Substring("Bearer ".Length).Trim();
         var principal = _jwtTokenService.ValidateToken(token);
         if (principal == null)
         {
-            return Task.FromResult(AuthenticateResult.Fail("Token JWT invalido o expirado."));
+            return AuthenticateResult.Fail("Token JWT invalido o expirado.");
         }
 
-        var ticket = new AuthenticationTicket(principal, Scheme.Name);
-        return Task.FromResult(AuthenticateResult.Success(ticket));
+        // El token solo prueba quien es: estado y rol se leen de la BD en cada peticion (con cache corta).
+        var vigente = await _sesiones.VerificarAsync(principal);
+        if (vigente == null)
+        {
+            Context.Items[ClaveCodigoError] = "SESION_REVOCADA";
+            return AuthenticateResult.Fail("Operador inexistente o inactivo.");
+        }
+
+        return AuthenticateResult.Success(new AuthenticationTicket(vigente, Scheme.Name));
     }
 
     protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
@@ -54,12 +67,16 @@ public class CustomBearerAuthenticationHandler : AuthenticationHandler<Authentic
         Response.StatusCode = StatusCodes.Status401Unauthorized;
         Response.ContentType = "application/json; charset=utf-8";
 
+        bool revocada = Context.Items.TryGetValue(ClaveCodigoError, out var codigoItem)
+            && codigoItem is "SESION_REVOCADA";
         var envelope = new ErrorEnvelope
         {
             Error = new ErrorDetails
             {
-                Codigo = "NO_AUTENTICADO",
-                Mensaje = "No se proporciono un token de autenticacion valido o la sesion ha expirado."
+                Codigo = revocada ? "SESION_REVOCADA" : "NO_AUTENTICADO",
+                Mensaje = revocada
+                    ? "La sesion ya no es valida: el operador fue desactivado o no existe."
+                    : "No se proporciono un token de autenticacion valido o la sesion ha expirado."
             }
         };
 
