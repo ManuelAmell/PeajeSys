@@ -46,6 +46,8 @@ export const clavesApi = {
     detalle: (id: number) => [...clavesApi.turnos.todas, 'detalle', id] as const,
     transacciones: (idTurno: number) =>
       [...clavesApi.turnos.todas, 'transacciones', idTurno] as const,
+    arqueo: (idTurno: number, efectivoReportado: number) =>
+      [...clavesApi.turnos.todas, 'arqueo', idTurno, efectivoReportado] as const,
   },
   transacciones: {
     todas: ['transacciones'] as const,

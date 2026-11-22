@@ -2,10 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { http, HttpResponse } from 'msw';
 import { server } from '@/mocks/server';
 import { ErrorApi } from '@/api/clienteHttp';
-import {
-  esquemaRecargaTelepeaje,
-  recargarCuentaTelepeaje,
-} from './telepeaje';
+import { esquemaRecargaTelepeaje, recargarCuentaTelepeaje } from './telepeaje';
 import { esquemaArqueoTurno, obtenerArqueoTurno } from './turnos';
 
 describe('recargarCuentaTelepeaje (POST /api/telepeaje/recargar)', () => {
@@ -35,18 +32,26 @@ describe('recargarCuentaTelepeaje (POST /api/telepeaje/recargar)', () => {
   });
 
   it('con MSW por defecto suma al saldo de la cuenta', async () => {
-    const r = await recargarCuentaTelepeaje({ placa: 'ABC123', monto: 20000 });
+    const r = await recargarCuentaTelepeaje({ placa: 'HKL123', monto: 20000 });
     expect(r.monto_recargado).toBe(20000);
     expect(r.saldo_nuevo).toBe(r.saldo_anterior + 20000);
   });
 
   it('propaga el 404 de cuenta inexistente como ErrorApi', async () => {
-    await expect(recargarCuentaTelepeaje({ placa: 'ZZZ999', monto: 1000 })).rejects.toBeInstanceOf(ErrorApi);
+    await expect(
+      recargarCuentaTelepeaje({ placa: 'ZZZ999', monto: 1000 }),
+    ).rejects.toBeInstanceOf(ErrorApi);
   });
 
   it('rechaza una respuesta que no cumple el esquema', async () => {
-    server.use(http.post('*/api/telepeaje/recargar', () => HttpResponse.json({ id_cuenta: 'x' })));
-    await expect(recargarCuentaTelepeaje({ placa: 'ABC123', monto: 1000 })).rejects.toBeDefined();
+    server.use(
+      http.post('*/api/telepeaje/recargar', () =>
+        HttpResponse.json({ id_cuenta: 'x' }),
+      ),
+    );
+    await expect(
+      recargarCuentaTelepeaje({ placa: 'ABC123', monto: 1000 }),
+    ).rejects.toBeDefined();
   });
 });
 
@@ -84,6 +89,8 @@ describe('obtenerArqueoTurno (GET /api/turnos/{id}/arqueo)', () => {
   });
 
   it('un turno inexistente da ErrorApi 404', async () => {
-    await expect(obtenerArqueoTurno(99999, 0)).rejects.toMatchObject({ estado: 404 });
+    await expect(obtenerArqueoTurno(99999, 0)).rejects.toMatchObject({
+      estado: 404,
+    });
   });
 });
