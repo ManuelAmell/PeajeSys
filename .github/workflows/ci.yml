@@ -173,7 +173,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Instalar navegadores Playwright con dependencias del sistema
-        run: pnpm exec playwright install --with-deps chromium
+        run: pnpm --dir frontend exec playwright install --with-deps chromium
 
       - name: Ejecutar pruebas E2E
         run: pnpm --dir frontend e2e
