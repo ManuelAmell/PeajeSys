@@ -59,6 +59,8 @@ docker compose up -d
 - Si `docker compose ps` muestra el servicio `exited`, revisa `docker compose logs db`, corrige y recarga con `docker compose down -v`.
 - Para entrar a la base: `docker compose exec db psql -U postgres -d peajesys_db`
 - Para reiniciar desde cero (borra los datos y vuelve a cargar el script): `docker compose down -v && docker compose up -d`
+- Atajos desde la raíz: `pnpm db` (equivale a `docker compose up -d`) y `pnpm db:reset` (equivale a `docker compose down -v && docker compose up -d`).
+- Si el puerto 5432 está ocupado por otro PostgreSQL, usa otro con `PEAJESYS_DB_PORT` (p. ej. `PEAJESYS_DB_PORT=5433 docker compose up -d` o `PEAJESYS_DB_PORT=5433 pnpm db`) y ajusta el puerto en la cadena de conexión de la API.
 
 > **Windows:** en PowerShell 5 no existe `&&`; ejecuta los comandos por separado o sepáralos con `;` (por ejemplo `docker compose down -v; docker compose up -d`).
 
