@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { QueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
 import { esquemaTransaccionPeaje, esquemaTurno } from '@/types';
 import type { TransaccionPeaje, Turno } from '@/types';
@@ -78,19 +79,38 @@ export function useTransaccionesTurno(
   });
 }
 
+/**
+ * Tras abrir o cerrar un turno cambian las listas de turnos y la ocupación de las casetas.
+ * Las listas se recargan aunque estén inactivas: la terminal no está montada mientras se abre
+ * el turno y, si solo se invalidara, leería la caché vieja (sin turno abierto) y redirigiría
+ * de vuelta a Abrir turno. Devuelve la promesa para que la apertura espere antes de navegar.
+ */
+function invalidarTurnosYOcupacion(queryClient: QueryClient): Promise<unknown> {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: clavesApi.turnos.todas }),
+    queryClient.invalidateQueries({
+      queryKey: [...clavesApi.turnos.todas, 'lista'],
+      refetchType: 'all',
+    }),
+    queryClient.invalidateQueries({ queryKey: clavesApi.estaciones.todas }),
+  ]);
+}
+
 export function useCerrarTurno() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: cerrarTurno,
     onSuccess: (turnoActualizado) => {
-      queryClient.invalidateQueries({ queryKey: clavesApi.turnos.todas });
       queryClient.setQueryData(
         clavesApi.turnos.detalle(turnoActualizado.id_turno),
         turnoActualizado,
       );
       queryClient.invalidateQueries({ queryKey: clavesApi.auditoria.todas });
       queryClient.invalidateQueries({ queryKey: clavesApi.recaudo.todas });
+      // Sin esperar: la terminal guarda el turno cerrado al resolver mutateAsync; si esperara la
+      // recarga, vería la lista sin turno abierto antes y redirigiría a Abrir turno.
+      void invalidarTurnosYOcupacion(queryClient);
     },
   });
 }
@@ -114,11 +134,11 @@ export function useAbrirTurno() {
   return useMutation({
     mutationFn: abrirTurno,
     onSuccess: (nuevoTurno) => {
-      queryClient.invalidateQueries({ queryKey: clavesApi.turnos.todas });
       queryClient.setQueryData(
         clavesApi.turnos.detalle(nuevoTurno.id_turno),
         nuevoTurno,
       );
+      return invalidarTurnosYOcupacion(queryClient);
     },
   });
 }
