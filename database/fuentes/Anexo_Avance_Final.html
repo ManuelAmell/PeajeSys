@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>PeajeSys · Anexo al Informe de Avance Final (Corte 3)</title>
+<!--
+  Fuente versionada del anexo (páginas 13 en adelante) de database/PeajeSys_Avance_Final.pdf.
+  Las páginas 1 a 12 son el informe original del 18-nov y no se modifican.
+  Regenerar:
+    chromium --headless --no-pdf-header-footer --print-to-pdf=anexo.pdf Anexo_Avance_Final.html
+    qpdf --empty --pages informe_original_12p.pdf anexo.pdf -- PeajeSys_Avance_Final.pdf
+-->
+<style>
+@page {
+  size: Letter;
+  margin: 16mm 16mm 18mm 16mm;
+  @top-left { content: "PEAJESYS | INFORME DE AVANCE FINAL (CORTE 3)"; font-family: "Noto Sans", "Segoe UI", Arial, sans-serif; font-size: 8pt; color: #64748b; letter-spacing: .04em; vertical-align: bottom; padding-bottom: 4px; border-bottom: 1px solid #1e3a8a; }
+  @top-right { content: "UNIVERSIDAD DE CARTAGENA — BASES DE DATOS"; font-family: "Noto Sans", "Segoe UI", Arial, sans-serif; font-size: 8pt; color: #64748b; letter-spacing: .04em; vertical-align: bottom; padding-bottom: 4px; border-bottom: 1px solid #1e3a8a; }
+  @bottom-right { content: "Página " counter(page); font-family: "Liberation Serif", "Times New Roman", serif; font-size: 11pt; color: #111; }
+}
+html { counter-reset: page 12; }
+* { box-sizing: border-box; }
+body { font-family: "Segoe UI", "Noto Sans", "Liberation Sans", Arial, sans-serif; color: #1f2937; font-size: 9.6pt; line-height: 1.45; margin: 0; }
+h1 { font-size: 17pt; color: #1e3a8a; font-weight: 800; margin: 4px 0 6px; padding-bottom: 6px; border-bottom: 1px solid #cbd5e1; }
+h2 { font-size: 11.5pt; color: #111827; border-left: 4px solid #d97706; padding-left: 8px; margin: 18px 0 8px; break-after: avoid; }
+p { margin: 4px 0 8px; text-align: justify; }
+code { font-family: "JetBrainsMono NF", "DejaVu Sans Mono", Consolas, monospace; font-size: 7.9pt; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 3px; padding: 0 3px; }
+table { width: 100%; table-layout: fixed; border-collapse: collapse; margin: 6px 0 10px; font-size: 8.2pt; }
+thead { display: table-header-group; }
+tr { break-inside: avoid; }
+th { background: #1e3a8a; color: #fff; text-align: left; font-size: 7.4pt; text-transform: uppercase; letter-spacing: .03em; padding: 7px 6px; }
+td { border-bottom: 1px solid #e5e7eb; padding: 6px; vertical-align: top; overflow-wrap: break-word; }
+tbody tr:nth-child(even) td { background: #f8fafc; }
+td.num { font-weight: 700; }
+.t { display: inline-block; font-size: 6.6pt; font-weight: 700; padding: 2px 5px; border-radius: 3px; letter-spacing: .03em; line-height: 1.3; }
+.t-normal { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.t-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+.t-limite { background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; }
+.t-trigger { background: #ccfbf1; color: #115e59; border: 1px solid #5eead4; }
+.t-batch { background: #e0f2fe; color: #075985; border: 1px solid #7dd3fc; }
+.ok { display: inline-block; font-size: 6.6pt; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #dcfce7; color: #166534; border: 1px solid #86efac; margin-right: 3px; }
+.nota { background: #eff6ff; border-left: 4px solid #1e3a8a; padding: 8px 12px; margin: 8px 0 12px; font-size: 9pt; }
+pre { background: #0f172a; color: #e2e8f0; border-radius: 6px; padding: 10px 12px; font-family: "JetBrainsMono NF", "DejaVu Sans Mono", Consolas, monospace; font-size: 8pt; line-height: 1.5; white-space: pre-wrap; margin: 6px 0 10px; break-inside: avoid; }
+pre .c { color: #94a3b8; font-style: italic; }
+pre .k { color: #7dd3fc; font-weight: 700; }
+.junto { break-inside: avoid; }
+.nuevo { display: inline-block; font-size: 6.6pt; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #fde68a; color: #78350f; border: 1px solid #f59e0b; }
+</style>
+</head>
+<body>
+
+<h1>Anexo. Actualización del 21 de noviembre y matriz de pruebas completa</h1>
+<p>Este anexo completa el informe del 18 de noviembre sin modificar sus páginas 1 a 12. Recoge los cambios de esquema introducidos al integrar la base de datos con la API de la aplicación, la matriz de pruebas con las tres columnas que exige el numeral 4.2.7 de la guía (entrada o acción, resultado esperado y resultado obtenido) y una corrección al protocolo de la sección 5.1.</p>
+
+<h2>A.1 Cambios en el esquema (versión final de los scripts)</h2>
+<table>
+  <thead><tr><th style="width:24%">Objeto</th><th style="width:22%">Cambio</th><th>Regla de negocio y justificación</th></tr></thead>
+  <tbody>
+    <tr><td><code>OPERADOR.password_hash</code></td><td>Columna nueva <code>VARCHAR(100)</code>, admite <code>NULL</code></td><td>Credencial de acceso a la aplicación: hash BCrypt (coste 12), nunca la contraseña en claro. <code>NULL</code> indica que el operador no puede iniciar sesión (operadores históricos EMP-001 a EMP-010).</td></tr>
+    <tr><td><code>OPERADOR.rol</code></td><td><code>CHECK</code> ampliado con <code>'ADMINISTRADOR'</code></td><td>Perfil que gestiona operadores, tarifas y categorías. Los recaudadores cobran y los supervisores consultan y anulan; el administrador configura.</td></tr>
+    <tr><td><code>uq_turno_caseta_abierto</code></td><td>Índice único parcial <code>TURNO(id_caseta) WHERE estado = 'ABIERTO'</code></td><td>Una caseta física solo puede tener un turno abierto. La base lo garantiza aunque dos aperturas lleguen al mismo tiempo (condición de carrera), sin bloquear la tabla ni afectar el histórico de turnos cerrados.</td></tr>
+    <tr><td><code>uq_turno_operador_abierto</code></td><td>Índice único parcial <code>TURNO(id_operador) WHERE estado = 'ABIERTO'</code></td><td>Un operador solo puede tener un turno abierto en todo el sistema a la vez.</td></tr>
+  </tbody>
+</table>
+<p>El diccionario de datos (<code>01_Modelado/Diccionario_Datos_PeajeSys.pdf</code>, versión 2) y el DER (<code>01_Modelado/Esquema Relacional y E-R.html</code>) se actualizaron con estos cambios; el número de tablas (11) y de relaciones (13) no cambia.</p>
+
+<h2>A.2 Matriz de pruebas con resultado esperado y obtenido</h2>
+<div class="nota"><strong>Evidencia:</strong> resultados obtenidos el 23-nov-2026 al reconstruir la base desde cero con <code>00_Master_PeajeSys.sql</code> en PostgreSQL 16 (<code>psql -v ON_ERROR_STOP=1</code>): <strong>11 de 11 pruebas exitosas</strong>, sin errores no controlados. Una segunda ejecución de <code>05_Matriz_Pruebas_PeajeSys.sql</code> sobre la misma base volvió a dar 11 de 11, lo que confirma que las pruebas son re-ejecutables.</div>
+<table>
+  <thead><tr>
+    <th style="width:4%">#</th><th style="width:11%">Tipología</th><th style="width:25%">Entrada / acción</th><th style="width:28%">Resultado esperado</th><th>Resultado obtenido</th>
+  </tr></thead>
+  <tbody>
+    <tr><td class="num">01</td><td><span class="t t-normal">NORMAL</span></td>
+      <td><code>CALL pr_registrar_paso_telepeaje(10, 'TAG-COL-9900112233', …)</code>; saldo $150.000, tarifa $10.500.</td>
+      <td>Se inserta la transacción y su detalle RFID, se emite ticket con la secuencia y el saldo baja a $139.500.</td>
+      <td><span class="ok">EXITOSA</span>Ticket <code>TCK-…-001001</code>, cobrado $10.500, nuevo saldo $139.500.</td></tr>
+    <tr><td class="num">02</td><td><span class="t t-error">ERROR CONTROLADO</span></td>
+      <td>Cobro con <code>'TAG-COL-9900112236'</code> (saldo $8.000) para tarifa de $15.300.</td>
+      <td>Excepción <code>P0016</code>; no se crea transacción y el saldo no cambia.</td>
+      <td><span class="ok">EXITOSA</span>«Saldo insuficiente: … $8000.00 … tarifa requerida $15300.00» (SQLSTATE <code>P0016</code>).</td></tr>
+    <tr><td class="num">03</td><td><span class="t t-error">ERROR CONTROLADO</span></td>
+      <td>Cruce con <code>'TAG-COL-9900112238'</code> forzada a <code>SUSPENDIDA</code>.</td>
+      <td>Excepción <code>P0014</code>; paso denegado.</td>
+      <td><span class="ok">EXITOSA</span>«Cuenta no habilitada: … estado "SUSPENDIDA". Paso denegado.»</td></tr>
+    <tr><td class="num">04</td><td><span class="t t-limite">LÍMITE</span></td>
+      <td>Cuenta con exactamente $10.500 paga tarifa de $10.500 en carril exclusivo.</td>
+      <td>Paso aprobado y saldo posterior exactamente $0.00 (no se rechaza por igualdad).</td>
+      <td><span class="ok">EXITOSA</span>Cobro exacto realizado; saldo posterior $0.00.</td></tr>
+    <tr><td class="num">05</td><td><span class="t t-trigger">TRIGGER REGLA</span></td>
+      <td><code>UPDATE CUENTA_TELEPEAJE SET saldo_disponible = -25000 WHERE id_cuenta = 1;</code></td>
+      <td><code>trg_prevenir_saldo_negativo</code> aborta con <code>P0040</code>; el saldo no cambia.</td>
+      <td><span class="ok">EXITOSA</span>«Violación de Regla Financiera: … cuenta ID 1 (Placa HKL123) … Saldo intentado: $-25000.00».</td></tr>
+    <tr><td class="num">06</td><td><span class="t t-trigger">TRIGGER AUDITORÍA</span></td>
+      <td><code>INSERT INTO TRANSACCION_PEAJE</code> con <code>estado_paso = 'EVASION'</code>.</td>
+      <td><code>trg_auditar_transacciones_sensibles</code> inserta la alerta en <code>AUDITORIA_TRANSACCION</code>.</td>
+      <td><span class="ok">EXITOSA</span>Registro de auditoría creado: «ALERTA DE EVASIÓN: Vehículo placa "EVA999" …».</td></tr>
+    <tr><td class="num">07</td><td><span class="t t-trigger">TRIGGER SEGURIDAD</span></td>
+      <td><code>DELETE FROM AUDITORIA_TRANSACCION WHERE id_auditoria = 1;</code></td>
+      <td><code>trg_auditoria_inmutable</code> rechaza el borrado con <code>P0045</code>.</td>
+      <td><span class="ok">EXITOSA</span>«Operación denegada: … AUDITORIA_TRANSACCION es estrictamente de solo lectura/inserción (append-only)…».</td></tr>
+    <tr><td class="num">08</td><td><span class="t t-normal">NORMAL</span></td>
+      <td><code>pr_cerrar_arqueo_turno</code> declarando exactamente los $21.000 recaudados en efectivo.</td>
+      <td>Turno <code>CERRADO</code> con <code>diferencia_descuadre = 0.00</code>.</td>
+      <td><span class="ok">EXITOSA</span>Turno 11 cerrado con diferencia $0.00.</td></tr>
+    <tr><td class="num">09</td><td><span class="t t-limite">LÍMITE FINANCIERO</span></td>
+      <td><code>pr_cerrar_arqueo_turno</code> declarando $20.000 frente a $22.000 en el sistema.</td>
+      <td>Turno cerrado con <code>diferencia_descuadre = -2000.00</code> y aviso de faltante.</td>
+      <td><span class="ok">EXITOSA</span>Turno 12 liquidado con faltante de $2.000.</td></tr>
+    <tr><td class="num">10</td><td><span class="t t-batch">BATCH / CURSOR</span></td>
+      <td><code>CALL pr_proceso_nocturno_monitoreo_cuentas(…)</code> sobre todas las cuentas RFID.</td>
+      <td>El cursor recorre todas las cuentas (10), suspende las de saldo $0 y no deja errores sin controlar.</td>
+      <td><span class="ok">EXITOSA</span>Proceso iteró 10 cuentas sin errores no controlados.</td></tr>
+    <tr><td class="num">11</td><td><span class="t t-batch">INTEGRAL</span></td>
+      <td>Recarga de $50.000 a cuenta suspendida en $0 y consulta con <code>fn_validar_aptitud_telepeaje</code>.</td>
+      <td>La cuenta pasa a <code>ACTIVA</code> y la función devuelve <code>TRUE</code>.</td>
+      <td><span class="ok">EXITOSA</span>Cuenta reactivada y apta para telepeaje.</td></tr>
+  </tbody>
+</table>
+
+<section class="junto">
+<h2>A.3 Corrección al protocolo de la sección 5.1</h2>
+<p>La base del proyecto se llama <code>peajesys_db</code> (como en el README y en la configuración de la API), no <code>peajesys</code>, y <code>\i</code> es un comando de la consola <code>psql</code> que no funciona en el Query Tool de pgAdmin. El procedimiento correcto es:</p>
+<pre><span class="c">-- Consola (psql), desde la carpeta database/</span>
+psql -U postgres -d postgres -c <span class="k">"DROP DATABASE IF EXISTS peajesys_db;"</span>
+psql -U postgres -d postgres -c <span class="k">"CREATE DATABASE peajesys_db;"</span>
+psql -U postgres -d peajesys_db -f 00_Master_PeajeSys.sql
+
+<span class="c">-- pgAdmin 4: crear la base peajesys_db, abrir el Query Tool sobre ella,</span>
+<span class="c">-- abrir 00_Master_PeajeSys.sql y ejecutar con F5.</span>
+
+<span class="c">-- Docker (desde la raíz del repositorio): reconstruye la base desde cero</span>
+docker compose down -v &amp;&amp; docker compose up -d</pre>
+<p>La demostración del error intencional de la sección 5.1 no cambia: tras cargar el maestro devuelve «Saldo insuficiente … (SQLSTATE: P0016)», verificado el 23-nov-2026.</p>
+</section>
+
+</body>
+</html>
