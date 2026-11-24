@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { Franja } from '@/components/layout/Franja';
 import { EstadoCargando, EstadoError } from '@/components/feedback/EstadoDatos';
 import { CabeceraOperador } from './components/CabeceraOperador';
@@ -17,6 +18,7 @@ import { useAtajosTeclado } from './hooks/useAtajosTeclado';
 
 export function OperadorTerminalPage() {
   const terminal = useTerminalCobro();
+  const navigate = useNavigate();
 
   // Asegurar que la cabecera permanezca visible y la página no se desplace
   useEffect(() => {
@@ -117,6 +119,31 @@ export function OperadorTerminalPage() {
                     Registro de paso vehicular y emisión de ticket en caseta.
                   </p>
                 </div>
+
+                {/* Turno cerrado: indicar cómo seguir trabajando */}
+                {terminal.turnoEstaCerrado && (
+                  <div
+                    role="status"
+                    className="flex flex-wrap items-center justify-between gap-3 p-3.5 md:p-4 rounded-[8px] bg-superficie-2 border-2 border-texto shadow-sm"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <strong className="text-[17px] md:text-[18px] text-texto">
+                        Turno {terminal.idTurno} cerrado
+                      </strong>
+                      <span className="text-[15px] md:text-[16px] text-texto-2 font-medium">
+                        Para seguir cobrando abre un turno nuevo.
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="primario"
+                      onClick={() => navigate('/operador/abrir-turno')}
+                      className="h-[44px] px-4 text-[15px]"
+                    >
+                      Abrir nuevo turno
+                    </Button>
+                  </div>
+                )}
 
                 {/* Banner de error al cobrar (ej. 409 turno cerrado) */}
                 {terminal.errorCobro && (
