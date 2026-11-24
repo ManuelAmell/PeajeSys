@@ -293,14 +293,16 @@ erDiagram
 
 <div align="center">
 
-| Miembro | Rol Principal | Áreas de Enfoque y Responsabilidad |
+| Miembro | Rol Principal | Aportes |
 | :--- | :--- | :--- |
-| **👨‍💻 Alex** | **Backend Developer** | Arquitectura de servicios C#/.NET, diseño de endpoints REST, seguridad y lógica de negocio. |
-| **👨‍💻 Samuel** | **Backend Developer** | Lógica de transacciones, validación de turnos/arqueos e integración de la capa de acceso a datos. |
-| **👨‍💻 Manuel** | **Database & Full-Stack** | Modelado DDL/DML en PostgreSQL, procedimientos/triggers, optimización e integración backend/frontend. |
-| **👨‍💻 Camilo** | **Frontend Developer** | Interfaz web en TypeScript, componentes visuales, consumo de APIs y experiencia de usuario (UX). |
+| **👨‍💻 Alex Florez** | **Backend** | Servicios y endpoints REST en C#/.NET, lógica de cobro y de turnos, y pruebas del backend. |
+| **👨‍💻 Camilo Guzmán** | **Backend** | Seguridad y autenticación, validaciones de negocio, integración con la base de datos y pruebas. |
+| **👨‍💻 Samuel Otero** | **Base de Datos y Modelado** | Modelo E-R y relacional en 3FN, diccionario de datos, DDL/DML, PL/pgSQL (funciones, procedimientos, triggers y cursor) y matriz de pruebas. |
+| **👨‍💻 Manuel Amell** | **Base de Datos, Modelado, Frontend y Backend** | Modelado y scripts SQL, integración API y base de datos, frontend en React/TypeScript, CI, pruebas y coordinación del equipo. |
 
 </div>
+
+> **Todos los integrantes trabajamos en el proyecto completo:** participamos en el análisis, el diseño, las pruebas y la sustentación, y cualquiera de nosotros puede explicar y modificar cualquier parte de la solución.
 
 ---
 
