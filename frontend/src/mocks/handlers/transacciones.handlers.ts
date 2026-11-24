@@ -3,6 +3,7 @@ import { calcularCambio } from '@/api/dominio/cambio';
 import { normalizarPlaca } from '@/api/dominio/placa';
 import { esquemaTransaccionPeajeNueva } from '@/types';
 import { getDb } from '../db';
+import { idOperadorDelToken } from '../token';
 
 export const transaccionesHandlers = [
   http.post('/api/transacciones', async ({ request }) => {
@@ -146,9 +147,9 @@ export const transaccionesHandlers = [
 
   http.post('/api/transacciones/:id/anulacion', async ({ params, request }) => {
     const id = parseInt(String(params.id), 10);
-    let body: { usuario_sistema?: string; motivo?: string } = {};
+    let body: { motivo?: string } = {};
     try {
-      body = (await request.json()) as { usuario_sistema?: string; motivo?: string };
+      body = (await request.json()) as { motivo?: string };
     } catch {
       return HttpResponse.json(
         { error: { codigo: 'CUERPO_INVALIDO', mensaje: 'JSON inválido' } },
@@ -156,12 +157,27 @@ export const transaccionesHandlers = [
       );
     }
 
-    if (!body.motivo || !body.motivo.trim()) {
+    // Mismo orden que TransaccionService.AnularAsync: motivo, existencia, propiedad, turno, ya anulada.
+    const motivo = (typeof body.motivo === 'string' ? body.motivo : '').trim();
+    if (motivo.length === 0) {
       return HttpResponse.json(
         {
           error: {
             codigo: 'MOTIVO_REQUERIDO',
             mensaje: 'Indica el motivo de la anulación para la auditoría.',
+            campos: { motivo: 'El motivo es obligatorio.' },
+          },
+        },
+        { status: 422 },
+      );
+    }
+    if (motivo.length > 255) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'MOTIVO_DEMASIADO_LARGO',
+            mensaje: 'El motivo no puede superar 255 caracteres.',
+            campos: { motivo: 'Máximo 255 caracteres.' },
           },
         },
         { status: 422 },
@@ -177,11 +193,47 @@ export const transaccionesHandlers = [
       );
     }
 
-    const resultado = db.anularTransaccion(
-      id,
-      body.usuario_sistema || 'supervisor_auditoria',
-      body.motivo.trim(),
-    );
+    // El rol se deduce del sub del token (id del operador); sin token válido no se acota.
+    const turno = db.turnos.find((t) => t.id_turno === tx.id_turno);
+    const idActor = idOperadorDelToken(request);
+    const actor = idActor === null ? undefined : db.operadores.find((o) => o.id_operador === idActor);
+    if (actor?.rol === 'RECAUDADOR' && turno && turno.id_operador !== actor.id_operador) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'TURNO_AJENO',
+            mensaje: 'Solo puedes operar sobre transacciones de tu propio turno.',
+          },
+        },
+        { status: 403 },
+      );
+    }
+
+    if (turno?.estado !== 'ABIERTO') {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'TURNO_CERRADO',
+            mensaje: 'El turno de la transacción está cerrado: no se puede anular.',
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    if (db.auditorias.some((a) => a.id_transaccion === id && a.tipo_operacion === 'VOID')) {
+      return HttpResponse.json(
+        {
+          error: {
+            codigo: 'TRANSACCION_YA_ANULADA',
+            mensaje: `La transacción ${id} ya fue anulada.`,
+          },
+        },
+        { status: 409 },
+      );
+    }
+
+    const resultado = db.anularTransaccion(id, actor?.codigo_empleado ?? 'supervisor_auditoria', motivo);
 
     return HttpResponse.json(
       {

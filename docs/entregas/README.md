@@ -24,11 +24,13 @@ PeajeSys/database
 ├── README.md                                  # Este documento de instrucciones y arquitectura
 ├── PeajeSys_Avance_Corte1.pdf                 # Informe de Avance Corte 1 (Análisis y Diseño)
 ├── PeajeSys_Avance_Corte2.pdf                 # Informe de Avance Corte 2 (Implementación SQL)
-├── PeajeSys_Avance_Final.pdf                  # Informe de Avance Final (Integración PL/SQL)
+├── PeajeSys_Avance_Final.pdf                  # Informe de Avance Final (Integración PL/SQL) + anexo del 21-nov (págs. 13-15)
 ├── Guia Ejecucion BD PeajeSys.pdf             # Guía visual de ejecución en PostgreSQL
+├── fuentes/Anexo_Avance_Final.html            # Fuente HTML del anexo del informe final
 ├── 01_Modelado/                               # Fase 1: Análisis, Modelado y Diccionario
-│   ├── Diccionario_Datos_PeajeSys.pdf         # Diccionario completo de las 11 tablas en 3FN
-│   └── Esquema Relacional y E-R.html          # DER y esquema relacional
+│   ├── Diccionario_Datos_PeajeSys.pdf         # Diccionario completo de las 11 tablas en 3FN (versión 2, 23-nov)
+│   ├── Esquema Relacional y E-R.html          # DER y esquema relacional
+│   └── fuentes/Diccionario_Datos_PeajeSys.html # Fuente HTML del diccionario (se imprime a PDF)
 ├── 02_SQL/                                    # Fase 2: Esquema Físico y Consultas
 │   ├── 01_DDL_PeajeSys.sql                    # Creación física de tablas y restricciones
 │   ├── 02_DML_Datos_PeajeSys.sql              # Carga masiva (+10 reg/tabla) y pruebas ACID
@@ -51,9 +53,9 @@ Para levantar todo el sistema desde cero (tablas, datos, vistas, funciones, trig
 
 ```bash
 # En consola psql (PostgreSQL 14+)
-psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS peajesys;"
-psql -U postgres -d postgres -c "CREATE DATABASE peajesys;"
-psql -U postgres -d peajesys -f 00_Master_PeajeSys.sql
+psql -U postgres -d postgres -c "DROP DATABASE IF EXISTS peajesys_db;"
+psql -U postgres -d postgres -c "CREATE DATABASE peajesys_db;"
+psql -U postgres -d peajesys_db -f 00_Master_PeajeSys.sql
 ```
 *O bien, en **pgAdmin 4**, abrir `00_Master_PeajeSys.sql` y presionar **F5**.*
 

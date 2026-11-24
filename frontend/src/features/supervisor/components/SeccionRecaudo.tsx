@@ -25,7 +25,7 @@ export function SeccionRecaudo({ recaudo, diasGrafico }: SeccionRecaudoProps) {
           Recaudo diario
         </h2>
         <p className="text-[16px] md:text-[17px] text-texto-2 m-0">
-          Vista vw_resumen_diario_estacion · Estación Gambote
+          Calculado por la API excluyendo anulaciones · Estación Gambote
         </p>
       </div>
 

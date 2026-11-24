@@ -5,39 +5,34 @@ export interface UsuarioDemo {
 }
 
 /**
- * Contraseña de prueba de la lista demo del prototipo: cualquier texto no vacío sirve.
+ * Contraseña de prueba de la lista demo: en modo mocks cualquier texto no vacío sirve
+ * (con la API real hay que usar la contraseña del README).
  */
 export const CLAVE_PRUEBA = 'prueba';
 
 /**
- * Lista demo de Login.dc.html, palabra por palabra. Es la fuente de las notas
- * «dato de prueba» del bloque: EMP-001 sin turno, EMP-009 INACTIVO y ADMIN-01
- * como usuario que solo existe en el frontend.
+ * Usuarios del equipo, los mismos que viven en la tabla OPERADOR del DML
+ * (database/02_SQL/02_DML_Datos_PeajeSys.sql).
  */
 export const USUARIOS_DEMO: UsuarioDemo[] = [
   {
-    codigo: 'EMP-002',
-    nombre: 'María Fernanda López',
-    nota: 'Recaudadora con el turno 9 abierto',
+    codigo: 'ADM-001',
+    nombre: 'Manuel Amell',
+    nota: 'Administrador',
   },
   {
-    codigo: 'EMP-003',
-    nombre: 'Juan David Rodríguez',
+    codigo: 'SUP-001',
+    nombre: 'Samuel Otero',
     nota: 'Supervisor',
   },
   {
-    codigo: 'ADMIN-01',
-    nombre: 'Administración',
-    nota: 'Usuario solo del front: el rol ADMINISTRADOR aún no existe en la BD',
+    codigo: 'REC-001',
+    nombre: 'Alex Florez',
+    nota: 'Recaudador (sin turno abierto: va a la pantalla Abrir turno)',
   },
   {
-    codigo: 'EMP-001',
-    nombre: 'Carlos Alberto Gómez',
-    nota: 'Recaudador sin turno abierto (muestra el aviso)',
-  },
-  {
-    codigo: 'EMP-009',
-    nombre: 'Jorge Luis Vargas',
-    nota: 'Usuario INACTIVO (muestra el error)',
+    codigo: 'REC-002',
+    nombre: 'Camilo Guzmán',
+    nota: 'Recaudador (sin turno abierto: va a la pantalla Abrir turno)',
   },
 ];

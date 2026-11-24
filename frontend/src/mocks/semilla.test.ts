@@ -50,7 +50,7 @@ describe('SEMILLA generada desde el DML', () => {
   it('tiene el recuento de filas del DML mas las del CASO 1 con COMMIT', () => {
     expect(SEMILLA.estaciones).toHaveLength(2);
     expect(SEMILLA.casetas).toHaveLength(6);
-    expect(SEMILLA.operadores).toHaveLength(10);
+    expect(SEMILLA.operadores).toHaveLength(14);
     expect(SEMILLA.categorias).toHaveLength(7);
     expect(SEMILLA.tarifas).toHaveLength(10);
     expect(SEMILLA.vehiculos).toHaveLength(10);
@@ -353,8 +353,22 @@ describe('generador reproducible', () => {
       'Cuenta de telepeaje 1 (HKL123): saldo_disponible 150000',
     );
     expect(contenidoGenerado).toContain('Estación 2 (Estación La Ceballos)');
-    expect(contenidoGenerado).toContain(
-      'No existe rol administrador en OPERADOR',
-    );
+    expect(contenidoGenerado).not.toContain('password_hash');
+  });
+});
+
+describe('usuarios del equipo en la semilla', () => {
+  it('trae a los 4 usuarios con su rol y sin password_hash', () => {
+    const equipo = SEMILLA.operadores
+      .filter((fila) => /^(ADM|SUP|REC)-/.test(fila.codigo_empleado))
+      .map((fila) => [fila.codigo_empleado, fila.rol]);
+    expect(equipo).toEqual([
+      ['ADM-001', 'ADMINISTRADOR'],
+      ['SUP-001', 'SUPERVISOR'],
+      ['REC-001', 'RECAUDADOR'],
+      ['REC-002', 'RECAUDADOR'],
+    ]);
+    expect(JSON.stringify(SEMILLA.operadores)).not.toContain('password_hash');
+    expect(JSON.stringify(SEMILLA.operadores)).not.toContain('$2');
   });
 });

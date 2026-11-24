@@ -3,8 +3,9 @@ import path from 'path';
 import http from 'http';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
-import { spawn, ChildProcess } from 'child_process';
+import type { ChildProcess } from 'child_process';
 import { chromium } from '@playwright/test';
+import { lanzarPnpm, rutaChromium, terminarProceso } from './plataforma';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -142,7 +143,7 @@ function obtenerUsuarioDeRol(rol: OpcionesCaptura['rol']) {
       };
     case 'ADMIN':
       return {
-        id: 'ADMIN-01',
+        id: 'ADM-001',
         nombre: 'Administración',
         rol: 'ADMIN' as const,
       };
@@ -177,8 +178,7 @@ async function ejecutar() {
     console.log(
       `Iniciando servidor de vista previa en puerto ${opts.puerto}...`,
     );
-    procesoServidor = spawn(
-      'pnpm',
+    procesoServidor = lanzarPnpm(
       ['preview', '--port', String(opts.puerto), '--strictPort'],
       {
         cwd: path.resolve(__dirname, '..'),
@@ -191,13 +191,12 @@ async function ejecutar() {
       console.error(
         `❌ No se pudo conectar al servidor en el puerto ${opts.puerto}`,
       );
-      if (procesoServidor) procesoServidor.kill('SIGTERM');
+      if (procesoServidor) terminarProceso(procesoServidor);
       process.exit(1);
     }
   }
 
-  const chromiumPath =
-    process.env.PLAYWRIGHT_CHROMIUM_PATH || '/usr/bin/chromium';
+  const chromiumPath = rutaChromium();
 
   const browser = await chromium.launch({
     executablePath: chromiumPath,
@@ -378,7 +377,7 @@ async function ejecutar() {
   } finally {
     await browser.close();
     if (procesoServidor) {
-      procesoServidor.kill('SIGTERM');
+      terminarProceso(procesoServidor);
     }
   }
 

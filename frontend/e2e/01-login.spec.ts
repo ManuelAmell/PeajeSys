@@ -14,7 +14,9 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
 
     // Muestra tarjeta «Ir a …»
     await expect(page.locator('text=Hola, María Fernanda')).toBeVisible();
-    const btnIr = page.locator('button', { hasText: /Ir a la terminal de cobro/i });
+    const btnIr = page.locator('button', {
+      hasText: /Ir a la terminal de cobro/i,
+    });
     await expect(btnIr).toBeVisible();
     await btnIr.click();
 
@@ -24,7 +26,7 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
     expect(errores).toEqual([]);
   });
 
-  test('1.2 EMP-001 operador sin turno asignado se rechaza con mensaje correspondiente', async ({
+  test('1.2 EMP-001 operador sin turno asignado inicia sesión y va a la pantalla Abrir turno', async ({
     page,
   }) => {
     const errores = escucharConsola(page);
@@ -34,11 +36,15 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
     await page.fill('#lg-clave', 'prueba123');
     await page.click('button[type="submit"]');
 
-    // Mensaje de rechazo: operador sin turno
-    const errorAlerta = page.locator('#lg-error, [role="alert"]');
-    await expect(errorAlerta).toBeVisible();
-    await expect(errorAlerta).toContainText('no tiene un turno abierto');
-    await expect(page).toHaveURL(/\/login/);
+    // Tarjeta "Ir a..." hacia Abrir turno
+    const botonIr = page
+      .locator('[role="status"]')
+      .getByRole('button', { name: /abrir turno/i });
+    await expect(botonIr).toBeVisible();
+    await botonIr.click();
+
+    await expect(page).toHaveURL(/\/operador\/abrir-turno/);
+    await expect(page.locator('h1')).toHaveText(/Abrir turno/i);
     expect(errores).toEqual([]);
   });
 
@@ -70,7 +76,9 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
 
     // Muestra tarjeta «Ir a …»
     await expect(page.locator('text=Hola, Juan David')).toBeVisible();
-    const btnIr = page.locator('button', { hasText: /Ir al panel del supervisor/i });
+    const btnIr = page.locator('button', {
+      hasText: /Ir al panel del supervisor/i,
+    });
     await expect(btnIr).toBeVisible();
     await btnIr.click();
 
@@ -81,17 +89,19 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
     expect(errores).toEqual([]);
   });
 
-  test('1.5 ADMIN-01 entra a la administración', async ({ page }) => {
+  test('1.5 ADM-001 entra a la administración', async ({ page }) => {
     const errores = escucharConsola(page);
     await page.goto('/login');
 
-    await page.fill('#lg-codigo', 'ADMIN-01');
+    await page.fill('#lg-codigo', 'ADM-001');
     await page.fill('#lg-clave', 'admin123');
     await page.click('button[type="submit"]');
 
     // Muestra tarjeta «Ir a …»
-    await expect(page.locator('text=Hola, Administración')).toBeVisible();
-    const btnIr = page.locator('button', { hasText: /Ir a la administración/i });
+    await expect(page.locator('text=Hola, Manuel Amell')).toBeVisible();
+    const btnIr = page.locator('button', {
+      hasText: /Ir a la administración/i,
+    });
     await expect(btnIr).toBeVisible();
     await btnIr.click();
 
@@ -113,7 +123,9 @@ test.describe('Caso 1: Autenticación e inicio de sesión por rol (5 casos oblig
 
     const errorAlerta = page.locator('#lg-error, [role="alert"]');
     await expect(errorAlerta).toBeVisible();
-    await expect(errorAlerta).toContainText('No existe un empleado con el código EMP-999');
+    await expect(errorAlerta).toContainText(
+      'Código de empleado o clave incorrectos.',
+    );
     await expect(page).toHaveURL(/\/login/);
     expect(errores).toEqual([]);
   });

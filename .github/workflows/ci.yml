@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - backend
+  pull_request:
+    branches:
+      - develop
+      - main
+      - backend
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Compilar backend
+        working-directory: backend
+        run: dotnet build --no-incremental
+
+      - name: Ejecutar pruebas unitarias backend
+        working-directory: backend
+        run: dotnet test --no-build
+
+  backend-postgres:
+    name: Backend con PostgreSQL (ubuntu-latest)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: peajesys_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cargar script maestro en PostgreSQL
+        env:
+          PGPASSWORD: postgres
+        run: |
+          OUTPUT=$(psql -v ON_ERROR_STOP=1 --no-psqlrc -h localhost -U postgres -d peajesys_db -f database/00_Master_PeajeSys.sql 2>&1)
+          echo "$OUTPUT"
+          echo "$OUTPUT" | grep "TODAS LAS PRUEBAS DE LA MATRIZ FUERON EJECUTADAS CON RESULTADO CONFORME"
+          if echo "$OUTPUT" | grep -i "FALLID"; then
+            echo "Error: Se encontro 'FALLID' en la salida de ejecucion del maestro SQL"
+            exit 1
+          fi
+
+      - name: Compilar backend
+        working-directory: backend
+        run: dotnet build --no-incremental
+
+      - name: Ejecutar pruebas backend con PostgreSQL
+        working-directory: backend
+        env:
+          PEAJESYS_PG_CONN: "Host=127.0.0.1;Port=5432;Database=peajesys_db;Username=postgres;Password=postgres;Timeout=10;Maximum Pool Size=40"
+        run: dotnet test --no-build
+
+  frontend:
+    name: Frontend (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Habilitar Corepack
+        run: corepack enable
+
+      - name: Obtener ruta del store de pnpm
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Configurar cache de pnpm
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Frontend Typecheck
+        working-directory: frontend
+        run: pnpm typecheck
+
+      - name: Frontend Lint
+        working-directory: frontend
+        run: pnpm lint
+
+      - name: Frontend Test
+        working-directory: frontend
+        run: pnpm test
+
+      - name: Frontend Build
+        working-directory: frontend
+        run: pnpm build
+
+  e2e:
+    name: Pruebas E2E (ubuntu-latest)
+    runs-on: ubuntu-latest
+    needs: frontend
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Habilitar Corepack
+        run: corepack enable
+
+      - name: Obtener ruta del store de pnpm
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - name: Configurar cache de pnpm
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Instalar dependencias
+        run: pnpm install --frozen-lockfile
+
+      - name: Instalar navegadores Playwright con dependencias del sistema
+        run: pnpm --dir frontend exec playwright install --with-deps chromium
+
+      - name: Ejecutar pruebas E2E
+        run: pnpm --dir frontend e2e
+
+      - name: Subir informe de Playwright si falla
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report/
+            frontend/test-results/
+          retention-days: 7

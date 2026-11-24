@@ -19,7 +19,7 @@
 export type EstadoEstacion = 'ACTIVA' | 'INACTIVA' | 'MANTENIMIENTO';
 export type TipoCarril = 'MANUAL' | 'TELEPEAJE_EXCLUSIVO' | 'MIXTO';
 export type EstadoCaseta = 'OPERATIVA' | 'CERRADA' | 'MANTENIMIENTO';
-export type RolOperador = 'RECAUDADOR' | 'SUPERVISOR';
+export type RolOperador = 'RECAUDADOR' | 'SUPERVISOR' | 'ADMINISTRADOR';
 export type EstadoOperador = 'ACTIVO' | 'INACTIVO';
 export type EstadoTurno = 'ABIERTO' | 'CERRADO';
 export type EstadoCuentaTelepeaje = 'ACTIVA' | 'SUSPENDIDA';
@@ -29,8 +29,8 @@ export type TipoOperacionAuditoria = 'INSERT' | 'UPDATE' | 'VOID';
 
 /**
  * Rol extendido en frontend para administración de catálogo.
- * NOTA: En la base de datos física (DDL) los operadores solo tienen rol RECAUDADOR o SUPERVISOR.
- * El rol ADMIN solo existe a nivel de frontend/sesión (e.g. ADMIN-01) y no corresponde a una fila en OPERADOR.
+ * NOTA: En la base de datos física (DDL) los operadores tienen rol RECAUDADOR, SUPERVISOR o ADMINISTRADOR.
+ * El rol ADMIN es el nombre que la sesión del frontend da a ADMINISTRADOR (e.g. ADM-001).
  */
 export type RolFrontend = RolOperador | 'ADMIN';
 
@@ -66,6 +66,8 @@ export interface Caseta {
   numero_carril: number;
   tipo_carril: TipoCarril;
   estado: EstadoCaseta;
+  /** Calculado por la API: true si la caseta tiene un turno ABIERTO. */
+  ocupada?: boolean;
 }
 
 export interface CasetaNueva {
@@ -97,6 +99,8 @@ export interface OperadorNuevo {
   codigo_empleado: string;
   rol: RolOperador;
   estado?: EstadoOperador;
+  /** Solo viaja en el alta o en el cambio de contraseña; la API la hashea y nunca la devuelve. */
+  password: string;
 }
 
 // =============================================================================
@@ -110,8 +114,8 @@ export interface Turno {
   diurno: boolean;
   fondo_inicial_caja: number;
   total_recaudado_efectivo: number;
-  total_declarado_cierre: number | null;
-  diferencia_descuadre: number | null;
+  total_declarado_cierre?: number | null;
+  diferencia_descuadre?: number | null;
   estado: EstadoTurno;
 }
 
@@ -141,7 +145,7 @@ export interface CategoriaVehiculo {
   descripcion: string;
   numero_ejes_min: number;
   numero_ejes_max: number;
-  peso_maximo_ton: number | null;
+  peso_maximo_ton?: number | null;
   activo: boolean;
 }
 
@@ -163,9 +167,9 @@ export interface Tarifa {
   id_estacion: number;
   id_categoria: number;
   monto: number;
-  resolucion_legal: string | null;
+  resolucion_legal?: string | null;
   fecha_inicio_vigencia: string;
-  fecha_fin_vigencia: string | null;
+  fecha_fin_vigencia?: string | null;
   activa: boolean;
 }
 
@@ -186,9 +190,9 @@ export interface TarifaNueva {
 export interface Vehiculo {
   placa: string;
   id_categoria: number;
-  marca: string | null;
-  modelo: string | null;
-  color: string | null;
+  marca?: string | null;
+  modelo?: string | null;
+  color?: string | null;
 }
 
 export interface VehiculoNuevo {
@@ -226,12 +230,14 @@ export interface TransaccionPeaje {
   id_turno: number;
   id_tarifa: number;
   id_categoria: number;
-  placa_detectada: string | null;
+  placa_detectada?: string | null;
   monto_tarifa: number;
   metodo_pago: MetodoPago;
   numero_ticket: string;
   fecha_hora: string;
   estado_paso: EstadoPaso;
+  /** Solo lo trae el listado de un turno: true si hay un VOID en la auditoría. */
+  anulada?: boolean;
 }
 
 export interface TransaccionPeajeNueva {
@@ -256,7 +262,7 @@ export interface DetallePagoTelepeaje {
   id_cuenta: number;
   saldo_anterior: number;
   saldo_posterior: number;
-  antena_lectora_id: string | null;
+  antena_lectora_id?: string | null;
 }
 
 export interface DetallePagoTelepeajeNuevo {
@@ -277,7 +283,7 @@ export interface AuditoriaTransaccion {
   tipo_operacion: TipoOperacionAuditoria;
   usuario_sistema: string;
   fecha_hora_evento: string;
-  motivo: string | null;
+  motivo?: string | null;
 }
 
 export interface AuditoriaTransaccionNueva {

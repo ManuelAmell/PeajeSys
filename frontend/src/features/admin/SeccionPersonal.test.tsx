@@ -7,10 +7,10 @@ import { renderConProveedores, screen, within } from '@/test/render';
 import { SeccionPersonal } from './SeccionPersonal';
 
 const admin = {
-  id: 'ADMIN-01',
+  id: 'ADM-001',
   nombre: 'Administración',
   rol: 'ADMIN' as const,
-  codigo: 'ADMIN-01',
+  codigo: 'ADM-001',
 };
 
 function renderSeccion() {
@@ -20,7 +20,7 @@ function renderSeccion() {
 }
 
 describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
-  it('lista los 10 operadores del DML con código, nombre, documento, rol y estado', async () => {
+  it('lista los operadores del DML con código, nombre, documento, rol y estado', async () => {
     renderSeccion();
 
     expect(
@@ -31,7 +31,7 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     expect(screen.getByText('1047123456')).toBeInTheDocument();
     expect(screen.getByText('EMP-009')).toBeInTheDocument();
     expect(screen.getByText('Jorge Luis Vargas Romero')).toBeInTheDocument();
-    expect(screen.getAllByText('SUPERVISOR')).toHaveLength(2);
+    expect(screen.getAllByText('SUPERVISOR')).toHaveLength(3);
     expect(screen.getByText('EMP-003')).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -155,12 +155,15 @@ describe('Sección Personal (Admin.dc.html con datos del DML)', () => {
     expect(operador.estado).toBe('ACTIVO');
   });
 
-  it('marca ADMIN-01 como usuario solo del front', async () => {
+  it('lista a ADM-001 de la tabla OPERADOR como administrador', async () => {
     renderSeccion();
 
-    expect(
-      await screen.findByText(/ADMIN-01.*solo del front/),
-    ).toBeInTheDocument();
+    const celda = await screen.findByText('ADM-001');
+    const fila = celda.closest('tr');
+    expect(fila).not.toBeNull();
+    if (fila) {
+      expect(within(fila).getByText('ADMINISTRADOR')).toBeInTheDocument();
+    }
   });
 
   it('muestra estado de error con Reintentar cuando el servidor falla', async () => {
